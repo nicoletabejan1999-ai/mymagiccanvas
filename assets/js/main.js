@@ -61,38 +61,84 @@
     const stage = $('#galStage'), strip = $('#galStrip');
     if (!stage || !strip) return;
 
+    const n = C.GALLERY.length;
+    let current = 0;
+
+    /* the picture itself lives in its own layer, under the controls */
+    const frame = el('div', 'gal__frame');
+    frame.style.cssText = 'position:absolute;inset:0';
+    stage.appendChild(frame);
+
+    const arrow = (dir, path) => {
+      const b = el('button', 'gal__nav gal__nav--' + dir,
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" ' +
+        'stroke-linecap="round" stroke-linejoin="round"><path d="' + path + '"/></svg>');
+      b.type = 'button';
+      b.setAttribute('aria-label', dir === 'prev' ? 'Previous image' : 'Next image');
+      b.addEventListener('click', () => show(dir === 'prev' ? current - 1 : current + 1));
+      stage.appendChild(b);
+      return b;
+    };
+    arrow('prev', 'M15 5l-7 7 7 7');
+    arrow('next', 'M9 5l7 7-7 7');
+
+    const counter = el('p', 'gal__count');
+    counter.setAttribute('aria-live', 'polite');
+    stage.appendChild(counter);
+
     function show(i) {
+      i = (i % n + n) % n;              // wrap around at both ends
+      current = i;
       const m = C.GALLERY[i];
-      stage.innerHTML = '';
+      frame.innerHTML = '';
+
       if (m.type === 'video') {
         const v = el('video');
         v.src = m.src; v.poster = m.poster; v.controls = true;
-        v.playsInline = true; v.preload = 'none';
+        v.playsInline = true; v.preload = 'metadata';
         v.setAttribute('aria-label', m.alt);
-        stage.appendChild(v);
-        v.play().catch(() => {});
+        frame.appendChild(v);
+        v.play().catch(() => {});       // browsers may refuse until a tap
       } else {
         const p = el('picture');
         p.innerHTML = '<source srcset="' + m.src + '.webp" type="image/webp">' +
                       '<img src="' + m.src + '.jpg" alt="' + esc(m.alt) + '" width="1400" height="1400">';
-        stage.appendChild(p);
+        frame.appendChild(p);
       }
-      $$('.gal__t', strip).forEach((b, k) => b.setAttribute('aria-selected', k === i ? 'true' : 'false'));
+
+      counter.textContent = (i + 1) + ' / ' + n;
+      $$('.gal__t', strip).forEach((b, k) => {
+        const on = k === i;
+        b.setAttribute('aria-selected', on ? 'true' : 'false');
+        b.tabIndex = on ? 0 : -1;
+        if (on) b.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      });
     }
 
     C.GALLERY.forEach((m, i) => {
       const b = el('button', 'gal__t');
       b.type = 'button';
       b.setAttribute('role', 'tab');
-      b.setAttribute('aria-label', m.alt);
+      b.setAttribute('aria-label', (i + 1) + ' of ' + n + ': ' + m.alt);
+      // thumbnails are a few KB each and must never collapse, so no lazy load
       const thumb = m.type === 'video' ? m.poster : m.src + '-thumb.webp';
-      b.innerHTML = '<img src="' + thumb + '" alt="" loading="lazy" width="320" height="320">' +
+      b.innerHTML = '<img src="' + thumb + '" alt="" width="320" height="320" decoding="async">' +
         (m.type === 'video'
           ? '<span class="gal__play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.2v13.6L19 12z"/></svg></span>'
           : '');
       b.addEventListener('click', () => show(i));
       strip.appendChild(b);
     });
+
+    /* arrow keys move through the rail */
+    strip.addEventListener('keydown', e => {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft' &&
+          e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+      e.preventDefault();
+      show(current + (e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : -1));
+      $$('.gal__t', strip)[current].focus();
+    });
+
     show(0);
   }
 

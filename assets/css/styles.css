@@ -174,17 +174,47 @@ p{margin:0}
 .pay--sm .pay__b{height:23px; font-size:.65rem; padding:0 8px}
 
 /* ─────────────────────────────────────────────────────────── gallery */
-.gal{display:grid; grid-template-columns:96px 1fr; gap:16px}
+/* Thumbnail rail on the left, big picture on the right — like a shop
+   listing. The rail is two columns wide so all twelve are reachable
+   without scrolling. */
+.gal{
+  display:grid; grid-template-columns:200px minmax(0,1fr); gap:18px;
+  width:min(100%, 880px); margin-inline:auto; align-items:start;
+}
+/* the big picture comes first in the markup, but sits on the right */
+.gal__stage{grid-column:2; grid-row:1}
+.gal__strip{grid-column:1; grid-row:1}
 .gal__stage{
   position:relative; border-radius:var(--r-lg); overflow:hidden;
   background:var(--sand-soft); aspect-ratio:1/1; box-shadow:var(--sh-1);
 }
 .gal__stage img, .gal__stage video{width:100%; height:100%; object-fit:cover}
-.gal__stage video{background:#111}
-.gal__strip{display:flex; flex-direction:column; gap:10px; max-height:640px; overflow-y:auto; scrollbar-width:thin; padding:2px}
+.gal__stage video{background:#111; object-fit:contain}
+
+/* prev / next */
+.gal__nav{
+  position:absolute; top:50%; translate:0 -50%; z-index:2;
+  width:42px; height:42px; border-radius:50%; cursor:pointer;
+  display:grid; place-items:center;
+  background:rgba(255,255,255,.92); border:1px solid var(--line);
+  box-shadow:0 2px 10px rgba(29,30,26,.14);
+  transition:background .15s, transform .15s, opacity .15s;
+}
+.gal__nav:hover{background:#fff; transform:translate(0,-50%) scale(1.06)}
+.gal__nav svg{width:17px; height:17px; color:var(--ink)}
+.gal__nav--prev{left:14px}
+.gal__nav--next{right:14px}
+.gal__count{
+  position:absolute; right:14px; bottom:14px; z-index:2;
+  background:rgba(29,30,26,.72); color:#fff; border-radius:999px;
+  padding:5px 12px; font-size:.78rem; font-weight:600; letter-spacing:.02em;
+  backdrop-filter:blur(6px);
+}
+
+.gal__strip{display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:2px}
 .gal__t{
-  position:relative; flex:none; width:100%; aspect-ratio:1; padding:0; cursor:pointer;
-  border:1.5px solid var(--line); border-radius:12px; overflow:hidden; background:var(--sand-soft);
+  position:relative; padding:0; cursor:pointer; width:100%; height:104px;
+  border:1.5px solid var(--line); border-radius:11px; overflow:hidden; background:var(--sand-soft);
   transition:border-color .16s, transform .16s;
 }
 .gal__t img{width:100%; height:100%; object-fit:cover}
@@ -194,11 +224,20 @@ p{margin:0}
   position:absolute; inset:0; display:grid; place-items:center;
   background:linear-gradient(rgba(0,0,0,.18), rgba(0,0,0,.34));
 }
-.gal__play svg{width:24px; height:24px; color:#fff; filter:drop-shadow(0 1px 4px rgba(0,0,0,.5))}
+.gal__play svg{width:20px; height:20px; color:#fff; filter:drop-shadow(0 1px 4px rgba(0,0,0,.5))}
+
 @media (max-width:760px){
-  .gal{grid-template-columns:1fr}
-  .gal__strip{flex-direction:row; max-height:none; overflow-x:auto; overflow-y:hidden; padding-bottom:6px}
-  .gal__t{width:74px}
+  .gal{grid-template-columns:1fr; gap:12px}
+  .gal__stage{grid-column:1; grid-row:1}
+  .gal__strip{grid-column:1; grid-row:2}
+  .gal__strip{
+    display:flex; gap:8px; overflow-x:auto; overflow-y:hidden;
+    padding-bottom:8px; scroll-snap-type:x proximity;
+    -webkit-overflow-scrolling:touch;
+  }
+  .gal__t{flex:0 0 68px; width:68px; height:68px; scroll-snap-align:start}
+  .gal__nav{width:36px; height:36px}
+  .gal__nav--prev{left:8px} .gal__nav--next{right:8px}
 }
 
 /* ───────────────────────────────────────────────────────────── steps */
