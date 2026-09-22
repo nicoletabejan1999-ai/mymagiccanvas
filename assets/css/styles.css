@@ -118,7 +118,7 @@ p{margin:0}
 .brand{display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--ink); font-family:var(--f-head); font-size:1.12rem; font-weight:600; letter-spacing:-.02em}
 .brand em{font-style:italic; font-weight:500; color:var(--sage-deep)}
 .brand__mark{width:30px; height:30px; color:#B08C5A; flex:none}
-.nav{display:flex; gap:26px; margin-left:auto}
+.nav{display:flex; gap:22px; margin-left:auto}
 .nav a{color:var(--ink-2); text-decoration:none; font-size:.92rem; font-weight:500; position:relative; padding:4px 0}
 .nav a::after{content:''; position:absolute; left:0; right:100%; bottom:0; height:1.5px; background:var(--sage-deep); transition:right .22s ease}
 .nav a:hover{color:var(--ink)}
