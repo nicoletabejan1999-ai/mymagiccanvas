@@ -63,6 +63,35 @@ they behave like every other variant:
 In `SHOP`, set `email` (used by the contact and quote buttons) and, if you want
 it, `etsyUrl`.
 
+### e. Company details — required before the first payment
+
+`LEGAL` in `config.js` feeds all three legal pages at once, so you fill each
+detail in one place:
+
+```js
+const LEGAL = {
+  companyName:  'Your Company SAS',
+  legalForm:    'SASU',
+  address:      '12 rue Example, 91200 Somewhere',
+  registration: 'SIREN 123 456 789',
+  vat:          'FR12345678901',
+  director:     'Your Name',
+  email:        'hello@…',
+  phone:        '+33 …',
+  host: { name: 'Vercel Inc.', address: '…', url: 'https://vercel.com' },
+  updated: '22 September 2026'
+};
+```
+
+While any required field is blank, all three pages print a red warning at the
+top and mark the gaps in the text. That warning is visible to the public, so
+it is not something to leave for later.
+
+`META.enabled` stays `false` until you actually install a Meta pixel. The
+privacy policy reads differently depending on that flag, so flipping it keeps
+the page honest — and the pixel must only load for visitors who ticked the
+advertising box at checkout.
+
 ### d. Payment method badges
 
 `CHECKOUT.methods` only controls which logos are *shown*. Which methods actually

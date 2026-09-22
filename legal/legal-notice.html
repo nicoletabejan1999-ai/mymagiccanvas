@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Company Details | MyMagiCanvas</title>
+<meta name="description" content="Who runs MyMagiCanvas: registered company name, address, registration and VAT numbers, contact details and hosting provider.">
+<meta name="robots" content="index, follow">
+<link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/styles.css?v=10">
+</head>
+<body class="legal-page">
+
+<header class="hdr">
+  <div class="wrap hdr__in">
+    <a class="brand" href="../index.html">
+      <svg class="brand__mark" viewBox="0 0 32 32" aria-hidden="true">
+        <path d="M16 29V15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        <path d="M16 18c-3.2-1.2-5.4-3-6.2-5.6M16 16.5c3-1.1 5.1-2.8 6-5.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+        <circle cx="10" cy="9" r="3.4" fill="#B3C99C"/>
+        <circle cx="21.6" cy="8" r="4.2" fill="#EDE8D0"/>
+        <circle cx="16" cy="5.6" r="3" fill="#B3C99C" opacity=".75"/>
+      </svg>
+      <span>MyMagi<em>Canvas</em></span>
+    </a>
+    <a class="btn btn--sm btn--ghost hdr__cta" href="../index.html">← Back to the shop</a>
+  </div>
+</header>
+
+<main class="legal">
+  <div class="wrap wrap--narrow">
+
+    <p class="eyebrow">Legal</p>
+    <h1 class="legal__h1">Company details</h1>
+    <p class="legal__meta">Last updated <span data-updated></span></p>
+
+    <div class="legal__warn" id="legalWarn" hidden></div>
+
+    <h2>Who you are buying from</h2>
+    <dl class="legal__dl">
+      <dt>Trading name</dt><dd data-shop="name"></dd>
+      <dt>Registered name</dt><dd data-legal="companyName" data-legal-label="registered company name"></dd>
+      <dt>Legal form</dt><dd data-legal="legalForm" data-legal-label="legal form"></dd>
+      <dt>Registered address</dt><dd data-legal="address" data-legal-label="registered address"></dd>
+      <dt>Registration number</dt><dd data-legal="registration" data-legal-label="registration number"></dd>
+      <dt>VAT number</dt><dd data-legal="vat" data-legal-label="VAT number, if registered"></dd>
+      <dt>Responsible for this site</dt><dd data-legal="director" data-legal-label="person responsible"></dd>
+      <dt>Email</dt><dd><a data-legal-mail href="#"></a></dd>
+      <dt>Telephone</dt><dd data-legal="phone" data-legal-label="telephone, optional"></dd>
+    </dl>
+
+    <h2>Hosting</h2>
+    <p>This site is hosted by <strong data-legal="host.name"></strong>,
+      <span data-legal="host.address" data-legal-label="hosting provider address"></span>
+      (<a data-legal-host-link href="#" target="_blank" rel="noopener noreferrer">vercel.com</a>).
+      The host stores the files that make up this site and keeps short-lived
+      server logs; it does not process your order.</p>
+
+    <h2>Payments</h2>
+    <p>Card payments are taken by Stripe Payments Europe, Ltd. and its group
+      companies. Your card details are entered on a page hosted by Stripe and
+      never reach our own servers. Stripe acts as an independent controller of
+      the payment data it collects, under
+      <a href="https://stripe.com/privacy" target="_blank" rel="noopener noreferrer">its own privacy policy</a>.</p>
+
+    <h2>What we sell</h2>
+    <p>Personalised fingerprint tree canvases, printed to order and posted
+      worldwide. Each canvas carries the names, date and colours chosen by the
+      buyer, so every one is made for a single customer and cannot be resold.</p>
+
+    <h2>Artwork</h2>
+    <p>The tree illustration, the photographs, the wording and the design of
+      this site belong to us. Buying a canvas gives you that canvas — it does
+      not transfer any rights in the artwork. Please do not copy the
+      illustration or the photographs for your own listings.</p>
+
+    <h2>Complaints</h2>
+    <p>Write to <a data-legal-mail href="#"></a> and tell us what went wrong.
+      We answer everything, usually the same day. If we cannot settle it
+      between us, you may take the matter to the consumer dispute body or the
+      competent court in the country where you live.</p>
+
+    <nav class="legal__nav" aria-label="Legal pages">
+      <a href="terms.html">Terms of Sale</a>
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="../index.html">Back to the shop</a>
+    </nav>
+  </div>
+</main>
+
+<footer class="ftr">
+  <div class="wrap ftr__in">
+    <p class="ftr__brand">MyMagi<em>Canvas</em></p>
+    <p class="ftr__sm">© <span data-year></span> <span data-shop="name"></span></p>
+  </div>
+</footer>
+
+<script src="../assets/js/config.js?v=10"></script>
+<script src="../assets/js/legal.js?v=10"></script>
+</body>
+</html>

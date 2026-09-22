@@ -359,6 +359,22 @@
         X.state.lang === l, () => X.set({ lang: l })));
     });
 
+    /* consent — the terms box gates checkout, the advertising box never does */
+    const okTerms = $('#okTerms'), okAds = $('#okAds');
+    okTerms.addEventListener('change', () => {
+      if (okTerms.checked) $('#consentErr').hidden = true;
+      sync(X.state);
+    });
+    okAds.addEventListener('change', () => X.set({ ads: okAds.checked }));
+
+    $('#buyBtn').addEventListener('click', e => {
+      if (okTerms.checked) return;
+      e.preventDefault();
+      $('#consentErr').hidden = false;
+      okTerms.focus();
+      $('.consent').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+
     /* copy */
     $('#btnCopy').addEventListener('click', async e => {
       const b = e.currentTarget, old = b.textContent;
@@ -499,6 +515,10 @@
       btn.removeAttribute('aria-disabled');
       err.hidden = true;
     }
+
+    /* the button stays visibly inert until the terms are accepted */
+    const agreed = $('#okTerms') && $('#okTerms').checked;
+    btn.classList.toggle('is-locked', !agreed);
 
     /* recap */
     $('#recText').textContent = X.recap(s);

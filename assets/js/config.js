@@ -30,6 +30,34 @@ window.MMC = (function () {
     salesCount: '2,600+'
   };
 
+  /* ---------------------------------------------------------------- legal */
+  // Fill EVERY field below before you take a single payment. The three legal
+  // pages print a visible warning while any of them is blank, and Stripe asks
+  // for the same details when it verifies your account.
+  const LEGAL = {
+    companyName:  '',            // ← registered name, exactly as filed
+    legalForm:    '',            // ← e.g. 'SASU', 'micro-entreprise', 'SRL'
+    address:      '',            // ← registered address, on one line
+    registration: '',            // ← SIREN / SIRET / trade register number
+    vat:          '',            // ← intra-community VAT number, or leave blank
+    director:     '',            // ← person legally responsible for the site
+    email:        '',            // ← falls back to SHOP.email when blank
+    phone:        '',            // ← optional
+    host: {
+      name:    'Vercel Inc.',    // where this site is hosted
+      address: '',               // ← copy it from vercel.com/legal
+      url:     'https://vercel.com'
+    },
+    updated: '22 September 2026' // ← bump whenever you edit the legal pages
+  };
+
+  /* --------------------------------------------------------------- meta */
+  // No Meta pixel is installed yet. When you start running ads, set the id
+  // and flip `enabled` — and load it only for visitors who ticked the
+  // advertising box at checkout. See the privacy policy, which changes
+  // wording to match this flag.
+  const META = { enabled: false, pixelId: '' };
+
   /* ------------------------------------------------------------ checkout */
   const CHECKOUT = {
     currency: 'EUR',
@@ -226,6 +254,6 @@ window.MMC = (function () {
       a: 'Send us a photo the day it lands and we will put it right — a damaged, misprinted or wrong canvas gets replaced at our cost. That is your legal right and we would rather reprint one than argue about it. Check the names and the date on your order confirmation while there is still time to change them, because once it is printed it cannot be unprinted.' }
   ];
 
-  return { SHOP, CHECKOUT, SIZES, VARIANTS, INKS, MAX_INKS, PALETTES, FONTS,
+  return { SHOP, LEGAL, META, CHECKOUT, SIZES, VARIANTS, INKS, MAX_INKS, PALETTES, FONTS,
            CARD_LANGUAGES, GALLERY, PRODUCTION_FILM, DELIVERY, REVIEWS, FAQ };
 })();

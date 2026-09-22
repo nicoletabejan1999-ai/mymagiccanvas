@@ -240,8 +240,28 @@
             <p class="buy__price" id="buyPrice"></p>
           </div>
 
+          <div class="consent">
+            <label class="consent__row">
+              <input type="checkbox" id="okTerms">
+              <span>I have read and accept the
+                <a href="legal/terms.html" target="_blank" rel="noopener">Terms of Sale</a> and the
+                <a href="legal/privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.
+                My details are used to make and deliver this order. I understand the canvas is
+                made to my specification, so the fourteen-day right of withdrawal does not apply
+                once production starts.</span>
+            </label>
+            <label class="consent__row">
+              <input type="checkbox" id="okAds">
+              <span>You may also use my details to improve our advertising on Meta
+                platforms — Facebook and Instagram.
+                <b class="consent__opt">Optional. Your order goes through either way, and you can
+                change your mind by sending one email.</b></span>
+            </label>
+          </div>
+
           <a class="btn btn--dark btn--lg btn--block" id="buyBtn" href="#">Continue to secure checkout</a>
           <p class="buy__err" id="buyErr" hidden></p>
+          <p class="buy__err buy__err--soft" id="consentErr" hidden>Please accept the terms above to continue.</p>
 
           <div class="pay pay--sm" data-pay-badges data-pay-label="Pay with"></div>
 
@@ -427,6 +447,9 @@
       <a href="#sizes">Sizes</a>
       <a href="#delivery">Delivery</a>
       <a href="#faq">FAQ</a>
+      <a href="legal/terms.html">Terms</a>
+      <a href="legal/privacy.html">Privacy</a>
+      <a href="legal/legal-notice.html">Company details</a>
       <a id="ftrMail" href="#">Contact</a>
     </nav>
     <p class="ftr__sm" id="ftrYear"></p>
