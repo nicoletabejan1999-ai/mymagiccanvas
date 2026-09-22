@@ -186,8 +186,7 @@ window.MMC = (function () {
     express: '1–3 business days',
     from: 'Europe',
     scope: 'Worldwide',      // where we post to
-    dispatch: '2 days',       // shown as a badge under the headline
-    returns: '14 days'        // stated in the delivery section and the FAQ
+    dispatch: '2 days'        // shown as a badge under the headline
   };
 
   /* ------------------------------------------------------------- reviews */
@@ -219,10 +218,12 @@ window.MMC = (function () {
       a: 'Only if you want the canvas standing at the entrance of your venue rather than lying on a table. The tall wooden easel fits all three canvas sizes. A small easel for the instruction card is always included.' },
     { q: 'How long does it take to arrive?',
       a: 'Two business days of production, then 3–7 business days with standard delivery or 1–3 with express, wherever in the world you are. Order with some margin before the date if you can.' },
+    { q: 'Can I return it if I change my mind?',
+      a: 'No, and we would rather say so plainly before you order. Every canvas is printed to order with your own names and date on it, so it cannot go back on a shelf or to anybody else. Under EU consumer law a made-to-order item is outside the usual fourteen-day right of withdrawal, and that is the rule we follow. What does not change: if the canvas arrives damaged, misprinted or not what you ordered, it is ours to put right.' },
     { q: 'Do you ship to my country?',
       a: 'Almost certainly — we post worldwide from within Europe. Customs and import charges, where a country applies them, are the buyer\u2019s to settle. If checkout will not take your address, write to us and we will sort it out by hand.' },
     { q: 'What if something is wrong when it arrives?',
-      a: 'Write to us. Returns and exchanges are accepted within 14 days, and in practice we would rather reprint a canvas than leave you with one you do not love.' }
+      a: 'Send us a photo the day it lands and we will put it right — a damaged, misprinted or wrong canvas gets replaced at our cost. That is your legal right and we would rather reprint one than argue about it. Check the names and the date on your order confirmation while there is still time to change them, because once it is printed it cannot be unprinted.' }
   ];
 
   return { SHOP, CHECKOUT, SIZES, VARIANTS, INKS, MAX_INKS, PALETTES, FONTS,
