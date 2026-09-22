@@ -220,7 +220,7 @@ window.MMC = (function () {
     { q: 'Do I need the easel?',
       a: 'Only if you want the canvas standing at the entrance of your venue rather than lying on a table. The tall wooden easel fits all three canvas sizes. A small easel for the instruction card is always included.' },
     { q: 'How long does it take to arrive?',
-      a: 'Two business days of production, then 3–7 business days with standard delivery or 1–3 with express. We post worldwide from within Europe, so allow a little longer for destinations further afield. Order with some margin before the date if you can.' },
+      a: 'Two business days of production, then 3–7 business days with standard delivery or 1–3 with express, wherever in the world you are. Order with some margin before the date if you can.' },
     { q: 'Do you ship to my country?',
       a: 'Almost certainly — we post worldwide from within Europe. Customs and import charges, where a country applies them, are the buyer\u2019s to settle. If checkout will not take your address, write to us and we will sort it out by hand.' },
     { q: 'What if something is wrong when it arrives?',
