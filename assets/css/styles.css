@@ -517,6 +517,7 @@ p{margin:0}
 .two__art{margin:0}
 .two__art img{border-radius:var(--r-lg); box-shadow:var(--sh-1)}
 .two__copy h2{margin-bottom:20px}
+.lede--tight{margin-bottom:24px; font-size:1rem}
 @media (max-width:880px){ .two{grid-template-columns:1fr} .two--rev .two__art{order:0} }
 
 .ticks{list-style:none; margin:0 0 28px; padding:0; display:grid; gap:14px}

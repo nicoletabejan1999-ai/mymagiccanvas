@@ -34,7 +34,7 @@
     [
       [ICON.star, '<b>' + C.SHOP.rating + '</b> from ' + C.SHOP.reviewCount + ' reviews'],
       [ICON.box,  '<b>' + C.SHOP.salesCount + '</b> canvases sent'],
-      [ICON.pin,  'Ships from <b>' + C.DELIVERY.from + '</b>'],
+      [ICON.pin,  '<b>' + C.DELIVERY.scope + '</b> shipping, from ' + C.DELIVERY.from],
       [ICON.clock,'Made &amp; shipped in <b>' + C.DELIVERY.dispatch + '</b>']
     ].forEach(([svg, txt]) => row.appendChild(el('li', '', svg + '<span>' + txt + '</span>')));
   }
@@ -230,7 +230,7 @@
     ld.textContent = JSON.stringify({
       '@context': 'https://schema.org', '@type': 'Product',
       name: 'Fingerprint Tree Guest Book Canvas',
-      description: 'Personalised fingerprint tree canvas used as a wedding guest book. Printed and stretched in Europe, supplied with four water-washable ink pads and an instruction card.',
+      description: 'Personalised fingerprint tree canvas used as a wedding guest book. Printed and stretched in Europe and shipped worldwide, supplied with four water-washable ink pads and an instruction card.',
       brand: { '@type': 'Brand', name: C.SHOP.name },
       image: ['assets/media/01-olive-tree-wedding-easel.jpg', 'assets/media/10-premium-wooden-framing.jpg'],
       aggregateRating: {
@@ -240,7 +240,8 @@
       offers: {
         '@type': 'AggregateOffer', priceCurrency: C.CHECKOUT.currency,
         lowPrice: Math.min.apply(null, prices), highPrice: Math.max.apply(null, prices),
-        offerCount: prices.length, availability: 'https://schema.org/InStock'
+        offerCount: prices.length, availability: 'https://schema.org/InStock',
+        areaServed: 'Worldwide'
       }
     });
     document.head.appendChild(ld);
@@ -449,6 +450,7 @@
       (s.easel ? ' · with easel' : '');
     $('#buyWhat').textContent = what;
     $('#buyShip').textContent = X.money(C.CHECKOUT.shipping);
+    $('#buyScope').textContent = C.DELIVERY.scope.toLowerCase();
 
     const pEl = $('#buyPrice'), btn = $('#buyBtn'), err = $('#buyErr');
     const url = X.checkoutUrl(s);
