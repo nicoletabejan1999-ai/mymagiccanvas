@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=Allura&family=Dancing+Script:wght@500&family=Great+Vibes&family=Italianno&family=Marck+Script&family=Mrs+Saint+Delafield&family=Parisienne&family=Pinyon+Script&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/styles.css?v=4">
+<link rel="stylesheet" href="assets/css/styles.css?v=5">
 </head>
 <body>
 
@@ -122,24 +122,34 @@
         <div class="cfg__stick">
           <div class="stage" id="stage">
             <div class="stage__scene" id="scene">
-              <div class="rig">
               <div class="easel" id="easel" hidden aria-hidden="true">
-                <svg viewBox="0 0 400 600" preserveAspectRatio="none" aria-hidden="true">
-                  <!-- back leg -->
-                  <path d="M202 14 L268 588" stroke="#C4A271" stroke-width="7" stroke-linecap="round"/>
-                  <!-- front legs -->
-                  <path d="M200 12 L36 592" stroke="#DCBC8C" stroke-width="8" stroke-linecap="round"/>
-                  <path d="M200 12 L364 592" stroke="#DCBC8C" stroke-width="8" stroke-linecap="round"/>
-                  <!-- mast -->
-                  <path d="M200 20 L200 470" stroke="#D3B183" stroke-width="7" stroke-linecap="round"/>
-                  <!-- tension wire -->
-                  <path d="M104 330 Q200 356 296 330" stroke="#CBB89A" stroke-width="2.5" fill="none"/>
-                  <!-- ledge -->
-                  <rect x="46" y="466" width="308" height="15" rx="7" fill="#E3C79B"/>
-                  <rect x="46" y="476" width="308" height="6" rx="3" fill="#BE9A66" opacity=".6"/>
+                <svg viewBox="0 0 540 880" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="beech" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0"   stop-color="#C9A275"/>
+                      <stop offset=".35" stop-color="#E4C79C"/>
+                      <stop offset=".72" stop-color="#D4B287"/>
+                      <stop offset="1"   stop-color="#BE9668"/>
+                    </linearGradient>
+                  </defs>
+                  <path d="M272 30 L366 846" stroke="#C09A6C" stroke-width="9" stroke-linecap="round"/>
+                  <path d="M268 24 L86 852"  stroke="url(#beech)" stroke-width="11" stroke-linecap="round"/>
+                  <path d="M274 24 L452 852" stroke="url(#beech)" stroke-width="11" stroke-linecap="round"/>
+                  <path d="M270 34 L270 626" stroke="url(#beech)" stroke-width="10" stroke-linecap="round"/>
+                  <path d="M168 430 Q270 468 372 430" stroke="#CFC0A6" stroke-width="3" fill="none"/>
+                  <rect x="158" y="416" width="16" height="30" rx="4" fill="#C9A87E"/>
+                  <rect x="366" y="416" width="16" height="30" rx="4" fill="#C9A87E"/>
+                  <rect x="246" y="548" width="48" height="88" rx="6" fill="#D2AF83"/>
+                  <rect x="120" y="556" width="300" height="15" rx="7" fill="url(#beech)"/>
+                  <rect x="120" y="567" width="300" height="7"  rx="3" fill="#A9804F" opacity=".45"/>
+                  <circle cx="271" cy="27"  r="5" fill="#9A9A96"/>
+                  <circle cx="270" cy="600" r="5" fill="#9A9A96"/>
+                  <circle cx="166" cy="431" r="4" fill="#9A9A96"/>
+                  <circle cx="374" cy="431" r="4" fill="#9A9A96"/>
                 </svg>
               </div>
 
+              <div class="rig">
               <div class="frame" id="frame">
                 <div class="sheet" id="sheet">
                   <canvas class="sheet__prints" id="prints"></canvas>
@@ -152,7 +162,6 @@
                 </div>
               </div>
               </div>
-              <div class="easel-space" id="easelSpace" hidden aria-hidden="true"></div>
             </div>
 
             <p class="stage__scale" id="stageScale"></p>
@@ -160,10 +169,6 @@
 
           <div class="stage__bar">
             <p class="stage__note" id="fillNote"></p>
-            <button class="lnk" type="button" id="btnShuffle" title="Scatter the fingerprints again">
-              <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 4h3.2l2 3M14 4h-3.2L6 12H2M14 12h-3.2l-1.3-2" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/><path d="M12.2 2.2 14.4 4l-2.2 1.8M12.2 10.2 14.4 12l-2.2 1.8" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              Re-scatter
-            </button>
           </div>
         </div>
       </div>
@@ -211,12 +216,13 @@
         </fieldset>
 
         <fieldset class="fld">
-          <legend>5 · The canopy</legend>
-          <div class="opts opts--2" id="optCrown"></div>
+          <legend>5 · Your guest list</legend>
+          <p class="fld__lbl">Tell us roughly how many people will sign and we will point you at the size that fits.</p>
           <label class="rng">
-            <span class="rng__top">How many guests? <output id="guestOut">150</output></span>
-            <input type="range" id="inGuests" min="20" max="320" step="5" value="150">
+            <span class="rng__top">How many guests? <output id="guestOut">80</output></span>
+            <input type="range" id="inGuests" min="10" max="200" step="5" value="80">
           </label>
+          <p class="reco" id="reco"></p>
         </fieldset>
 
         <fieldset class="fld">
@@ -244,7 +250,6 @@
             <pre id="recText"></pre>
             <div class="rec__btns">
               <button class="btn btn--ghost btn--sm" type="button" id="btnCopy">Copy</button>
-              <button class="btn btn--ghost btn--sm" type="button" id="btnPng">Download preview</button>
             </div>
           </details>
         </div>
@@ -302,29 +307,6 @@
         <img src="assets/media/06-size-guide.jpg" width="1400" height="1400" loading="lazy"
              alt="Size guide showing S 30×40 cm, M 40×50 cm and L 50×60 cm hung on a wall next to a person"></picture>
     </figure>
-  </div>
-</section>
-
-<!-- ─────────────────────────────────────────────────────── inspiration -->
-<section class="sec sec--cream" id="colours">
-  <div class="wrap">
-    <header class="sh sh--center">
-      <p class="eyebrow">Colour</p>
-      <h2>Fifteen inks, four at a time</h2>
-      <p class="sh__sub">One colour reads calm and graphic. Three or four give you the layered, sunlit canopy in these photos.</p>
-    </header>
-    <div class="two two--gap">
-      <figure class="two__art">
-        <picture><source srcset="assets/media/08-color-inspiration.webp" type="image/webp">
-          <img src="assets/media/08-color-inspiration.jpg" width="1400" height="1400" loading="lazy"
-               alt="Three finished trees showing different colour combinations, each labelled with its ink numbers"></picture>
-      </figure>
-      <figure class="two__art">
-        <picture><source srcset="assets/media/07-how-to-order.webp" type="image/webp">
-          <img src="assets/media/07-how-to-order.jpg" width="1400" height="1400" loading="lazy"
-               alt="The ordering chart: fifteen numbered ink colours and eight numbered lettering fonts"></picture>
-      </figure>
-    </div>
   </div>
 </section>
 
@@ -454,8 +436,9 @@
   </div>
 </div>
 
-<script src="assets/js/config.js?v=4"></script>
-<script src="assets/js/configurator.js?v=4"></script>
-<script src="assets/js/main.js?v=4"></script>
+<script src="assets/js/canopy-mask.js?v=5"></script>
+<script src="assets/js/config.js?v=5"></script>
+<script src="assets/js/configurator.js?v=5"></script>
+<script src="assets/js/main.js?v=5"></script>
 </body>
 </html>

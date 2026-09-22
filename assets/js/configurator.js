@@ -23,8 +23,7 @@ window.MMCConfigurator = (function () {
     date: '25.06.2025',
     font: 5,
     inks: [3, 4, 6],
-    crown: 'round',
-    guests: 150,
+    guests: 80,
     lang: 'English',
     seed: 20250625
   };
@@ -34,11 +33,47 @@ window.MMCConfigurator = (function () {
   const emit = () => listeners.forEach(fn => fn(state));
 
   /* ------------------------------------------------------------ geometry */
-  // Normalised to the sheet. Derived by measuring the real artwork.
-  const CROWN = {
-    round: { cx: 0.520, cy: 0.325, rx: 0.400, ry: 0.235 },
-    heart: { cx: 0.520, cy: 0.300, rx: 0.360, ry: 0.245 }
-  };
+  // The tree artwork sits inside the sheet at this offset (see styles.css).
+  const TREE_TOP = 0.074, TREE_H = 0.769;
+  const PRINT_CM = 1.6;   // how wide a thumbprint lands, in centimetres
+  const SPACING  = 0.62;  // centres stay this many radii apart, so prints
+                          // crowd together without stacking into mud
+
+  // Where a fingerprint may land, unpacked from the generated bitmap.
+  const MASK = (function () {
+    const src = window.MMC_CANOPY;
+    if (!src) return null;
+    const bin = atob(src.bits);
+    const on = new Uint8Array(src.w * src.h);
+    for (let i = 0; i < on.length; i++) {
+      on[i] = (bin.charCodeAt(i >> 3) >> (7 - (i & 7))) & 1;
+    }
+    let count = 0, x0 = src.w, x1 = 0, y0 = src.h, y1 = 0;
+    for (let y = 0; y < src.h; y++) {
+      for (let x = 0; x < src.w; x++) {
+        if (!on[y * src.w + x]) continue;
+        count++;
+        if (x < x0) x0 = x; if (x > x1) x1 = x;
+        if (y < y0) y0 = y; if (y > y1) y1 = y;
+      }
+    }
+    return {
+      w: src.w, h: src.h, on: on,
+      coverage: count / (src.w * src.h),
+      // bounding box in sheet coordinates, so sampling does not waste tries
+      bx: x0 / src.w, bw: (x1 - x0 + 1) / src.w,
+      by: TREE_TOP + (y0 / src.h) * TREE_H, bh: ((y1 - y0 + 1) / src.h) * TREE_H
+    };
+  })();
+
+  // Is this point (in sheet coordinates) inside the canopy?
+  function inCanopy(sx, sy) {
+    if (!MASK) return false;
+    const tv = (sy - TREE_TOP) / TREE_H;
+    if (tv < 0 || tv >= 1 || sx < 0 || sx >= 1) return false;
+    const gx = (sx * MASK.w) | 0, gy = (tv * MASK.h) | 0;
+    return MASK.on[gy * MASK.w + gx] === 1;
+  }
 
   /* ------------------------------------------------------------- helpers */
   function mulberry32(a) {
@@ -54,6 +89,11 @@ window.MMCConfigurator = (function () {
   const fontOf = n => C.FONTS.find(f => f.n === n) || C.FONTS[0];
   const inkOf  = n => C.INKS.find(i => i.n === n) || C.INKS[0];
 
+  // Smallest canvas whose capacity covers the guest list.
+  function recommendedSize(guests) {
+    return (C.SIZES.find(s => guests <= s.capacity) || C.SIZES[C.SIZES.length - 1]).id;
+  }
+
   function variantKey(s = state) {
     return (s.framed ? 'FRAMED-' : '') + s.size + (s.easel ? '-EASEL' : '');
   }
@@ -65,30 +105,6 @@ window.MMCConfigurator = (function () {
 
   function money(n) {
     return C.CHECKOUT.currencySymbol + n.toFixed(2).replace('.', ',');
-  }
-
-  /* ------------------------------------ is a point inside the crown shape */
-  function inHeart(u, v) {
-    // u,v in [-1,1]; classic implicit heart, v flipped so the lobes sit up top
-    const x = u * 1.18, y = -v * 1.10 + 0.32;
-    const a = x * x + y * y - 1;
-    return a * a * a - x * x * y * y * y <= 0;
-  }
-
-  function crownSampler(style) {
-    const g = CROWN[style] || CROWN.round;
-    return function (rnd) {
-      for (let i = 0; i < 60; i++) {
-        const u = rnd() * 2 - 1, v = rnd() * 2 - 1;
-        const inside = style === 'heart' ? inHeart(u, v) : (u * u + v * v <= 1);
-        if (!inside) continue;
-        // thin the very edge so the canopy fades out like the real thing
-        const d = Math.sqrt(u * u + v * v);
-        if (d > 0.72 && rnd() > 1 - (1 - d) / 0.55) continue;
-        return { x: g.cx + u * g.rx, y: g.cy + v * g.ry };
-      }
-      return { x: g.cx, y: g.cy };
-    };
   }
 
   /* ------------------------------------------------ draw one fingerprint */
@@ -142,24 +158,50 @@ window.MMCConfigurator = (function () {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, w, h);
 
-    const inks = state.inks.length ? state.inks : [4];
-    const colours = inks.map(n => inkOf(n).hex);
-    const n = Math.max(6, Math.round(state.guests));
-    const sample = crownSampler(state.crown);
+    const colours = (state.inks.length ? state.inks : [4]).map(n => inkOf(n).hex);
     const rnd = mulberry32(state.seed);
 
-    // print size scales with the canvas so a crowded L still reads as busy
-    const g = CROWN[state.crown] || CROWN.round;
-    const area = Math.PI * (g.rx * w) * (g.ry * h);
-    const base = Math.sqrt(area / n) * 0.56;
-    const r0 = Math.max(2.0, Math.min(base, w * 0.032));
+    // A thumb leaves a mark about the same size whatever the canvas, so on a
+    // wider canvas the prints look smaller and more of them fit — which is
+    // the whole point of choosing a size.
+    const cm = parseFloat(sizeOf(state.size).cm);
+    const r0 = Math.max(2.2, (PRINT_CM / cm / 1.4) * w);
+
+    // Guests press side by side, not on top of each other. Keeping centres a
+    // minimum distance apart fills the canopy while every print stays its
+    // own leaf — a plain random scatter turns into mud where marks pile up.
+    const minD = r0 * 2 * SPACING;
+    const cell = minD;
+    const cols = Math.ceil(w / cell) + 1, rows = Math.ceil(h / cell) + 1;
+    const grid = new Array(cols * rows);
+
+    function fits(px, py) {
+      const cxi = (px / cell) | 0, cyi = (py / cell) | 0;
+      for (let gy = Math.max(0, cyi - 1); gy <= Math.min(rows - 1, cyi + 1); gy++) {
+        for (let gx = Math.max(0, cxi - 1); gx <= Math.min(cols - 1, cxi + 1); gx++) {
+          const bucket = grid[gy * cols + gx];
+          if (!bucket) continue;
+          for (let k = 0; k < bucket.length; k += 2) {
+            const dx = bucket[k] - px, dy = bucket[k + 1] - py;
+            if (dx * dx + dy * dy < minD * minD) return false;
+          }
+        }
+      }
+      const idx = cyi * cols + cxi;
+      (grid[idx] || (grid[idx] = [])).push(px, py);
+      return true;
+    }
 
     ctx.globalCompositeOperation = 'multiply';
-    for (let i = 0; i < n; i++) {
-      const p = sample(rnd);
-      const hex = colours[Math.floor(rnd() * colours.length)];
-      const r = r0 * (0.78 + rnd() * 0.46);
-      drawPrint(ctx, p.x * w, p.y * h, r, (rnd() - 0.5) * 0.95, hex, 0.40 + rnd() * 0.28);
+    const budget = 14000;
+    for (let tries = 0; tries < budget; tries++) {
+      const x = (MASK.bx + rnd() * MASK.bw) * w;
+      const y = (MASK.by + rnd() * MASK.bh) * h;
+      if (!inCanopy(x / w, y / h) || !fits(x, y)) continue;
+      drawPrint(ctx, x, y, r0 * (0.84 + rnd() * 0.30),
+                (rnd() - 0.5) * 1.0,
+                colours[Math.floor(rnd() * colours.length)],
+                0.56 + rnd() * 0.26);
     }
     ctx.globalCompositeOperation = 'source-over';
   }
@@ -177,7 +219,6 @@ window.MMCConfigurator = (function () {
       'Font: ' + s.font + ' (' + fontOf(s.font).name + ')',
       'Names / text: ' + (s.names.trim() || '—'),
       'Date: ' + (s.date.trim() || '—'),
-      'Canopy: ' + (s.crown === 'heart' ? 'Heart' : 'Full crown'),
       'Instruction card language: ' + s.lang
     ];
     return lines.join('\n');
@@ -191,7 +232,6 @@ window.MMCConfigurator = (function () {
       s.easel ? 'E1' : 'E0',
       'C' + (s.inks.slice().sort((a, b) => a - b).join('-') || '0'),
       'T' + s.font,
-      s.crown === 'heart' ? 'H' : 'R',
       'L' + s.lang.slice(0, 2).toUpperCase()
     ].join('_');
   }
@@ -221,57 +261,6 @@ window.MMCConfigurator = (function () {
     return true;
   }
 
-  /* ------------------------------------------------------ export as PNG */
-  function toPNG() {
-    const W = 900;
-    const sz = sizeOf(state.size);
-    const H = Math.round(W / sz.ratio);
-    const out = document.createElement('canvas');
-    out.width = W; out.height = H;
-    const o = out.getContext('2d');
-
-    o.fillStyle = '#FCFCFA';
-    o.fillRect(0, 0, W, H);
-
-    // fingerprints, same recipe as the live preview
-    const inks = (state.inks.length ? state.inks : [4]).map(n => inkOf(n).hex);
-    const n = Math.max(6, Math.round(state.guests));
-    const sample = crownSampler(state.crown);
-    const rnd = mulberry32(state.seed);
-    const g = CROWN[state.crown] || CROWN.round;
-    const base = Math.sqrt((Math.PI * (g.rx * W) * (g.ry * H)) / n) * 0.56;
-    const r0 = Math.max(2.0, Math.min(base, W * 0.032));
-
-    o.globalCompositeOperation = 'multiply';
-    for (let i = 0; i < n; i++) {
-      const p = sample(rnd);
-      const r = r0 * (0.78 + rnd() * 0.46);
-      drawPrint(o, p.x * W, p.y * H, r, (rnd() - 0.5) * 0.95,
-                inks[Math.floor(rnd() * inks.length)], 0.40 + rnd() * 0.28);
-    }
-
-    // branches on top, multiplied
-    const tree = document.getElementById('treeImg');
-    if (tree && tree.complete && tree.naturalWidth) {
-      const th = H * 0.769, tw = th * (tree.naturalWidth / tree.naturalHeight);
-      o.drawImage(tree, (W - Math.min(tw, W)) / 2, H * 0.074, Math.min(tw, W), th);
-    }
-    o.globalCompositeOperation = 'source-over';
-
-    // lettering
-    const f = fontOf(state.font);
-    o.fillStyle = '#141414';
-    o.textAlign = 'center';
-    o.textBaseline = 'alphabetic';
-    o.font = '400 ' + Math.round(W * 0.072 * f.scale) + "px " + f.css.replace(/'/g, '"');
-    o.fillText(state.names || '', W / 2, H * 0.905);
-    o.fillStyle = '#2A2A2A';
-    o.font = '400 ' + Math.round(W * 0.026) + 'px Inter, sans-serif';
-    o.fillText(state.date || '', W / 2, H * 0.955);
-
-    return out.toDataURL('image/png');
-  }
-
   /* ---------------------------------------------------------------- init */
   function mount(canvasEl) {
     cv = canvasEl;
@@ -282,7 +271,7 @@ window.MMCConfigurator = (function () {
   }
 
   return {
-    state, set, toggleInk, onChange, mount, render, toPNG,
+    state, set, toggleInk, onChange, mount, render, recommendedSize,
     recap, reference, checkoutUrl, variantKey, priceOf, money,
     sizeOf, fontOf, inkOf
   };

@@ -326,14 +326,6 @@
         false, () => X.set({ inks: p.inks.slice() })));
     });
 
-    /* crown */
-    const hCrown = $('#optCrown');
-    C.CROWNS.forEach(c => {
-      hCrown.appendChild(optBtn('opt',
-        '<span class="opt__t">' + c.name + '</span><span class="opt__s">' + c.hint + '</span>',
-        X.state.crown === c.id, () => X.set({ crown: c.id })));
-    });
-
     const guests = $('#inGuests');
     guests.value = X.state.guests;
     guests.addEventListener('input', () => X.set({ guests: +guests.value }));
@@ -346,10 +338,7 @@
         X.state.lang === l, () => X.set({ lang: l })));
     });
 
-    /* re-scatter */
-    $('#btnShuffle').addEventListener('click', () => X.set({}, true));
-
-    /* copy + download */
+    /* copy */
     $('#btnCopy').addEventListener('click', async e => {
       const b = e.currentTarget, old = b.textContent;
       try {
@@ -365,12 +354,6 @@
       setTimeout(() => { b.textContent = old; }, 1800);
     });
 
-    $('#btnPng').addEventListener('click', () => {
-      const a = el('a');
-      a.href = X.toPNG();
-      a.download = 'mymagicanvas-preview.png';
-      a.click();
-    });
   }
 
   let inkFlash;
@@ -404,11 +387,12 @@
     $('#frame').classList.toggle('is-framed', s.framed);
     $('#easel').hidden = !s.easel;
 
-    /* the stage shows the real relative size of S / M / L */
+    /* the stage shows the real relative size of S / M / L. On the easel the
+       stand sets the scale instead, so the scene grows to hold it. */
     const scene = $('#scene');
-    $('#easelSpace').hidden = !s.easel;
+    scene.classList.toggle('is-easel', s.easel);
     const grow = { S: 0.86, M: 0.94, L: 1 }[s.size] || 1;
-    scene.style.maxWidth = Math.round(430 * grow) + 'px';
+    scene.style.maxWidth = Math.round((s.easel ? 330 : 430) * grow) + 'px';
     $('#stageScale').textContent = size.cm + '  ·  ' + size.inch +
       (s.framed ? '  ·  plus the frame' : '');
 
@@ -418,7 +402,6 @@
     press('#optSize',  i => C.SIZES[i].id === s.size);
     press('#optFrame', i => (i === 1) === s.framed);
     press('#optFont',  i => C.FONTS[i].n === s.font);
-    press('#optCrown', i => C.CROWNS[i].id === s.crown);
     press('#optLang',  i => C.CARD_LANGUAGES[i] === s.lang);
     press('#optPalettes', i => {
       const a = C.PALETTES[i].inks.slice().sort().join();
@@ -433,23 +416,32 @@
     $('#optEasel').checked = s.easel;
     syncInkCount();
 
-    /* guest count + fill note */
+    /* what this size holds, right under the canvas */
+    $('#fillNote').innerHTML = 'Room for <b>' + size.capacityLabel + '</b>';
+
+    /* guest count drives the size recommendation */
     $('#guestOut').textContent = s.guests;
     const g = $('#inGuests');
     g.style.setProperty('--pct', ((s.guests - g.min) / (g.max - g.min) * 100) + '%');
 
-    const note = $('#fillNote');
-    const cap = size.capacity;
-    if (s.guests > cap * 1.15) {
-      const better = C.SIZES.find(z => z.capacity >= s.guests);
-      note.classList.add('is-over');
-      note.innerHTML = '<b>Tight fit</b> — ' + s.guests + ' prints on an ' + size.label +
-        (better ? '. Size ' + better.label + ' gives them room.' : '. Consider fewer prints per guest.');
+    const want = X.recommendedSize(s.guests);
+    const wantSize = X.sizeOf(want);
+    const reco = $('#reco');
+    const many = s.guests > C.SIZES[C.SIZES.length - 1].capacity;
+    if (want === s.size) {
+      reco.className = 'reco is-ok';
+      reco.innerHTML = '<b>Size ' + wantSize.label + '</b> is the right fit for ' + s.guests +
+        ' guests' + (many ? ' — the largest we make, and the one to pick past 120.' : '.');
     } else {
-      note.classList.remove('is-over');
-      note.innerHTML = '<b>' + s.guests + ' fingerprints</b> on an ' + size.label +
-        ' — room for about ' + cap + '.';
+      reco.className = 'reco';
+      reco.innerHTML = 'For ' + s.guests + ' guests we would go with <b>size ' +
+        wantSize.label + '</b> — ' + wantSize.cm + '. ' +
+        '<button type="button" class="reco__go" data-size="' + want + '">Use size ' +
+        wantSize.label + '</button>';
+      $('.reco__go', reco).addEventListener('click', e => X.set({ size: e.currentTarget.dataset.size }));
     }
+    $$('#optSize > button').forEach((b2, i) =>
+      b2.classList.toggle('is-reco', C.SIZES[i].id === want));
 
     /* price + checkout */
     const price = X.priceOf(s);

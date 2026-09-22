@@ -70,12 +70,16 @@ window.MMC = (function () {
   };
 
   /* --------------------------------------------------------------- sizes */
-  // `capacity` is the indicative number of guest fingerprints that sit
-  // comfortably in the crown — used for the "recommended size" hint.
+  // `capacity` is how many fingerprints the crown holds comfortably. It
+  // drives both the note under the preview and the size we recommend for a
+  // given guest list, so these two always agree.
   const SIZES = [
-    { id: 'S', label: 'S', cm: '30 × 40 cm', inch: '11.6 × 15.7 in', ratio: 30 / 40, capacity: 90 },
-    { id: 'M', label: 'M', cm: '40 × 50 cm', inch: '15.7 × 19.7 in', ratio: 40 / 50, capacity: 160 },
-    { id: 'L', label: 'L', cm: '50 × 60 cm', inch: '19.7 × 23.6 in', ratio: 50 / 60, capacity: 260 }
+    { id: 'S', label: 'S', cm: '30 × 40 cm', inch: '11.6 × 15.7 in', ratio: 30 / 40,
+      capacity: 40,  capacityLabel: 'about 40 fingerprints' },
+    { id: 'M', label: 'M', cm: '40 × 50 cm', inch: '15.7 × 19.7 in', ratio: 40 / 50,
+      capacity: 80,  capacityLabel: 'about 80 fingerprints' },
+    { id: 'L', label: 'L', cm: '50 × 60 cm', inch: '19.7 × 23.6 in', ratio: 50 / 60,
+      capacity: 120, capacityLabel: 'about 120+ fingerprints' }
   ];
 
   /* ------------------------------------------------------------ variants */
@@ -142,12 +146,6 @@ window.MMC = (function () {
     { n: 8, name: 'Allura',              css: "'Allura', cursive",              scale: 1.10 }
   ];
 
-  /* --------------------------------------------------------- crown shape */
-  const CROWNS = [
-    { id: 'round', name: 'Full crown', hint: 'The classic — a wide, generous canopy.' },
-    { id: 'heart', name: 'Heart',      hint: 'Guests fill a heart above the trunk.' }
-  ];
-
   /* ------------------------------------------------ instruction language */
   const CARD_LANGUAGES = ['English', 'French', 'German', 'Italian', 'Spanish'];
 
@@ -202,7 +200,7 @@ window.MMC = (function () {
   /* ----------------------------------------------------------------- faq */
   const FAQ = [
     { q: 'How many guests fit on one tree?',
-      a: 'As a guide, the S canvas holds around 90 fingerprints, M around 160 and L around 260. The configurator shows you the density live, so slide the guest count up and down until the canopy looks the way you want it.' },
+      a: 'As a guide, the S canvas holds about 40 fingerprints, M about 80 and L about 120 or more. Set your guest count in the configurator and it will point you at the size that fits.' },
     { q: 'What exactly arrives in the box?',
       a: 'The printed canvas on its wooden stretcher, four water-washable ink pads in the colours you chose, an instruction card for your guests in the language you pick, and a small easel to stand that card on. Hanging hardware is already fitted on the back.' },
     { q: 'Is the ink safe and does it wash off hands?',
@@ -222,5 +220,5 @@ window.MMC = (function () {
   ];
 
   return { SHOP, CHECKOUT, SIZES, VARIANTS, INKS, MAX_INKS, PALETTES, FONTS,
-           CROWNS, CARD_LANGUAGES, GALLERY, PRODUCTION_FILM, DELIVERY, REVIEWS, FAQ };
+           CARD_LANGUAGES, GALLERY, PRODUCTION_FILM, DELIVERY, REVIEWS, FAQ };
 })();
