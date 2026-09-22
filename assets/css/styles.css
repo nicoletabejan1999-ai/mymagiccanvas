@@ -576,6 +576,27 @@ p{margin:0}
 }
 
 /* ───────────────────────────────────────────────────────────── reviews */
+.rev__src{
+  display:flex; flex-wrap:wrap; align-items:center; justify-content:center;
+  gap:10px 14px; margin:22px auto 0;
+  padding:11px 20px; width:max-content; max-width:100%;
+  background:#fff; border:1px solid var(--line); border-radius:999px;
+  box-shadow:var(--sh-1);
+}
+.rev__src span{font-size:.84rem; color:var(--ink-2); font-weight:500}
+.rev__src img{height:19px; width:auto; display:block}
+.rev__src-link{
+  font-size:.82rem; font-weight:600; color:var(--ink);
+  text-decoration:none; padding-left:14px; border-left:1px solid var(--line);
+  white-space:nowrap;
+}
+.rev__src-link:hover{color:var(--sage-ink); text-decoration:underline; text-underline-offset:3px}
+@media (max-width:520px){
+  .rev__src{border-radius:var(--r); padding:13px 16px}
+  .rev__src-link{padding-left:0; border-left:0}
+}
+.rev__via{color:var(--sage-ink); font-weight:600}
+
 .revs{columns:3 300px; column-gap:clamp(16px,2.2vw,24px)}
 .rev{
   break-inside:avoid; margin:0 0 clamp(16px,2.2vw,24px);

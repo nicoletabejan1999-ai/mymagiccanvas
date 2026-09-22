@@ -32,7 +32,8 @@
   function buildTrust() {
     const row = $('#trustRow'); if (!row) return;
     [
-      [ICON.star, '<b>' + C.SHOP.rating + '</b> from ' + C.SHOP.reviewCount + ' reviews'],
+      [ICON.star, '<b>' + C.SHOP.rating + '</b> from ' + C.SHOP.reviewCount +
+                  ' reviews on ' + C.SHOP.reviewSource],
       [ICON.box,  '<b>' + C.SHOP.salesCount + '</b> canvases sent'],
       [ICON.pin,  '<b>' + C.DELIVERY.scope + '</b> shipping, from ' + C.DELIVERY.from],
       [ICON.clock,'Made &amp; shipped in <b>' + C.DELIVERY.dispatch + '</b>']
@@ -180,16 +181,37 @@
 
   /* ── reviews ── */
   function buildReviews() {
+    const src = C.SHOP.reviewSource;
     $('#revTitle').textContent = C.SHOP.itemRating.toFixed(1) + ' out of 5, from ' +
       C.SHOP.itemReviewCount + ' couples';
-    $('#revSub').textContent = 'Across the whole shop: ' + C.SHOP.rating + ' stars from ' +
-      C.SHOP.reviewCount + ' reviews and ' + C.SHOP.salesCount + ' orders.';
+    $('#revSub').textContent = 'Every word below was left by a buyer on ' + src +
+      ', where the shop stands at ' + C.SHOP.rating + ' stars from ' +
+      C.SHOP.reviewCount + ' ratings and ' + C.SHOP.salesCount + ' orders. ' +
+      'We cannot edit them and neither can you.';
+
+    // say it once, plainly, with the mark people recognise
+    const badge = $('#revSource');
+    if (badge) {
+      badge.innerHTML =
+        '<span>Verified reviews on</span>' +
+        '<picture><source srcset="assets/img/etsy-logo.webp" type="image/webp">' +
+        '<img src="assets/img/etsy-logo.png" alt="' + esc(src) + '" width="152" height="72"></picture>';
+      if (C.SHOP.etsyShopUrl) {
+        const a = el('a', 'rev__src-link', 'Read all ' + C.SHOP.reviewCount + ' on ' + src + ' \u2192');
+        a.href = C.SHOP.etsyShopUrl;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        badge.appendChild(a);
+      }
+    }
+
     const host = $('#revList');
     C.REVIEWS.forEach(r => {
       host.appendChild(el('article', 'rev',
         '<p class="rev__s" aria-label="' + r.stars + ' out of 5 stars">' + '★'.repeat(r.stars) + '</p>' +
         '<p class="rev__t">' + esc(r.text) + '</p>' +
-        '<p class="rev__m"><b>' + esc(r.name) + '</b> · ' + esc(r.date) + '</p>'));
+        '<p class="rev__m"><b>' + esc(r.name) + '</b> · ' + esc(r.date) +
+          (r.via ? ' · <span class="rev__via">via ' + esc(r.via) + '</span>' : '') + '</p>'));
     });
   }
 
@@ -233,10 +255,9 @@
       description: 'Personalised fingerprint tree canvas used as a wedding guest book. Printed and stretched in Europe and shipped worldwide, supplied with four water-washable ink pads and an instruction card.',
       brand: { '@type': 'Brand', name: C.SHOP.name },
       image: ['assets/media/01-olive-tree-wedding-easel.jpg', 'assets/media/10-premium-wooden-framing.jpg'],
-      aggregateRating: {
-        '@type': 'AggregateRating',
-        ratingValue: C.SHOP.itemRating, reviewCount: C.SHOP.itemReviewCount
-      },
+      // No aggregateRating here on purpose: these ratings were collected by
+      // Etsy, and Google's review-snippet guidelines forbid republishing a
+      // third party's ratings as your own structured data.
       offers: {
         '@type': 'AggregateOffer', priceCurrency: C.CHECKOUT.currency,
         lowPrice: Math.min.apply(null, prices), highPrice: Math.max.apply(null, prices),

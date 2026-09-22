@@ -21,8 +21,12 @@ window.MMC = (function () {
     email: 'hello@mymagicanvas.com',        // ← replace with your real address
     etsyUrl: '',                            // ← optional: your Etsy listing
     city: '',                               // left blank on purpose: we say Europe, not a country
+    // Every rating on this page comes from the Etsy shop and is labelled
+    // as such. Keep these in step with the shop page.
+    reviewSource: 'Etsy',
+    etsyShopUrl: 'https://www.etsy.com/shop/MyMagiCanvas',
     rating: 4.9,
-    reviewCount: 552,
+    reviewCount: 554,
     salesCount: '2,600+',
     itemReviewCount: 66,
     itemRating: 5.0
@@ -189,13 +193,14 @@ window.MMC = (function () {
   };
 
   /* ------------------------------------------------------------- reviews */
+  // `via` names where the review was left. It is shown on every card.
   const REVIEWS = [
-    { name: 'Estela',   stars: 5, date: '20 Aug 2026', text: 'We ordered a wedding fingerprint tree canvas and could not be happier with the outcome! The vendor was an absolute dream to work with — they collaborated with us closely on the design and made sure it was exactly what we envisioned. The final canvas print looks stunning and high-quality.' },
-    { name: 'Ashlynn',  stars: 5, date: '17 Aug 2026', text: 'Just as pictured! Shop was great at communicating and ensured we’d have this in time for the wedding. Shipping was impressive. I think it’s going to be a great touch for our guests and a lovely keepsake for my fiancé and I.' },
-    { name: 'Jerry',    stars: 5, date: '13 Sep 2026', text: 'Really lovely item, and I can’t wait to use it for my wedding. Dimitri messaged to keep me updated and clarify anything — would recommend!' },
-    { name: 'Audrey',   stars: 5, date: '13 Aug 2026', text: 'It’s gorgeous! I can’t wait for our wedding!!' },
-    { name: 'Danielle', stars: 5, date: '16 Aug 2026', text: 'It’s perfect! Looks great.' },
-    { name: 'Kim',      stars: 5, date: '11 Aug 2026', text: 'Very good, I love it.' }
+    { name: 'Estela',   stars: 5, date: '20 Aug 2026', via: 'Etsy', text: 'We ordered a wedding fingerprint tree canvas and could not be happier with the outcome! The vendor was an absolute dream to work with — they collaborated with us closely on the design and made sure it was exactly what we envisioned. The final canvas print looks stunning and high-quality.' },
+    { name: 'Ashlynn',  stars: 5, date: '17 Aug 2026', via: 'Etsy', text: 'Just as pictured! Shop was great at communicating and ensured we’d have this in time for the wedding. Shipping was impressive. I think it’s going to be a great touch for our guests and a lovely keepsake for my fiancé and I.' },
+    { name: 'Jerry',    stars: 5, date: '13 Sep 2026', via: 'Etsy', text: 'Really lovely item, and I can’t wait to use it for my wedding. Dimitri messaged to keep me updated and clarify anything — would recommend!' },
+    { name: 'Audrey',   stars: 5, date: '13 Aug 2026', via: 'Etsy', text: 'It’s gorgeous! I can’t wait for our wedding!!' },
+    { name: 'Danielle', stars: 5, date: '16 Aug 2026', via: 'Etsy', text: 'It’s perfect! Looks great.' },
+    { name: 'Kim',      stars: 5, date: '11 Aug 2026', via: 'Etsy', text: 'Very good, I love it.' }
   ];
 
   /* ----------------------------------------------------------------- faq */
