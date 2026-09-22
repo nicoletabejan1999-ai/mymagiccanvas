@@ -17,10 +17,10 @@ window.MMC = (function () {
   /* ---------------------------------------------------------------- shop */
   const SHOP = {
     name: 'MyMagiCanvas',
-    tagline: 'Fingerprint guest book canvases, made in France',
+    tagline: 'Fingerprint guest book canvases, made in Europe',
     email: 'hello@mymagicanvas.com',        // ← replace with your real address
     etsyUrl: '',                            // ← optional: your Etsy listing
-    city: 'Athis-Mons, Île-de-France',
+    city: '',                               // left blank on purpose: we say Europe, not a country
     rating: 4.9,
     reviewCount: 552,
     salesCount: '2,600+',
@@ -176,7 +176,7 @@ window.MMC = (function () {
     src: 'assets/media/production.mp4',
     poster: 'assets/media/production-poster.jpg',
     title: 'Made by hand, two at a time',
-    text: 'Every canvas is printed, stretched and checked in our studio near Paris before it is packed. No warehouse, no middleman — just us and your names.'
+    text: 'Every canvas is printed, stretched and checked in our own studio before it is packed. No warehouse, no middleman — just us and your names.'
   };
 
   /* ------------------------------------------------------------ delivery */
@@ -184,8 +184,9 @@ window.MMC = (function () {
     production: '2 business days',
     standard: '3–7 business days',
     express: '1–3 business days',
-    from: 'France',
-    returns: '14 days'
+    from: 'Europe',
+    dispatch: '2 days',       // shown as a badge under the headline
+    returns: '14 days'        // stated in the delivery section and the FAQ
   };
 
   /* ------------------------------------------------------------- reviews */
@@ -215,7 +216,7 @@ window.MMC = (function () {
     { q: 'Do I need the easel?',
       a: 'Only if you want the canvas standing at the entrance of your venue rather than lying on a table. The tall wooden easel fits all three canvas sizes. A small easel for the instruction card is always included.' },
     { q: 'How long does it take to arrive?',
-      a: 'Two business days of production, then 3–7 business days with standard delivery or 1–3 with express, shipped from France. Order with a little margin before the date if you can.' },
+      a: 'Two business days of production, then 3–7 business days with standard delivery or 1–3 with express, shipped from within Europe. Order with a little margin before the date if you can.' },
     { q: 'What if something is wrong when it arrives?',
       a: 'Write to us. Returns and exchanges are accepted within 14 days, and in practice we would rather reprint a canvas than leave you with one you do not love.' }
   ];
