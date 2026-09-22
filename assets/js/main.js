@@ -182,11 +182,10 @@
   /* ── reviews ── */
   function buildReviews() {
     const src = C.SHOP.reviewSource;
-    $('#revTitle').textContent = C.SHOP.itemRating.toFixed(1) + ' out of 5, from ' +
-      C.SHOP.itemReviewCount + ' couples';
+    $('#revTitle').textContent = C.SHOP.rating.toFixed(1) + ' out of 5, from ' +
+      C.SHOP.reviewCount + ' clients';
     $('#revSub').textContent = 'Every word below was left by a buyer on ' + src +
-      ', where the shop stands at ' + C.SHOP.rating + ' stars from ' +
-      C.SHOP.reviewCount + ' ratings and ' + C.SHOP.salesCount + ' orders. ' +
+      ', across ' + C.SHOP.salesCount + ' orders. ' +
       'We cannot edit them and neither can you.';
 
     // say it once, plainly, with the mark people recognise

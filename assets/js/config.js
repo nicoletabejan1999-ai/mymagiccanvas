@@ -27,9 +27,7 @@ window.MMC = (function () {
     etsyShopUrl: 'https://www.etsy.com/shop/MyMagiCanvas',
     rating: 4.9,
     reviewCount: 554,
-    salesCount: '2,600+',
-    itemReviewCount: 66,
-    itemRating: 5.0
+    salesCount: '2,600+'
   };
 
   /* ------------------------------------------------------------ checkout */
