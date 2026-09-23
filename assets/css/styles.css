@@ -370,25 +370,6 @@ p{margin:0}
   font-family:var(--f-date, var(--f-body)); font-weight:var(--fw-date, 400); letter-spacing:.03em;
 }
 
-/* Words and letters the buyer can pick out and resize. The outline is
-   drawn on the preview only — it is not part of the canvas. */
-.pv-w, .pv-l{cursor:pointer; border-radius:.08em}
-.pv-w{display:inline-block}
-.is-pick .pv-w:hover, .is-pick .pv-l:hover{background:rgba(179,201,156,.22)}
-.pv-w.is-sel, .pv-l.is-sel{
-  background:rgba(179,201,156,.26);
-  box-shadow:0 .07em 0 0 var(--sage, #B3C99C) inset, 0 -.06em 0 0 var(--sage, #B3C99C);
-}
-.pv-w:focus-visible, .pv-l:focus-visible{outline:2px solid var(--ink); outline-offset:.04em}
-
-.szr{display:grid; gap:12px; margin-top:6px}
-.szr__lbl{margin:2px 0 0}
-.szr__pick{
-  margin:0; font-size:.82rem; color:var(--ink-3); line-height:1.4;
-  padding:8px 10px; background:var(--sand-2, #F7F4E8); border-radius:var(--r-sm);
-}
-.szr__pick b{color:var(--ink)}
-.szr .btn{justify-self:start}
 .sheet{container-type:inline-size}
 .sheet__grain{
   position:absolute; inset:0; pointer-events:none; opacity:.5; mix-blend-mode:multiply;
