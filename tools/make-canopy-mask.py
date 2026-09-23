@@ -16,6 +16,7 @@ WORK_W     = 300      # work small; the mask only needs to be approximate
 CANOPY_END = 0.665    # fraction of tree height where leaves stop at the sides
 CANOPY_MID = 0.500    # over the trunk the canopy lifts, so the bark shows
 DILATE     = 29       # odd; how far leaves reach past a branch
+ROUND      = 41       # odd; closes the notches between branches into a dome
 SMOOTH     = 5.0
 GRID_W     = 120      # exported resolution
 
@@ -64,17 +65,37 @@ for y in range(h):
     for x in range(w):
         if not outside[y][x]: bp[x, y] = 255
 
-# a real canopy is a dome, so trim the blob back to an ellipse that just
-# contains it — this rounds the sides and the flat bottom left by the cut
+# A canopy carries its own volume: seen from across a room it is a round
+# mass, not a branch-shaped one. Closing the blob — grow, then shrink by
+# the same amount — swallows the notches between the branches and leaves
+# a rounded outline, without pushing the whole canopy outwards.
+blob = blob.filter(ImageFilter.MaxFilter(ROUND)).filter(ImageFilter.MinFilter(ROUND))
+
+# A real canopy is a dome: round through the middle, and trimmed back to
+# an ellipse at the edge, which rounds the sides and the flat bottom left
+# by the cut. The inner ellipse fills the last hollows between the big
+# limbs — everything outside it still follows the branches, so the
+# outline keeps its bumps instead of turning into a drawn circle.
 bp = blob.load()
 xs = [x for y in range(h) for x in range(w) if bp[x, y]]
 ys = [y for y in range(h) for x in range(w) if bp[x, y]]
 x0, x1, y0, y1 = min(xs), max(xs), min(ys), max(ys)
 cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
-rx, ry = (x1 - x0) / 2 * 1.06, (y1 - y0) / 2 * 1.06
+rx, ry = (x1 - x0) / 2 * 1.06, (y1 - y0) / 2 * 1.05
+import math
 for y in range(h):
     for x in range(w):
-        if bp[x, y] and ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 > 1.0:
+        t = max(0.0, 1 - ((x - w / 2) / half) ** 2)
+        limit = side - (side - mid) * t
+        dx, dy = (x - cx) / rx, (y - cy) / ry
+        e = math.hypot(dx, dy)
+        a = math.atan2(dy, dx)
+        # the edge wanders a little, the way a canopy does; without it the
+        # outline reads as a drawn circle rather than a tree
+        env = 1 + 0.038 * math.sin(3 * a + 1.9) + 0.024 * math.sin(5 * a + 0.4)
+        if e <= env * 0.97 and y < limit:
+            bp[x, y] = 255
+        elif e > env:
             bp[x, y] = 0
 
 # round off the silhouette

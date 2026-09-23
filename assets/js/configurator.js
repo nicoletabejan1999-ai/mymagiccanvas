@@ -37,11 +37,9 @@ window.MMCConfigurator = (function () {
   /* ------------------------------------------------------------ geometry */
   // The tree artwork sits inside the sheet at this offset (see styles.css).
   const TREE_TOP = 0.074, TREE_H = 0.769;
-  const PRINT_CM = 1.35;  // how wide a fingertip lands, in centimetres
-  const REF_CM   = 40;    // the middle canvas, which the others scale against
-  const SOFTEN   = 0.72;  // <1 keeps the prints on the big canvas readable
-  const GAP      = 0.98;  // centres this many print widths apart
-  const JITTER   = 0.92;  // how far a print strays from its square
+  const PRINT_CM = 1.6;   // how wide a thumbprint lands, in centimetres
+  const SPACING  = 0.62;  // centres stay this many radii apart, so prints
+                          // crowd together without stacking into mud
 
   // Where a fingerprint may land, unpacked from the generated bitmap.
   const MASK = (function () {
@@ -112,125 +110,87 @@ window.MMCConfigurator = (function () {
   }
 
   /* ------------------------------------------------ draw one fingerprint */
-  /* A print is drawn once, in detail, into a small stencil — the uneven
-     oval a fingertip leaves, the ink smudged between the ridges, and the
-     ridges themselves arching around the core and flattening out towards
-     the base. That stencil is then tinted and stamped over and over.
-     Drawing every ridge of every guest would be pointless work: at this
-     size nobody can tell one loop from another, but the eye sees at once
-     that these are fingerprints and not painted dots. */
-  const SPRITE_W = 76, SPRITE_H = 96;
-  const SHAPES   = 8;     // how many different fingers are on file
-  const TINTS    = 9;     // steps from a firm press to a barely-there one
-  const PALEST   = 0.60;  // how far towards white the lightest press goes
+  // Ink on canvas behaves like a watercolour wash: the edge dries a shade
+  // darker than the middle, the pigment settles in patches, and nothing
+  // ends on a clean line. Drawing it that way is what keeps the canopy
+  // from looking like a page of printed dots.
+  function drawPrint(ctx, x, y, r, rot, hex, alpha, rnd) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rot);
+    ctx.globalAlpha = alpha;
 
-  const stencils = [];
-  const stamps   = new Map();
-
-  function stencil(i) {
-    if (stencils[i]) return stencils[i];
-    const c = document.createElement('canvas');
-    c.width = SPRITE_W; c.height = SPRITE_H;
-    const g = c.getContext('2d');
-    const rnd = mulberry32(1013904223 + i * 40503);
-    const cx = SPRITE_W / 2, cy = SPRITE_H / 2;
-    const rx = SPRITE_W * 0.42, ry = SPRITE_H * 0.45;
-
-    // the outline — a finger never lands as a neat ellipse
+    // a thumb leaves a narrow oval, taller than it is wide, and a little
+    // out of true wherever the finger rolled
+    const rx = r * 0.70, ry = r * 1.00;
     const p1 = rnd() * 6.2832, p2 = rnd() * 6.2832;
-    const k1 = 2 + ((rnd() * 2) | 0), k2 = 4 + ((rnd() * 3) | 0);
-    const wob = 0.05 + rnd() * 0.045;
-    g.beginPath();
-    for (let k = 0; k <= 84; k++) {
-      const a = k / 84 * 6.2832;
-      const f = 1 + wob * Math.sin(k1 * a + p1) + wob * 0.55 * Math.sin(k2 * a + p2);
-      const x = cx + Math.cos(a) * rx * f, y = cy + Math.sin(a) * ry * f;
-      if (k) g.lineTo(x, y); else g.moveTo(x, y);
+    const wob = 0.045 + rnd() * 0.045;
+    ctx.beginPath();
+    for (let k = 0; k <= 44; k++) {
+      const a = k / 44 * 6.2832;
+      const f = 1 + wob * Math.sin(3 * a + p1) + wob * 0.6 * Math.sin(5 * a + p2);
+      const px = Math.cos(a) * rx * f, py = Math.sin(a) * ry * f;
+      if (k) ctx.lineTo(px, py); else ctx.moveTo(px, py);
     }
-    g.closePath();
-    g.save();
-    g.clip();
+    ctx.closePath();
 
-    // ink between the ridges, heavier where the finger bore down
-    ellipticalFill(g, cx, cy, rx, ry, [
-      [0.00, 'rgba(0,0,0,.50)'], [0.70, 'rgba(0,0,0,.37)'], [1.00, 'rgba(0,0,0,.06)']
-    ], ry * 0.08, ry * 1.06, ry * 0.12);
+    ctx.save();
+    ctx.clip();
 
-    // the ridges: arches around the core, then flat lines across the base
-    const coreX = cx + (rnd() - 0.5) * rx * 0.30;
-    const coreY = cy + ry * (0.04 + rnd() * 0.16);
-    const step  = ry * 0.150;
-    const lean  = (rnd() - 0.5) * 0.44;
-    g.lineCap = 'round';
-    g.strokeStyle = 'rgba(0,0,0,.80)';
-    for (let k = 1; k <= 7; k++) {
-      const r = step * k;
-      g.lineWidth = Math.max(1, step * 0.46);
-      g.setLineDash([r * (4 + rnd() * 7), r * (0.10 + rnd() * 0.18)]);
-      g.lineDashOffset = rnd() * r * 6;
-      g.beginPath();
-      g.ellipse(coreX, coreY - r * 0.20, r * 1.02, r * 0.80, lean,
-                Math.PI * (0.92 + rnd() * 0.08), Math.PI * (2.08 - rnd() * 0.08));
-      g.stroke();
+    // the wash itself
+    const grd = ctx.createRadialGradient(0, -r * 0.12, r * 0.10, 0, 0, r * 1.05);
+    grd.addColorStop(0.00, hex + 'D2');
+    grd.addColorStop(0.58, hex + 'E4');
+    grd.addColorStop(0.88, hex + '9E');
+    grd.addColorStop(1.00, hex + '00');
+    ctx.fillStyle = grd;
+    ctx.fillRect(-r * 1.4, -r * 1.4, r * 2.8, r * 2.8);
+
+    // pigment settling in patches, the way a wash granulates as it dries
+    for (let k = 0; k < 3; k++) {
+      const bx = (rnd() - 0.5) * rx * 1.2, by = (rnd() - 0.5) * ry * 1.2;
+      const br = r * (0.26 + rnd() * 0.26);
+      const blot = ctx.createRadialGradient(bx, by, 0, bx, by, br);
+      blot.addColorStop(0, hex + (k ? '32' : '46'));
+      blot.addColorStop(1, hex + '00');
+      ctx.fillStyle = blot;
+      ctx.fillRect(bx - br, by - br, br * 2, br * 2);
     }
-    for (let k = 1; k <= 4; k++) {
-      const r = step * k * 1.15;
-      g.lineWidth = Math.max(1, step * 0.40);
-      g.setLineDash([r * (5 + rnd() * 5), r * (0.10 + rnd() * 0.20)]);
-      g.lineDashOffset = rnd() * r * 5;
-      g.beginPath();
-      g.ellipse(coreX, coreY + ry * 0.30, rx * (0.52 + k * 0.11), r * 0.92, lean, 0.14, Math.PI - 0.14);
-      g.stroke();
+
+    // and a pale bloom where the paper dried first
+    const bl = ctx.createRadialGradient(rx * 0.18, -ry * 0.22, 0, rx * 0.18, -ry * 0.22, r * 0.52);
+    bl.addColorStop(0, 'rgba(255,255,255,.30)');
+    bl.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = bl;
+    ctx.fillRect(-r * 1.4, -r * 1.4, r * 2.8, r * 2.8);
+
+    // the darker line the pigment leaves as it is pushed to the rim, and
+    // the heavier pool on the side the wash ran to
+    ctx.lineWidth = Math.max(0.7, r * 0.15);
+    ctx.strokeStyle = hex + '62';
+    ctx.stroke();
+    const run = rnd() * 6.2832;
+    ctx.lineWidth = Math.max(0.9, r * 0.26);
+    ctx.strokeStyle = hex + '4A';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, rx, ry, 0, run, run + 2.2);
+    ctx.stroke();
+
+    ctx.restore();
+
+    // ridge hint — only worth drawing once the print is big enough to see
+    if (r > 5) {
+      ctx.globalAlpha = alpha * 0.40;
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = Math.max(0.55, r * 0.075);
+      for (let k = 1; k <= 3; k++) {
+        const rr = r * (0.18 + k * 0.19);
+        ctx.beginPath();
+        ctx.ellipse(0, -r * 0.04, rr * 0.68, rr, 0, 0.6, Math.PI * 1.7);
+        ctx.stroke();
+      }
     }
-    g.setLineDash([]);
-    g.restore();
-
-    // soften the rim, so the stamp does not end on a drawn line
-    g.save();
-    g.globalCompositeOperation = 'destination-out';
-    ellipticalFill(g, cx, cy, rx, ry, [
-      [0.00, 'rgba(0,0,0,0)'], [1.00, 'rgba(0,0,0,.62)']
-    ], ry * 0.62, ry, 0);
-    g.restore();
-
-    stencils[i] = c;
-    return c;
-  }
-
-  // A radial gradient is round; a fingertip is not. Squashing the canvas
-  // while it paints keeps the falloff following the oval.
-  function ellipticalFill(g, cx, cy, rx, ry, stops, r0, r1, dy) {
-    g.save();
-    g.translate(cx, cy); g.scale(rx / ry, 1); g.translate(-cx, -cy);
-    const grd = g.createRadialGradient(cx, cy + (dy || 0), r0, cx, cy, r1);
-    for (let i = 0; i < stops.length; i++) grd.addColorStop(stops[i][0], stops[i][1]);
-    g.fillStyle = grd;
-    g.fillRect(-SPRITE_W, -SPRITE_H, SPRITE_W * 3, SPRITE_H * 3);
-    g.restore();
-  }
-
-  // ink mixed towards white: a light press leaves a pale mark of the same
-  // colour, which is where the shading across the canopy comes from
-  function tintOf(hex, t) {
-    const n = parseInt(hex.slice(1), 16);
-    const mix = v => Math.round(v + (255 - v) * t);
-    return 'rgb(' + mix((n >> 16) & 255) + ',' + mix((n >> 8) & 255) + ',' + mix(n & 255) + ')';
-  }
-
-  function stamp(shape, hex, ti) {
-    const key = shape + hex + ti;
-    const had = stamps.get(key);
-    if (had) return had;
-    if (stamps.size > 600) stamps.clear();
-    const c = document.createElement('canvas');
-    c.width = SPRITE_W; c.height = SPRITE_H;
-    const g = c.getContext('2d');
-    g.fillStyle = tintOf(hex, (ti / (TINTS - 1)) * PALEST);
-    g.fillRect(0, 0, SPRITE_W, SPRITE_H);
-    g.globalCompositeOperation = 'destination-in';
-    g.drawImage(stencil(shape), 0, 0);
-    stamps.set(key, c);
-    return c;
+    ctx.restore();
   }
 
   /* ------------------------------------------------- render the canopy */
@@ -254,50 +214,47 @@ window.MMCConfigurator = (function () {
     const colours = (state.inks.length ? state.inks : [4]).map(n => inkOf(n).hex);
     const rnd = mulberry32(state.seed);
 
-    // A fingertip leaves a mark of its own size whatever the canvas, so a
-    // bigger canvas takes more prints and each one reads finer. The preview
-    // shrinks them a little less than life, so even the largest canvas still
-    // shows the ridges on a screen.
+    // A thumb leaves a mark about the same size whatever the canvas, so on a
+    // wider canvas the prints look smaller and more of them fit — which is
+    // the whole point of choosing a size.
     const cm = parseFloat(sizeOf(state.size).cm);
-    const pw = (PRINT_CM / REF_CM) * Math.pow(REF_CM / cm, SOFTEN) * w;
-    const ph = pw * (SPRITE_H / SPRITE_W);
-    const cell = Math.max(4, pw * GAP);
+    const r0 = Math.max(2.2, (PRINT_CM / cm / 1.4) * w);
 
-    // Guests press side by side. Working across a loose grid, with every
-    // print nudged off its square, fills the canopy evenly the way a room
-    // full of people does — random darts leave bald patches and pile-ups.
-    const x0 = MASK.bx * w, x1 = (MASK.bx + MASK.bw) * w;
-    const y0 = MASK.by * h, y1 = (MASK.by + MASK.bh) * h;
-    const ccx = (x0 + x1) / 2, ccy = y0 + (y1 - y0) * 0.54;
-    const crx = Math.max(1, (x1 - x0) / 2), cry = Math.max(1, (y1 - y0) / 2);
+    // Guests press side by side, not on top of each other. Keeping centres a
+    // minimum distance apart fills the canopy while every print stays its
+    // own leaf — a plain random scatter turns into mud where marks pile up.
+    const minD = r0 * 2 * SPACING;
+    const cell = minD;
+    const cols = Math.ceil(w / cell) + 1, rows = Math.ceil(h / cell) + 1;
+    const grid = new Array(cols * rows);
+
+    function fits(px, py) {
+      const cxi = (px / cell) | 0, cyi = (py / cell) | 0;
+      for (let gy = Math.max(0, cyi - 1); gy <= Math.min(rows - 1, cyi + 1); gy++) {
+        for (let gx = Math.max(0, cxi - 1); gx <= Math.min(cols - 1, cxi + 1); gx++) {
+          const bucket = grid[gy * cols + gx];
+          if (!bucket) continue;
+          for (let k = 0; k < bucket.length; k += 2) {
+            const dx = bucket[k] - px, dy = bucket[k + 1] - py;
+            if (dx * dx + dy * dy < minD * minD) return false;
+          }
+        }
+      }
+      const idx = cyi * cols + cxi;
+      (grid[idx] || (grid[idx] = [])).push(px, py);
+      return true;
+    }
 
     ctx.globalCompositeOperation = 'multiply';
-    let row = 0;
-    for (let gy = y0; gy < y1; gy += cell, row++) {
-      const stagger = (row & 1) ? cell * 0.5 : 0;
-      for (let gx = x0 - stagger; gx < x1; gx += cell) {
-        const x = gx + cell * (0.5 + (rnd() - 0.5) * JITTER);
-        const y = gy + cell * (0.5 + (rnd() - 0.5) * JITTER);
-        const hex = colours[(rnd() * colours.length) | 0];
-        const shape = (rnd() * SHAPES) | 0;
-        const noise = rnd(), size = rnd(), spin = rnd(), press = rnd();
-        if (!inCanopy(x / w, y / h)) continue;
-
-        // pale at the edge of the canopy, deeper towards the heart of it,
-        // with enough scatter that it never looks like a printed gradient
-        const d = Math.min(1, Math.hypot((x - ccx) / crx, (y - ccy) / cry));
-        let t = 0.02 + 0.30 * d + (noise - 0.46) * 0.72;
-        t = t < 0 ? 0 : t > 1 ? 1 : t;
-
-        const sc = 0.82 + size * 0.38;
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.rotate((spin - 0.5) * 1.15);
-        ctx.globalAlpha = 0.70 + press * 0.30;
-        ctx.drawImage(stamp(shape, hex, Math.round(t * (TINTS - 1))),
-                      -pw * sc / 2, -ph * sc / 2, pw * sc, ph * sc);
-        ctx.restore();
-      }
+    const budget = 14000;
+    for (let tries = 0; tries < budget; tries++) {
+      const x = (MASK.bx + rnd() * MASK.bw) * w;
+      const y = (MASK.by + rnd() * MASK.bh) * h;
+      if (!inCanopy(x / w, y / h) || !fits(x, y)) continue;
+      drawPrint(ctx, x, y, r0 * (0.84 + rnd() * 0.30),
+                (rnd() - 0.5) * 1.0,
+                colours[Math.floor(rnd() * colours.length)],
+                0.56 + rnd() * 0.26, rnd);
     }
     ctx.globalCompositeOperation = 'source-over';
   }
