@@ -321,7 +321,84 @@
     return b;
   }
 
+  const SHIPPING_COUNTRIES = (
+    'AD AE AF AG AI AL AM AO AR AS AT AU AW AX AZ BA BB BD BE BF BG BH BI BJ BL BM BN BO BQ BR BS BT BW BY BZ CA CC CD CF CG CH CI CK CL CM CN CO CR CU CV CW CX CY CZ DE DJ DK DM DO DZ EC EE EG EH ER ES ET FI FJ FK FM FO FR GA GB GD GE GF GG GH GI GL GM GN GP GQ GR GS GT GU GW GY HK HN HR HT HU ID IE IL IM IN IO IQ IR IS IT JE JM JO JP KE KG KH KI KM KN KP KR KW KY KZ LA LB LC LI LK LR LS LT LU LV LY MA MC MD ME MF MG MH MK ML MM MN MO MP MQ MR MS MT MU MV MW MX MY MZ NA NC NE NF NG NI NL NO NP NR NU NZ OM PA PE PF PG PH PK PL PM PN PR PS PT PW PY QA RE RO RS RU RW SA SB SC SD SE SG SH SI SJ SK SL SM SN SO SR SS ST SV SX SY SZ TC TD TF TG TH TJ TK TL TM TN TO TR TT TV TW TZ UA UG UM US UY UZ VA VC VE VG VI VN VU WF WS YE YT ZA ZM ZW'
+  ).trim().split(/\s+/);
+
+  function buildCountrySelect() {
+    const select = $('#shipCountry');
+    if (!select) return;
+    let display;
+    try { display = new Intl.DisplayNames([document.documentElement.lang || 'en'], { type: 'region' }); }
+    catch (_) { display = null; }
+
+    const rows = SHIPPING_COUNTRIES.map(code => ({
+      code,
+      name: display ? display.of(code) : code
+    })).sort((a, b) => a.name.localeCompare(b.name));
+
+    rows.forEach(row => {
+      const o = document.createElement('option');
+      o.value = row.code;
+      o.textContent = row.name;
+      select.appendChild(o);
+    });
+  }
+
+  async function startCheckout(e) {
+    e.preventDefault();
+
+    const terms = $('#okTerms');
+    const country = $('#shipCountry');
+    const err = $('#buyErr');
+    const btn = $('#buyBtn');
+
+    if (!terms || !terms.checked) {
+      $('#consentErr').hidden = false;
+      terms && terms.focus();
+      $('.consent').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    $('#consentErr').hidden = true;
+
+    if (!country || !country.value) {
+      err.hidden = false;
+      err.textContent = 'Please select the delivery country before continuing.';
+      country && country.focus();
+      return;
+    }
+
+    const price = X.priceOf(X.state);
+    if (price == null) return;
+
+    const oldText = btn.textContent;
+    btn.textContent = 'Opening secure checkout…';
+    btn.setAttribute('aria-disabled', 'true');
+    err.hidden = true;
+
+    try {
+      const response = await fetch('/api/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          variant: X.variantKey(X.state),
+          country: country.value,
+          reference: X.reference(X.state)
+        })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.url) throw new Error(data.error || 'Checkout could not be started.');
+      window.location.assign(data.url);
+    } catch (error) {
+      btn.textContent = oldText;
+      btn.removeAttribute('aria-disabled');
+      err.hidden = false;
+      err.textContent = error.message || 'Checkout is temporarily unavailable.';
+    }
+  }
+
   function buildControls() {
+    buildCountrySelect();
     /* size */
     const hSize = $('#optSize');
     C.SIZES.forEach(s => {
@@ -410,13 +487,8 @@
     });
     okAds.addEventListener('change', () => X.set({ ads: okAds.checked }));
 
-    $('#buyBtn').addEventListener('click', e => {
-      if (okTerms.checked) return;
-      e.preventDefault();
-      $('#consentErr').hidden = false;
-      okTerms.focus();
-      $('.consent').scrollIntoView({ behavior: 'smooth', block: 'center' });
-    });
+    $('#buyBtn').addEventListener('click', startCheckout);
+    $('#dockBtn').addEventListener('click', startCheckout);
 
     /* copy */
     $('#btnCopy').addEventListener('click', async e => {
@@ -705,11 +777,10 @@
     const what = (s.framed ? 'Framed canvas ' : 'Canvas ') + size.label + ' · ' + size.cm +
       (s.easel ? ' · with easel' : '');
     $('#buyWhat').textContent = what;
-    $('#buyShip').textContent = X.money(C.CHECKOUT.shipping);
+    $('#buyShip').textContent = 'based on destination';
     $('#buyScope').textContent = C.DELIVERY.scope.toLowerCase();
 
     const pEl = $('#buyPrice'), btn = $('#buyBtn'), err = $('#buyErr');
-    const url = X.checkoutUrl(s);
 
     if (price == null) {
       pEl.classList.add('is-quote');
@@ -719,19 +790,11 @@
       btn.removeAttribute('aria-disabled');
       err.hidden = false;
       err.textContent = 'This combination is not listed online yet. Send us the design and we will come back with a price the same day.';
-    } else if (!url) {
-      pEl.classList.remove('is-quote');
-      pEl.innerHTML = X.money(price) + ' <small>+ shipping</small>';
-      btn.textContent = 'Order by email';
-      btn.href = quoteMail(s);
-      btn.removeAttribute('aria-disabled');
-      err.hidden = false;
-      err.textContent = 'Card checkout for this option is being switched on. In the meantime send us the design and we will invoice you directly.';
     } else {
       pEl.classList.remove('is-quote');
       pEl.innerHTML = X.money(price) + ' <small>+ shipping</small>';
       btn.textContent = 'Continue to secure checkout';
-      btn.href = url;
+      btn.href = '#';
       btn.removeAttribute('aria-disabled');
       err.hidden = true;
     }
@@ -748,7 +811,7 @@
     $('#dockPrice').textContent = price == null ? 'On request' : X.money(price);
     const dockBtn = $('#dockBtn');
     dockBtn.textContent = price == null ? 'Ask us' : 'Checkout';
-    dockBtn.href = btn.href;
+    dockBtn.href = price == null ? btn.href : '#configurator';
   }
 
   function quoteMail(s) {
@@ -843,7 +906,7 @@
     stickyHeader();
     mobileDock();
     reveal();
-    setupNotice();
+    // Stripe checkout is created server-side; no static Payment Links are needed.
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
