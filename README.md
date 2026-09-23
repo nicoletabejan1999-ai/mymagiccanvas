@@ -161,6 +161,17 @@ canvas gets `bottom: 54.43%`) and spans **61.5%** of its width (so a canvas at
 `width: 50%` rests comfortably inside it). Photograph a different easel
 straight on against a plain wall, re-measure those two, and it drops in.
 
+**Drawing the sizes to scale.** The three canvases are drawn at their real
+proportions — 30, 40 and 50 cm wide, so S is 60% of L and M is 80%. `PREVIEW`
+in `config.js` holds the two numbers that decide it. On the easel the canvas
+is measured against the stand (`easelHeightCm`, 160 cm, with the photo's own
+aspect giving its width), which is what makes the difference obvious: the
+easel does not change, so the canvas visibly does. Off the easel there is
+nothing to judge against, so the largest canvas fills the box (`largestCm`)
+and the others are drawn beside it in proportion. The preview area keeps a
+fixed 5:6 box either way, so choosing a size changes the canvas and not the
+page layout.
+
 **Guest capacity.** `SIZES[].capacity` does two jobs: it prints the "room for
 about N fingerprints" note under the preview and it decides which size the
 guest-count slider recommends. Change the number and both follow.

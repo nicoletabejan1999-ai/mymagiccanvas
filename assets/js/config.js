@@ -99,6 +99,20 @@ window.MMC = (function () {
     ]
   };
 
+  /* ------------------------------------------------------------- preview */
+  // How the configurator scales a canvas so the three sizes actually look
+  // different from each other.
+  const PREVIEW = {
+    // The display easel is a real object of a known height, so on the easel
+    // the canvas is measured against it — that is what makes S read as small
+    // and L as large.
+    easelHeightCm: 160,
+    easelAspect: 660 / 1224,   // the easel photo, width ÷ height
+    // Off the easel there is nothing to judge against, so the largest canvas
+    // fills the preview and the others are drawn to scale beside it.
+    largestCm: 50
+  };
+
   /* --------------------------------------------------------------- sizes */
   // `capacity` is how many fingerprints the crown holds comfortably. It
   // drives both the note under the preview and the size we recommend for a
@@ -254,6 +268,6 @@ window.MMC = (function () {
       a: 'Send us a photo the day it lands and we will put it right — a damaged, misprinted or wrong canvas gets replaced at our cost. That is your legal right and we would rather reprint one than argue about it. Check the names and the date on your order confirmation while there is still time to change them, because once it is printed it cannot be unprinted.' }
   ];
 
-  return { SHOP, LEGAL, META, CHECKOUT, SIZES, VARIANTS, INKS, MAX_INKS, PALETTES, FONTS,
+  return { SHOP, LEGAL, META, CHECKOUT, PREVIEW, SIZES, VARIANTS, INKS, MAX_INKS, PALETTES, FONTS,
            CARD_LANGUAGES, GALLERY, PRODUCTION_FILM, DELIVERY, REVIEWS, FAQ };
 })();

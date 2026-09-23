@@ -424,12 +424,19 @@
     $('#frame').classList.toggle('is-framed', s.framed);
     $('#easel').hidden = !s.easel;
 
-    /* the stage shows the real relative size of S / M / L. On the easel the
-       stand sets the scale instead, so the scene grows to hold it. */
+    /* Draw the canvas to scale, so the three sizes are visibly different.
+       On the easel it is measured against the stand, which is a real object
+       of a known height. Off the easel the largest canvas fills the frame
+       and the smaller ones are drawn beside it in proportion. */
     const scene = $('#scene');
     scene.classList.toggle('is-easel', s.easel);
-    const grow = { S: 0.86, M: 0.94, L: 1 }[s.size] || 1;
-    scene.style.maxWidth = Math.round((s.easel ? 330 : 430) * grow) + 'px';
+    const P = C.PREVIEW;
+    const widthCm = parseFloat(size.cm);
+    const cw = s.easel
+      ? widthCm / (P.easelHeightCm * P.easelAspect)   // share of the easel's width
+      : widthCm / P.largestCm;                        // share of the preview box
+    $('.rig').style.setProperty('--cw', (cw * 100).toFixed(2) + '%');
+    scene.style.maxWidth = (s.easel ? 340 : 400) + 'px';
     $('#stageScale').textContent = size.cm + '  ·  ' + size.inch +
       (s.framed ? '  ·  plus the frame' : '');
 

@@ -270,9 +270,12 @@ p{margin:0}
   position:relative; display:grid; place-items:center;
   width:100%; max-width:430px;
 }
+/* A fixed box the size of the largest canvas, so S and M sit inside it at
+   their real proportions instead of every size filling the same space. */
+.stage__scene:not(.is-easel){aspect-ratio:5/6}
 /* .rig is exactly as tall as the framed canvas, so the easel — which is
    positioned against it — always lands with its ledge under the canvas. */
-.rig{position:relative; width:100%; container-type:inline-size}
+.rig{position:relative; width:var(--cw, 100%); container-type:inline-size}
 
 /* ── the easel ──
    In easel mode the easel sets the size of the scene and the canvas is
@@ -286,7 +289,8 @@ p{margin:0}
 .stage__scene.is-easel .rig{
   position:absolute; left:50.6%; translate:-50% 0;
   bottom:54.43%;   /* the ledge in the photograph is 45.57% down the easel */
-  width:50%;       /* it spans 61.5%, so the canvas rests well within it */
+  width:var(--cw, 50%);   /* drawn to scale against the stand; the ledge
+                             spans 61.5%, and the largest canvas stays under it */
   z-index:1;
 }
 
