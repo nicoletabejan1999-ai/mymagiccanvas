@@ -351,7 +351,7 @@ p{margin:0}
   top:7.4%; height:76.9%;
   object-fit:contain; mix-blend-mode:multiply; pointer-events:none;
 }
-.sheet__text{position:absolute; left:6%; right:6%; bottom:2cm; text-align:center; line-height:1}
+.sheet__text{position:absolute; left:6%; right:6%; bottom:var(--text-bottom,4%); text-align:center; line-height:1}
 .sheet__names{
   color:#141414; line-height:1.14; white-space:nowrap;
   font-size:var(--fs-names, 8.5cqw);
