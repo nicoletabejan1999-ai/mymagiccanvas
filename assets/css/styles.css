@@ -360,7 +360,7 @@ p{margin:0}
 .sheet__date{
   margin-top:.5em; color:#2A2A2A; white-space:nowrap;
   font-size:var(--fs-date, 2.5cqw);
-  font-family:var(--f-body); font-weight:400; letter-spacing:.03em;
+  font-family:var(--f-date, var(--f-body)); font-weight:var(--fw-date, 400); letter-spacing:.03em;
 }
 .sheet{container-type:inline-size}
 .sheet__grain{

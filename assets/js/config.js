@@ -177,18 +177,40 @@ window.MMC = (function () {
   ];
 
   /* --------------------------------------------------------------- fonts */
-  // `css` is the closest web equivalent used for the on-screen preview.
-  // The print always uses the numbered font from the chart.
+  // The eight numbered fonts on the chart, in the order they appear on it.
+  //
+  // `file` is the font itself, sitting in assets/fonts/ — see the note in
+  // that folder for what each one must be called. Two of the eight are
+  // free and come from Google Fonts, so they are already exact; the other
+  // six are bought fonts and cannot be downloaded here, so until their
+  // files are dropped in, `file` stays null and the preview falls back to
+  // the nearest free face in `stand`. The print always uses the numbered
+  // font from the chart either way.
+  //
+  // `scale` sizes the lettering in the preview, because the same point
+  // size looks quite different from one face to the next. Each one is set
+  // for the face actually being shown, so it wants a look when a bought
+  // font arrives.
   const FONTS = [
-    { n: 1, name: 'Marck Script',        css: "'Marck Script', cursive",        scale: 1.00 },
-    { n: 2, name: 'Italianno',           css: "'Italianno', cursive",           scale: 1.22 },
-    { n: 3, name: 'Mrs Saint Delafield', css: "'Mrs Saint Delafield', cursive", scale: 1.18 },
-    { n: 4, name: 'Pinyon Script',       css: "'Pinyon Script', cursive",       scale: 1.00 },
-    { n: 5, name: 'Dancing Script',      css: "'Dancing Script', cursive",      scale: 0.94 },
-    { n: 6, name: 'Great Vibes',         css: "'Great Vibes', cursive",         scale: 1.06 },
-    { n: 7, name: 'Parisienne',          css: "'Parisienne', cursive",          scale: 1.02 },
-    { n: 8, name: 'Allura',              css: "'Allura', cursive",              scale: 1.10 }
+    { n: 1, name: 'Hubiland',          file: null, stand: "'Sacramento', cursive",         scale: 1.06 },
+    { n: 2, name: 'Millerstone Demo',  file: null, stand: "'Playfair Display', serif",     scale: 0.80 },
+    { n: 3, name: 'Boheme Floral',     file: null, stand: "'Mrs Saint Delafield', cursive", scale: 1.18 },
+    { n: 4, name: 'Francisco',         file: null, stand: "'Cormorant Garamond', serif",   scale: 0.88 },
+    { n: 5, name: 'Belista',           file: null, stand: "'Prata', serif",                scale: 0.80 },
+    { n: 6, name: 'Poppy Shower',      file: null, stand: "'Parisienne', cursive",         scale: 1.02 },
+    { n: 7, name: 'Dancing Script',    file: null, stand: "'Dancing Script', cursive",     scale: 0.94 },
+    { n: 8, name: 'Savoye LET',        file: null, stand: "'Allura', cursive",             scale: 1.10 }
   ];
+
+  // The date is always set in the same face, whatever the lettering.
+  const DATE_FONT = { name: 'Mukta Mahee ExtraLight', file: null,
+                      stand: "'Mukta Mahee', sans-serif", weight: 200 };
+
+  // The family name a face is served under, and the stack the preview asks
+  // for: the real font first when we have it, then the stand-in.
+  const fontStack = f => (f.file ? '"MMC ' + f.name + '", ' : '') + f.stand;
+  FONTS.forEach(f => { f.css = fontStack(f); });
+  DATE_FONT.css = fontStack(DATE_FONT);
 
   /* ------------------------------------------------ instruction language */
   const CARD_LANGUAGES = ['English', 'French', 'German', 'Italian', 'Spanish'];
@@ -269,5 +291,5 @@ window.MMC = (function () {
   ];
 
   return { SHOP, LEGAL, META, CHECKOUT, PREVIEW, SIZES, VARIANTS, INKS, MAX_INKS, PALETTES, FONTS,
-           CARD_LANGUAGES, GALLERY, PRODUCTION_FILM, DELIVERY, REVIEWS, FAQ };
+           DATE_FONT, CARD_LANGUAGES, GALLERY, PRODUCTION_FILM, DELIVERY, REVIEWS, FAQ };
 })();

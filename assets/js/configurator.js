@@ -21,7 +21,7 @@ window.MMCConfigurator = (function () {
     easel: false,
     names: 'Noah & Rose',
     date: '25.06.2025',
-    font: 5,
+    font: 7,
     inks: [3, 4, 6],
     guests: 80,
     lang: 'English',

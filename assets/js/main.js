@@ -19,6 +19,25 @@
   const esc = s => String(s).replace(/[&<>"']/g, c =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+  /* ═══════════════════════════════════════════════════════════════ fonts */
+
+  // The bought fonts are served from assets/fonts/. Until a file is there
+  // its entry carries no `file` and nothing is asked for, so the preview
+  // falls back to the free stand-in rather than to a missing download.
+  function serveFonts() {
+    const faces = C.FONTS.concat([C.DATE_FONT]).filter(f => f.file);
+    if (!faces.length) return;
+    const css = faces.map(f =>
+      '@font-face{font-family:"MMC ' + f.name + '";' +
+      'src:url("assets/fonts/' + f.file + '") format("' +
+      (/\.woff2$/i.test(f.file) ? 'woff2' : /\.woff$/i.test(f.file) ? 'woff' :
+       /\.otf$/i.test(f.file) ? 'opentype' : 'truetype') + '");' +
+      'font-weight:' + (f.weight || 400) + ';font-display:swap}').join('');
+    const el = document.createElement('style');
+    el.textContent = css;
+    document.head.appendChild(el);
+  }
+
   /* ══════════════════════════════════════════════════════ static blocks */
 
   /* ── trust row ── */
@@ -319,9 +338,13 @@
     const hFont = $('#optFont');
     C.FONTS.forEach(f => {
       const b = optBtn('font',
-        '<span class="font__s">Emma &amp; Leo</span><span class="font__n">FONT ' + f.n + '</span>',
+        '<span class="font__s">Emma &amp; Leo</span>' +
+        '<span class="font__n">' + f.n + ' · ' + f.name + '</span>',
         X.state.font === f.n, () => X.set({ font: f.n }));
       $('.font__s', b).style.fontFamily = f.css;
+      // the same point size reads much wider on a serif than on a script,
+      // so each sample is set at the size that font is drawn at
+      $('.font__s', b).style.fontSize = (1.24 * f.scale).toFixed(2) + 'rem';
       hFont.appendChild(b);
     });
 
@@ -417,6 +440,8 @@
     $('#scene').style.setProperty('--ar', size.ratio);
     sheet.style.setProperty('--f-names', font.css);
     sheet.style.setProperty('--fs-names', (7.2 * font.scale).toFixed(2) + 'cqw');
+    sheet.style.setProperty('--f-date', C.DATE_FONT.css);
+    sheet.style.setProperty('--fw-date', C.DATE_FONT.weight);
     $('#pvNames').textContent = s.names;
     $('#pvDate').textContent = s.date;
     $('#pvDate').style.visibility = s.date.trim() ? 'visible' : 'hidden';
@@ -603,6 +628,7 @@
   /* ════════════════════════════════════════════════════════════ start */
 
   function init() {
+    serveFonts();
     buildTrust();
     buildPayments();
     buildGallery();
