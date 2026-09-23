@@ -332,8 +332,45 @@
     const inNames = $('#inNames'), inDate = $('#inDate');
     inNames.value = X.state.names;
     inDate.value = X.state.date;
-    inNames.addEventListener('input', () => X.set({ names: inNames.value }));
+    inNames.addEventListener('input', () => {
+      const old = X.state.nameCharScale || [];
+      const next = new Array(inNames.value.length).fill(100);
+      for (let i = 0; i < Math.min(old.length, next.length); i++) next[i] = old[i] || 100;
+      X.set({ names: inNames.value, nameCharScale: next });
+    });
     inDate.addEventListener('input', () => X.set({ date: inDate.value }));
+
+    const nameSize = $('#inNameSize'), dateSize = $('#inDateSize');
+    nameSize.value = X.state.nameSize;
+    dateSize.value = X.state.dateSize;
+    nameSize.addEventListener('input', () => X.set({ nameSize: +nameSize.value }));
+    dateSize.addEventListener('input', () => X.set({ dateSize: +dateSize.value }));
+
+    function selectionRange() {
+      return [inNames.selectionStart || 0, inNames.selectionEnd || 0];
+    }
+    function selectedScale() {
+      const [a, b] = selectionRange();
+      if (a === b) return 100;
+      const vals = (X.state.nameCharScale || []).slice(a, b).map(v => v || 100);
+      return vals.length ? Math.round(vals.reduce((x, y) => x + y, 0) / vals.length) : 100;
+    }
+    function resizeSelection(delta, reset) {
+      let [a, b] = selectionRange();
+      if (a === b) { a = 0; b = inNames.value.length; }
+      const scales = new Array(inNames.value.length).fill(100);
+      (X.state.nameCharScale || []).forEach((v, i) => { if (i < scales.length) scales[i] = v || 100; });
+      for (let i = a; i < b; i++) scales[i] = reset ? 100 : Math.max(60, Math.min(180, scales[i] + delta));
+      X.set({ nameCharScale: scales });
+      inNames.focus();
+      inNames.setSelectionRange(a, b);
+    }
+    $('#selSmaller').addEventListener('click', () => resizeSelection(-10, false));
+    $('#selLarger').addEventListener('click', () => resizeSelection(10, false));
+    $('#selReset').addEventListener('click', () => resizeSelection(0, true));
+    ['select','keyup','mouseup','focus'].forEach(ev => inNames.addEventListener(ev, () => {
+      $('#selSizeOut').textContent = selectedScale() + '%';
+    }));
 
     const hFont = $('#optFont');
     C.FONTS.forEach(f => {
@@ -439,10 +476,20 @@
     // --ar lives on the scene so the easel spacer can read it too
     $('#scene').style.setProperty('--ar', size.ratio);
     sheet.style.setProperty('--f-names', font.css);
-    sheet.style.setProperty('--fs-names', (7.2 * font.scale).toFixed(2) + 'cqw');
+    sheet.style.setProperty('--fs-names', (7.2 * font.scale * (s.nameSize / 100)).toFixed(2) + 'cqw');
     sheet.style.setProperty('--f-date', C.DATE_FONT.css);
     sheet.style.setProperty('--fw-date', C.DATE_FONT.weight);
-    $('#pvNames').textContent = s.names;
+    sheet.style.setProperty('--fs-date', (2.5 * (s.dateSize / 100)).toFixed(2) + 'cqw');
+
+    const pvNames = $('#pvNames');
+    pvNames.innerHTML = '';
+    Array.from(s.names).forEach((ch, i) => {
+      const span = document.createElement('span');
+      span.textContent = ch;
+      const scale = (s.nameCharScale && s.nameCharScale[i]) || 100;
+      span.style.fontSize = scale + '%';
+      pvNames.appendChild(span);
+    });
     $('#pvDate').textContent = s.date;
     $('#pvDate').style.visibility = s.date.trim() ? 'visible' : 'hidden';
 
@@ -483,6 +530,10 @@
       b.setAttribute('aria-disabled', full ? 'true' : 'false');
     });
     $('#optEasel').checked = s.easel;
+    $('#inNameSize').value = s.nameSize;
+    $('#inDateSize').value = s.dateSize;
+    $('#nameSizeOut').textContent = s.nameSize + '%';
+    $('#dateSizeOut').textContent = s.dateSize + '%';
     syncInkCount();
 
     /* what this size holds, right under the canvas */
