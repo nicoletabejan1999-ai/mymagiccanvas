@@ -300,20 +300,25 @@ p{margin:0}
    of shape whatever the canvas ratio. The slice numbers are the moulding
    thickness in the source file, measured off the photo. */
 .frame.is-framed{
-  --fw: 4.45cqw;                 /* the moulding, as it sits in the photo */
+  /* A floater frame: the moulding, then a dark recess, then the canvas. The
+     slice deliberately reaches past the wood and takes the shadow gap with
+     it, otherwise the canvas would sit flush against the timber, which this
+     frame never does. Measured off the photograph:
+     228px left, 234 top, 204 right, 209 bottom, halved with the file. */
+  --fw: 8.55cqw;
   padding: 0;
   background: none;
   border-style: solid;
   border-left-width:   var(--fw);
-  border-top-width:    calc(var(--fw) * 53 / 55);
-  border-right-width:  calc(var(--fw) * 57 / 55);
-  border-bottom-width: calc(var(--fw) * 62 / 55);
+  border-top-width:    calc(var(--fw) * 1.0263);
+  border-right-width:  calc(var(--fw) * 0.8947);
+  border-bottom-width: calc(var(--fw) * 0.9167);
   border-image-source: image-set(
       url('../img/frame-oak.webp') type('image/webp'),
       url('../img/frame-oak.png')  type('image/png'));
-  border-image-slice: 53 57 62 55;
+  border-image-slice: 117 102 104 114;
   border-image-repeat: stretch;
-  filter: drop-shadow(0 16px 26px rgba(29,30,26,.17));
+  filter: drop-shadow(0 16px 26px rgba(29,30,26,.15));
 }
 
 

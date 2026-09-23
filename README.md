@@ -135,15 +135,23 @@ how far they spread past a branch. In `configurator.js`, `PRINT_CM` is how wide
 a thumbprint lands in centimetres — which is why a bigger canvas shows smaller,
 more numerous prints — and `SPACING` is how close their centres may sit.
 
-**The frame.** The framed option is a photograph of the real oak moulding,
-`assets/img/frame-oak.*`, applied as a CSS `border-image`. Slicing it that way
-keeps the corners square and stops the wood stretching out of shape when the
-canvas changes ratio. To swap in a different moulding: photograph it straight
-on against a plain wall, crop to the outer edge of the wood, clear the middle
-to transparent, and update `border-image-slice` in `styles.css` with the
-moulding thickness in pixels (top right bottom left). `--fw` is that thickness
-as a share of the frame's width — 4.45% in the current photo — and it is the
-same on all three sizes.
+**The frame.** The framed option is a photograph of the real moulding,
+`assets/img/frame-oak.*`, applied as a CSS `border-image`. Slicing it keeps
+the corners square and stops the wood stretching out of shape when the canvas
+changes ratio.
+
+It is a *floater* frame: moulding, then a dark recess, then the canvas. The
+slice deliberately reaches past the wood and takes that shadow gap with it —
+cut at the timber instead and the canvas sits flush against it, which this
+frame never does. Measured off the photo: 228px left, 234 top, 204 right,
+209 bottom, all halved with the file, which is why `border-image-slice` reads
+`117 102 104 114`. `--fw` is the left figure as a share of the frame's width,
+8.55%, and the other three sides are ratios of it so the photo's own
+proportions survive. Same on all three sizes.
+
+To swap in a different moulding: photograph it straight on against a plain
+white wall with a blank canvas in it, find the outer edge of the wood and the
+point where the canvas face starts, and use the distance between them.
 
 **The easel.** Also a photograph, cut out of its background with a soft alpha
 so the thin legs keep clean edges — `assets/img/easel.*`. It sets the size of
