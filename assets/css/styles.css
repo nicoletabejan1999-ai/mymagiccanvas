@@ -467,6 +467,15 @@ p{margin:0}
 }
 .inp input:hover{border-color:var(--sage)}
 .inp input:focus{border-color:var(--ink); outline:none; box-shadow:inset 0 0 0 1px var(--ink)}
+.inp select{
+  width:100%; min-height:46px; padding:10px 38px 10px 12px;
+  border:1.5px solid var(--line); border-radius:var(--r-sm);
+  background:#fff; color:var(--ink); font:inherit; cursor:pointer;
+}
+.inp select:focus{border-color:var(--ink); outline:none; box-shadow:inset 0 0 0 1px var(--ink)}
+.buy__country{display:grid; gap:7px; margin:4px 0 16px}
+.buy__country > span{font-size:.855rem; color:var(--ink-2)}
+.buy__country > small{font-size:.75rem; line-height:1.45; color:var(--ink-3)}
 
 .fonts{display:grid; grid-template-columns:repeat(auto-fit,minmax(118px,1fr)); gap:8px}
 .font{
