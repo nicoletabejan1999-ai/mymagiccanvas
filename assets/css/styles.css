@@ -316,7 +316,7 @@ p{margin:0}
      a renderer leaves at the seam. */
   --fw: 8.55cqw;
   padding: 0;
-  background: #2A1C13;
+  background: none;
   border-radius: 0;
   border-style: solid;
   border-color: transparent;
@@ -331,6 +331,13 @@ p{margin:0}
   border-image-slice: 6.890% 7.646% 6.125% 8.546%;
   border-image-repeat: stretch;
   filter: drop-shadow(0 16px 26px rgba(29,30,26,.15));
+}
+/* A dark line just outside the canvas, hidden under the moulding. If a
+   renderer leaves half a pixel at the frame's inner edge it reads as the
+   shadow it sits in, not as a gap. It cannot reach the outer edge of the
+   frame, which a background on the frame itself would. */
+.frame.is-framed .sheet{
+  box-shadow:0 0 0 2px #2A1C13, 0 14px 34px rgba(29,30,26,.14);
 }
 
 

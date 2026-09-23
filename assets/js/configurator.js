@@ -273,15 +273,26 @@ window.MMCConfigurator = (function () {
     }
 
     ctx.globalCompositeOperation = 'multiply';
+    // No print may hang over the edge of the canvas: on a real one the
+    // guest would be pressing onto the wooden stretcher. How far an oval
+    // reaches depends on how it was turned, so each one is measured.
+    const EDGE = w * 0.030;
+
     const budget = 14000;
     for (let tries = 0; tries < budget; tries++) {
       const x = (MASK.bx + rnd() * MASK.bw) * w;
       const y = (MASK.by + rnd() * MASK.bh) * h;
+      const pr = r0 * (0.84 + rnd() * 0.30);
+      const rot = (rnd() - 0.5) * 1.0;
+      const hex = colours[Math.floor(rnd() * colours.length)];
+      const alpha = 0.56 + rnd() * 0.26;
+
+      const co = Math.abs(Math.cos(rot)), si = Math.abs(Math.sin(rot));
+      const hw = pr * 0.72 * co + pr * 1.06 * si + EDGE;
+      const hh = pr * 0.72 * si + pr * 1.06 * co + EDGE;
+      if (x < hw || x > w - hw || y < hh || y > h - hh) continue;
       if (!inCanopy(x / w, y / h) || !fits(x, y)) continue;
-      drawPrint(ctx, x, y, r0 * (0.84 + rnd() * 0.30),
-                (rnd() - 0.5) * 1.0,
-                colours[Math.floor(rnd() * colours.length)],
-                0.56 + rnd() * 0.26, rnd);
+      drawPrint(ctx, x, y, pr, rot, hex, alpha, rnd);
     }
     ctx.globalCompositeOperation = 'source-over';
   }

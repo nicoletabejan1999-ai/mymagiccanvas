@@ -82,6 +82,10 @@ ys = [y for y in range(h) for x in range(w) if bp[x, y]]
 x0, x1, y0, y1 = min(xs), max(xs), min(ys), max(ys)
 cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
 rx, ry = (x1 - x0) / 2 * 1.06, (y1 - y0) / 2 * 1.05
+# Leave a margin at the sides: a print centred on the very edge of the
+# canopy would hang over the edge of the canvas, and on a real one the
+# guest would be pressing onto the wooden stretcher.
+rx = min(rx, w * 0.445)
 import math
 for y in range(h):
     for x in range(w):
