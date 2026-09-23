@@ -380,6 +380,25 @@ p{margin:0}
 .sheet__names:focus-within .sheet__names-resize,
 .sheet__names.is-sizing .sheet__names-resize{opacity:1}
 .sheet__names.is-sizing{cursor:nwse-resize}
+
+/* Alignment grid appears only while the names are being moved or resized. */
+.sheet.is-aligning::after{
+  content:'';
+  position:absolute; inset:0; z-index:8; pointer-events:none;
+  background-image:
+    linear-gradient(to right, rgba(42,42,42,.11) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(42,42,42,.11) 1px, transparent 1px),
+    linear-gradient(to right, transparent calc(50% - .7px), rgba(42,42,42,.45) calc(50% - .7px), rgba(42,42,42,.45) calc(50% + .7px), transparent calc(50% + .7px));
+  background-size:10% 10%, 10% 10%, 100% 100%;
+}
+.sheet.is-aligning.is-centred::after{
+  background-image:
+    linear-gradient(to right, rgba(42,42,42,.11) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(42,42,42,.11) 1px, transparent 1px),
+    linear-gradient(to right, transparent calc(50% - 1px), rgba(91,126,65,.8) calc(50% - 1px), rgba(91,126,65,.8) calc(50% + 1px), transparent calc(50% + 1px));
+}
+.name-amp-fallback{font-family:'Cormorant Garamond',serif}
+
 .sheet__date{
   margin-top:.5em; color:#2A2A2A; white-space:nowrap;
   font-size:var(--fs-date, 2.5cqw);
