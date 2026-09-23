@@ -335,6 +335,8 @@
     inNames.addEventListener('input', () => X.set({ names: inNames.value }));
     inDate.addEventListener('input', () => X.set({ date: inDate.value }));
 
+    wireNameDrag();
+
     const hFont = $('#optFont');
     C.FONTS.forEach(f => {
       const b = optBtn('font',
@@ -416,6 +418,135 @@
 
   }
 
+  function wireNameDrag() {
+    const name = $('#pvNames');
+    const sheet = $('#sheet');
+    if (!name || !sheet) return;
+
+    const initialText = name.textContent;
+    name.textContent = '';
+    const textNode = document.createElement('span');
+    textNode.className = 'sheet__names-text';
+    textNode.textContent = initialText;
+    const resize = document.createElement('button');
+    resize.type = 'button';
+    resize.className = 'sheet__names-resize';
+    resize.setAttribute('aria-label', 'Resize names');
+    resize.title = 'Drag to resize';
+    name.append(textNode, resize);
+
+    name.setAttribute('role', 'button');
+    name.setAttribute('tabindex', '0');
+    name.setAttribute('aria-label', 'Drag the names to reposition them on the canvas');
+
+    let active = null;
+    let sizing = null;
+
+    const applyPx = (dx, dy) => {
+      name.style.transform = 'translate(' + dx.toFixed(2) + 'px,' + dy.toFixed(2) + 'px)';
+    };
+
+    const clampOffset = (dx, dy) => {
+      const sr = active.sheetRect;
+      const pad = Math.max(4, sr.width * 0.02);
+      const minX = sr.left + pad - active.baseLeft;
+      const maxX = sr.right - pad - active.nameWidth - active.baseLeft;
+      const minY = sr.top + pad - active.baseTop;
+      const maxY = sr.bottom - pad - active.nameHeight - active.baseTop;
+      return [
+        Math.min(maxX, Math.max(minX, dx)),
+        Math.min(maxY, Math.max(minY, dy))
+      ];
+    };
+
+    name.addEventListener('pointerdown', e => {
+      if (e.target === resize) return;
+      if (e.button != null && e.button !== 0) return;
+      const sr = sheet.getBoundingClientRect();
+      const nr = name.getBoundingClientRect();
+      const startX = X.state.nameX * sr.width;
+      const startY = X.state.nameY * sr.height;
+      active = {
+        id: e.pointerId,
+        x: e.clientX,
+        y: e.clientY,
+        startX,
+        startY,
+        sheetRect: sr,
+        baseLeft: nr.left - startX,
+        baseTop: nr.top - startY,
+        nameWidth: nr.width,
+        nameHeight: nr.height
+      };
+      name.setPointerCapture(e.pointerId);
+      name.classList.add('is-dragging');
+      e.preventDefault();
+    });
+
+    name.addEventListener('pointermove', e => {
+      if (!active || e.pointerId !== active.id) return;
+      const dx = active.startX + (e.clientX - active.x);
+      const dy = active.startY + (e.clientY - active.y);
+      const [x, y] = clampOffset(dx, dy);
+      applyPx(x, y);
+      active.nextX = x;
+      active.nextY = y;
+    });
+
+    const finish = e => {
+      if (!active || e.pointerId !== active.id) return;
+      const sr = sheet.getBoundingClientRect();
+      const x = active.nextX == null ? active.startX : active.nextX;
+      const y = active.nextY == null ? active.startY : active.nextY;
+      active = null;
+      name.classList.remove('is-dragging');
+      X.set({
+        nameX: sr.width ? x / sr.width : 0,
+        nameY: sr.height ? y / sr.height : 0
+      });
+    };
+    name.addEventListener('pointerup', finish);
+    name.addEventListener('pointercancel', finish);
+
+    resize.addEventListener('pointerdown', e => {
+      if (e.button != null && e.button !== 0) return;
+      e.stopPropagation();
+      const sr = sheet.getBoundingClientRect();
+      const nr = name.getBoundingClientRect();
+      sizing = {
+        id: e.pointerId,
+        x: e.clientX,
+        startScale: X.state.nameScale,
+        width: nr.width,
+        maxWidth: sr.width * 0.92
+      };
+      resize.setPointerCapture(e.pointerId);
+      name.classList.add('is-sizing');
+      e.preventDefault();
+    });
+
+    resize.addEventListener('pointermove', e => {
+      if (!sizing || e.pointerId !== sizing.id) return;
+      const factor = Math.max(0.6, 1 + (e.clientX - sizing.x) / Math.max(60, sizing.width));
+      const maxByWidth = sizing.startScale * (sizing.maxWidth / Math.max(1, sizing.width));
+      const scale = Math.min(2.2, maxByWidth, Math.max(0.6, sizing.startScale * factor));
+      name.style.setProperty('--name-scale-live', scale);
+      name.style.fontSize = 'calc(var(--fs-names, 9cqw) * var(--name-scale-live, 1))';
+      sizing.nextScale = scale;
+    });
+
+    const finishSize = e => {
+      if (!sizing || e.pointerId !== sizing.id) return;
+      const scale = sizing.nextScale == null ? sizing.startScale : sizing.nextScale;
+      sizing = null;
+      name.classList.remove('is-sizing');
+      name.style.removeProperty('--name-scale-live');
+      X.set({ nameScale: scale });
+    };
+    resize.addEventListener('pointerup', finishSize);
+    resize.addEventListener('pointercancel', finishSize);
+  }
+
   let inkFlash;
   function flashInkLimit() {
     const n = $('#inkCount');
@@ -441,7 +572,7 @@
     sheet.style.setProperty('--f-names', font.css);
     // Deliberately larger than the original configurator, but fixed: the
     // landing stays simple and the buyer only chooses the text and font.
-    sheet.style.setProperty('--fs-names', (9 * font.scale).toFixed(2) + 'cqw');
+    sheet.style.setProperty('--fs-names', (9 * font.scale * s.nameScale).toFixed(2) + 'cqw');
     sheet.style.setProperty('--f-date', C.DATE_FONT.css);
     sheet.style.setProperty('--fw-date', C.DATE_FONT.weight);
     // The date sits two physical centimetres above the bottom edge on every
@@ -450,7 +581,14 @@
     sheet.style.setProperty('--date-bottom',
       (C.PREVIEW.dateFromBottomCm / heightCm * 100).toFixed(2) + '%');
 
-    $('#pvNames').textContent = s.names;
+    const pvNames = $('#pvNames');
+    const pvNamesText = $('.sheet__names-text', pvNames);
+    if (pvNamesText) pvNamesText.textContent = s.names;
+    else pvNames.textContent = s.names;
+    pvNames.style.fontSize = '';
+    pvNames.style.transform = 'translate(' +
+      (s.nameX * sheet.clientWidth).toFixed(2) + 'px,' +
+      (s.nameY * sheet.clientHeight).toFixed(2) + 'px)';
     $('#pvDate').textContent = s.date;
     $('#pvDate').style.visibility = s.date.trim() ? 'visible' : 'hidden';
 

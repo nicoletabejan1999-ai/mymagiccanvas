@@ -22,6 +22,11 @@ window.MMCConfigurator = (function () {
     names: 'Noah & Rose',
     date: '25.06.2025',
     font: 7,
+    // Name position is stored as a fraction of the canvas width/height,
+    // measured from the default placement. The date stays fixed.
+    nameX: 0,
+    nameY: 0,
+    nameScale: 1,
     inks: [3, 4, 6],
     guests: 80,
     lang: 'English',
@@ -309,6 +314,9 @@ window.MMCConfigurator = (function () {
         : '—'),
       'Font: ' + s.font + ' (' + fontOf(s.font).name + ')',
       'Names / text: ' + (s.names.trim() || '—'),
+      'Name position: ' + Math.round(s.nameX * 100) + '% horizontal, ' +
+        Math.round(s.nameY * 100) + '% vertical from default',
+      'Name size: ' + Math.round(s.nameScale * 100) + '%',
       'Date: ' + (s.date.trim() || '—'),
       'Instruction card language: ' + s.lang
     ];
@@ -323,6 +331,9 @@ window.MMCConfigurator = (function () {
       s.easel ? 'E1' : 'E0',
       'C' + (s.inks.slice().sort((a, b) => a - b).join('-') || '0'),
       'T' + s.font,
+      'PX' + Math.round(s.nameX * 1000),
+      'PY' + Math.round(s.nameY * 1000),
+      'PS' + Math.round(s.nameScale * 100),
       'L' + s.lang.slice(0, 2).toUpperCase(),
       s.ads ? 'ADS1' : 'ADS0'
     ].join('_');

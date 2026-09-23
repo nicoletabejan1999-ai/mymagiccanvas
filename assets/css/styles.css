@@ -351,9 +351,9 @@ p{margin:0}
   top:7.4%; height:76.9%;
   object-fit:contain; mix-blend-mode:multiply; pointer-events:none;
 }
-/* The lettering hangs from the foot of the canvas: the date sits two
-   centimetres up from the bottom edge whatever the size, and the names
-   stack above it, so making them larger never moves the date. */
+/* The lettering hangs from the foot of the canvas: the date stays fixed
+   one physical centimetre above the bottom edge. The names may be dragged
+   independently without changing the date position. */
 .sheet__text{
   position:absolute; left:6%; right:6%;
   bottom:var(--date-bottom, 4%);
@@ -363,7 +363,23 @@ p{margin:0}
   color:#141414; line-height:1.14; white-space:nowrap;
   font-size:var(--fs-names, 9cqw);
   font-family:var(--f-names, 'Dancing Script', cursive);
+  cursor:grab; touch-action:none; user-select:none; -webkit-user-select:none;
+  will-change:transform; position:relative; display:inline-block;
 }
+.sheet__names-text{pointer-events:none}
+.sheet__names.is-dragging{cursor:grabbing}
+.sheet__names:focus-visible{outline:2px dashed rgba(42,42,42,.45); outline-offset:.18em}
+.sheet__names-resize{
+  position:absolute; right:-.38em; bottom:-.38em;
+  width:.72em; height:.72em; min-width:14px; min-height:14px;
+  padding:0; border:1.5px solid #fff; border-radius:50%;
+  background:#2A2A2A; box-shadow:0 1px 4px rgba(0,0,0,.22);
+  cursor:nwse-resize; touch-action:none; opacity:.82;
+}
+.sheet__names:hover .sheet__names-resize,
+.sheet__names:focus-within .sheet__names-resize,
+.sheet__names.is-sizing .sheet__names-resize{opacity:1}
+.sheet__names.is-sizing{cursor:nwse-resize}
 .sheet__date{
   margin-top:.5em; color:#2A2A2A; white-space:nowrap;
   font-size:var(--fs-date, 2.5cqw);
