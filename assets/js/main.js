@@ -348,8 +348,6 @@
       hFont.appendChild(b);
     });
 
-    buildSizers();
-
     /* inks */
     const hInks = $('#optInks');
     C.INKS.forEach(i => {
@@ -430,145 +428,6 @@
     $('#inkCount').textContent = '— ' + X.state.inks.length + ' of ' + C.MAX_INKS + ' chosen';
   }
 
-  /* ═════════════════════════════════════════════════════ lettering size */
-
-  // Which word or letter the buyer is working on. This is a matter of the
-  // screen, not of the order, so it stays here rather than in the design.
-  const pick = { mode: 'word', key: null };
-
-  function buildSizers() {
-    const hMode = $('#szMode');
-    [['word', 'A word'], ['letter', 'One letter']].forEach(([m, label]) => {
-      hMode.appendChild(optBtn('opt', '<span class="opt__t">' + label + '</span>',
-        pick.mode === m, () => {
-          pick.mode = m; pick.key = null;
-          $$('#szMode > button').forEach((b, i) =>
-            b.setAttribute('aria-pressed', (i === 0) === (m === 'word') ? 'true' : 'false'));
-          paintNames(X.state);
-        }));
-    });
-
-    rng('#szAll',  v => X.set({ nameScale: v }));
-    rng('#szDate', v => X.set({ dateScale: v }));
-    rng('#szSel',  v => {
-      if (pick.key === null) return;
-      X.setScale(pick.mode === 'word' ? 'words' : 'letters', pick.key, v);
-    });
-
-    $('#szReset').addEventListener('click', () => {
-      pick.key = null;
-      X.clearScales();
-    });
-
-    // one listener for the whole preview, so rebuilding it costs nothing
-    $('#pvNames').addEventListener('click', onPickEvent);
-    // clicking the canvas anywhere else lets the selection go, so the
-    // marker never sits on the preview once the buyer has moved on
-    $('#sheet').addEventListener('click', e => {
-      if (pick.key === null || e.target.closest('#pvNames')) return;
-      pick.key = null;
-      paintNames(X.state);
-    });
-    $('#pvNames').addEventListener('keydown', e => {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onPickEvent(e); return; }
-      if (pick.key === null) return;
-      const step = e.key === 'ArrowUp' ? 0.05 : e.key === 'ArrowDown' ? -0.05 : 0;
-      if (!step) return;
-      e.preventDefault();
-      const kind = pick.mode === 'word' ? 'words' : 'letters';
-      const now = X.state[kind][pick.key] || 1;
-      X.setScale(kind, pick.key, Math.min(2, Math.max(0.5, +(now + step).toFixed(2))));
-    });
-  }
-
-  function rng(sel, apply) {
-    const el = $(sel);
-    el.addEventListener('input', () => apply(+el.value / 100));
-  }
-
-  function onPickEvent(e) {
-    const letter = e.target.closest('.pv-l');
-    const word = e.target.closest('.pv-w');
-    if (!word) return;
-    // the canvas below listens for a click that lets the selection go, and
-    // by the time it runs this node has been redrawn and is no longer in
-    // the page — so the pick is kept here rather than tested for there
-    e.stopPropagation();
-    pick.key = pick.mode === 'word' ? word.dataset.w : (letter && letter.dataset.l);
-    if (pick.key === undefined) pick.key = null;
-    paintNames(X.state);
-    const el = $('#pvNames').querySelector('.is-sel');
-    if (el) el.focus({ preventScroll: true });
-  }
-
-  // The names are drawn one word and one letter at a time, so the buyer can
-  // reach into the lettering and change a single one. A size is written as
-  // a multiple of the size around it, which is why a letter inside a word
-  // that was itself enlarged grows with it, the way it should.
-  function paintNames(s) {
-    const host = $('#pvNames');
-    host.textContent = '';
-    host.classList.add('is-pick');
-    let wi = -1;
-    s.names.split(/(\s+)/).forEach(part => {
-      if (!part) return;
-      if (!part.trim()) { host.appendChild(document.createTextNode(part)); return; }
-      wi++;
-      const w = document.createElement('span');
-      w.className = 'pv-w';
-      w.dataset.w = wi;
-      if (s.words[wi]) w.style.fontSize = s.words[wi] + 'em';
-      if (pick.mode === 'word') {
-        w.tabIndex = 0; w.setAttribute('role', 'button');
-        w.setAttribute('aria-label', 'Resize the word ' + part);
-        if (pick.key === String(wi)) w.classList.add('is-sel');
-      }
-      Array.from(part).forEach((ch, li) => {
-        const key = wi + '.' + li;
-        const l = document.createElement('span');
-        l.className = 'pv-l';
-        l.dataset.l = key;
-        l.textContent = ch;
-        if (s.letters[key]) l.style.fontSize = s.letters[key] + 'em';
-        if (pick.mode === 'letter') {
-          l.tabIndex = 0; l.setAttribute('role', 'button');
-          l.setAttribute('aria-label', 'Resize the letter ' + ch);
-          if (pick.key === key) l.classList.add('is-sel');
-        }
-        w.appendChild(l);
-      });
-      host.appendChild(w);
-    });
-    syncPick(s);
-  }
-
-  function syncPick(s) {
-    const sel = $('#szSel'), out = $('#szSelOut'), note = $('#szPick');
-    const kind = pick.mode === 'word' ? 'words' : 'letters';
-    const words = s.names.split(/(\s+)/).filter(t => t.trim());
-
-    if (pick.key === null || pick.key === undefined) {
-      sel.disabled = true; sel.value = 100; out.textContent = '—';
-      note.innerHTML = pick.mode === 'word'
-        ? 'Tap a word on the canvas to change that one on its own.'
-        : 'Tap a single letter on the canvas to change it on its own.';
-      return;
-    }
-    const v = s[kind][pick.key] || 1;
-    sel.disabled = false;
-    sel.value = Math.round(v * 100);
-    out.textContent = Math.round(v * 100) + '%';
-    if (pick.mode === 'word') {
-      note.innerHTML = 'Changing <b>' + esc(words[pick.key] || '') + '</b>.';
-    } else {
-      const [a, b] = pick.key.split('.').map(Number);
-      const ch = words[a] && words[a][b];
-      note.innerHTML = ch
-        ? 'Changing the <b>' + esc(ch) + '</b> in <b>' + esc(words[a]) + '</b>.'
-        : 'Tap a single letter on the canvas to change it on its own.';
-    }
-  }
-
   /* ══════════════════════════════════════════════════════════════ sync */
 
   function sync(s) {
@@ -580,21 +439,18 @@
     // --ar lives on the scene so the easel spacer can read it too
     $('#scene').style.setProperty('--ar', size.ratio);
     sheet.style.setProperty('--f-names', font.css);
-    sheet.style.setProperty('--fs-names', (9 * font.scale * s.nameScale).toFixed(2) + 'cqw');
+    // Deliberately larger than the original configurator, but fixed: the
+    // landing stays simple and the buyer only chooses the text and font.
+    sheet.style.setProperty('--fs-names', (9 * font.scale).toFixed(2) + 'cqw');
     sheet.style.setProperty('--f-date', C.DATE_FONT.css);
     sheet.style.setProperty('--fw-date', C.DATE_FONT.weight);
-    sheet.style.setProperty('--fs-date', (2.5 * s.dateScale).toFixed(2) + 'cqw');
-    // the date sits two centimetres up from the foot of the canvas, which is
-    // a different share of the sheet on each size
+    // The date sits two physical centimetres above the bottom edge on every
+    // real canvas size, so the percentage changes with the canvas height.
     const heightCm = parseFloat(size.cm) / size.ratio;
     sheet.style.setProperty('--date-bottom',
       (C.PREVIEW.dateFromBottomCm / heightCm * 100).toFixed(2) + '%');
 
-    paintNames(s);
-    $('#szAll').value = Math.round(s.nameScale * 100);
-    $('#szAllOut').textContent = Math.round(s.nameScale * 100) + '%';
-    $('#szDate').value = Math.round(s.dateScale * 100);
-    $('#szDateOut').textContent = Math.round(s.dateScale * 100) + '%';
+    $('#pvNames').textContent = s.names;
     $('#pvDate').textContent = s.date;
     $('#pvDate').style.visibility = s.date.trim() ? 'visible' : 'hidden';
 

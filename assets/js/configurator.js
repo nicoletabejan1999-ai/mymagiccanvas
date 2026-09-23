@@ -27,15 +27,6 @@ window.MMCConfigurator = (function () {
     lang: 'English',
     ads: false,        // advertising consent, recorded with the order
 
-    // Lettering sizes, all as plain multipliers of what the font would
-    // otherwise be given. `words` and `letters` hold only what the buyer
-    // actually changed, keyed by position in the text — word 0 upwards,
-    // and "word.letter" for a single letter.
-    nameScale: 1,
-    dateScale: 1,
-    words: {},
-    letters: {},
-
     seed: 20250625
   };
 
@@ -319,39 +310,14 @@ window.MMCConfigurator = (function () {
       'Font: ' + s.font + ' (' + fontOf(s.font).name + ')',
       'Names / text: ' + (s.names.trim() || '—'),
       'Date: ' + (s.date.trim() || '—'),
-      'Lettering size: ' + pct(s.nameScale) + ', date ' + pct(s.dateScale),
       'Instruction card language: ' + s.lang
     ];
-
-    const w = wordNotes(s);
-    if (w) lines.splice(8, 0, 'Resized by hand: ' + w);
     return lines.join('\n');
   }
 
-  const pct = v => Math.round(v * 100) + '%';
-
-  // What the buyer changed by hand, in words rather than codes, so the
-  // order is readable by the person who sets the file up for print.
-  function wordNotes(s = state) {
-    const words = s.names.split(/(\s+)/).filter(t => t.trim());
-    const bits = [];
-    Object.keys(s.words).forEach(i => {
-      if (words[i]) bits.push('"' + words[i] + '" ' + pct(s.words[i]));
-    });
-    Object.keys(s.letters).forEach(k => {
-      const [wi, li] = k.split('.').map(Number);
-      const ch = words[wi] && words[wi][li];
-      if (ch) bits.push('the "' + ch + '" in "' + words[wi] + '" ' + pct(s.letters[k]));
-    });
-    return bits.join(', ');
-  }
-
   // Compact, URL-safe code so an order can be matched back to this design.
-  // Stripe takes two hundred characters, so the hand-set letter sizes are
-  // dropped first if it runs long — the recap still spells them out.
   function reference(s = state) {
-    const three = v => ('00' + Math.round(v * 100)).slice(-3);
-    const parts = [
+    return [
       s.size,
       s.framed ? 'F1' : 'F0',
       s.easel ? 'E1' : 'E0',
@@ -359,19 +325,7 @@ window.MMCConfigurator = (function () {
       'T' + s.font,
       'L' + s.lang.slice(0, 2).toUpperCase(),
       s.ads ? 'ADS1' : 'ADS0'
-    ];
-    if (s.nameScale !== 1) parts.push('N' + three(s.nameScale));
-    if (s.dateScale !== 1) parts.push('D' + three(s.dateScale));
-
-    const words = Object.keys(s.words).map(i => i + 'x' + three(s.words[i]));
-    if (words.length) parts.push('W' + words.join('-'));
-
-    const letters = Object.keys(s.letters)
-      .map(k => k.replace('.', 'l') + 'x' + three(s.letters[k]));
-    if (letters.length && parts.join('_').length + letters.join('-').length + 2 <= 190) {
-      parts.push('X' + letters.join('-'));
-    }
-    return parts.join('_');
+    ].join('_');
   }
 
   function checkoutUrl(s = state) {
@@ -387,18 +341,6 @@ window.MMCConfigurator = (function () {
     if (reseed) state.seed = (Math.random() * 1e9) | 0;
     render();
     emit();
-  }
-
-  // A size of exactly one is the default, so it is dropped rather than
-  // stored — that keeps the order code short and the recap quiet.
-  function setScale(kind, key, value) {
-    const map = Object.assign({}, state[kind]);
-    if (Math.abs(value - 1) < 0.001) delete map[key]; else map[key] = value;
-    set({ [kind]: map });
-  }
-
-  function clearScales() {
-    set({ nameScale: 1, dateScale: 1, words: {}, letters: {} });
   }
 
   function toggleInk(n) {
@@ -423,6 +365,6 @@ window.MMCConfigurator = (function () {
   return {
     state, set, toggleInk, onChange, mount, render, recommendedSize,
     recap, reference, checkoutUrl, variantKey, priceOf, money,
-    sizeOf, fontOf, inkOf, setScale, clearScales
+    sizeOf, fontOf, inkOf
   };
 })();
