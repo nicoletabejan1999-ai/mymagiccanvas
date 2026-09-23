@@ -423,11 +423,24 @@
     const sheet = $('#sheet');
     if (!name || !sheet) return;
 
+    const initialText = name.textContent;
+    name.textContent = '';
+    const textNode = document.createElement('span');
+    textNode.className = 'sheet__names-text';
+    textNode.textContent = initialText;
+    const resize = document.createElement('button');
+    resize.type = 'button';
+    resize.className = 'sheet__names-resize';
+    resize.setAttribute('aria-label', 'Resize names');
+    resize.title = 'Drag to resize';
+    name.append(textNode, resize);
+
     name.setAttribute('role', 'button');
     name.setAttribute('tabindex', '0');
     name.setAttribute('aria-label', 'Drag the names to reposition them on the canvas');
 
     let active = null;
+    let sizing = null;
 
     const applyPx = (dx, dy) => {
       name.style.transform = 'translate(' + dx.toFixed(2) + 'px,' + dy.toFixed(2) + 'px)';
@@ -447,6 +460,7 @@
     };
 
     name.addEventListener('pointerdown', e => {
+      if (e.target === resize) return;
       if (e.button != null && e.button !== 0) return;
       const sr = sheet.getBoundingClientRect();
       const nr = name.getBoundingClientRect();
@@ -493,6 +507,44 @@
     };
     name.addEventListener('pointerup', finish);
     name.addEventListener('pointercancel', finish);
+
+    resize.addEventListener('pointerdown', e => {
+      if (e.button != null && e.button !== 0) return;
+      e.stopPropagation();
+      const sr = sheet.getBoundingClientRect();
+      const nr = name.getBoundingClientRect();
+      sizing = {
+        id: e.pointerId,
+        x: e.clientX,
+        startScale: X.state.nameScale,
+        width: nr.width,
+        maxWidth: sr.width * 0.92
+      };
+      resize.setPointerCapture(e.pointerId);
+      name.classList.add('is-sizing');
+      e.preventDefault();
+    });
+
+    resize.addEventListener('pointermove', e => {
+      if (!sizing || e.pointerId !== sizing.id) return;
+      const factor = Math.max(0.6, 1 + (e.clientX - sizing.x) / Math.max(60, sizing.width));
+      const maxByWidth = sizing.startScale * (sizing.maxWidth / Math.max(1, sizing.width));
+      const scale = Math.min(2.2, maxByWidth, Math.max(0.6, sizing.startScale * factor));
+      name.style.setProperty('--name-scale-live', scale);
+      name.style.fontSize = 'calc(var(--fs-names, 9cqw) * var(--name-scale-live, 1))';
+      sizing.nextScale = scale;
+    });
+
+    const finishSize = e => {
+      if (!sizing || e.pointerId !== sizing.id) return;
+      const scale = sizing.nextScale == null ? sizing.startScale : sizing.nextScale;
+      sizing = null;
+      name.classList.remove('is-sizing');
+      name.style.removeProperty('--name-scale-live');
+      X.set({ nameScale: scale });
+    };
+    resize.addEventListener('pointerup', finishSize);
+    resize.addEventListener('pointercancel', finishSize);
   }
 
   let inkFlash;
@@ -520,7 +572,7 @@
     sheet.style.setProperty('--f-names', font.css);
     // Deliberately larger than the original configurator, but fixed: the
     // landing stays simple and the buyer only chooses the text and font.
-    sheet.style.setProperty('--fs-names', (9 * font.scale).toFixed(2) + 'cqw');
+    sheet.style.setProperty('--fs-names', (9 * font.scale * s.nameScale).toFixed(2) + 'cqw');
     sheet.style.setProperty('--f-date', C.DATE_FONT.css);
     sheet.style.setProperty('--fw-date', C.DATE_FONT.weight);
     // The date sits two physical centimetres above the bottom edge on every
@@ -530,7 +582,10 @@
       (C.PREVIEW.dateFromBottomCm / heightCm * 100).toFixed(2) + '%');
 
     const pvNames = $('#pvNames');
-    pvNames.textContent = s.names;
+    const pvNamesText = $('.sheet__names-text', pvNames);
+    if (pvNamesText) pvNamesText.textContent = s.names;
+    else pvNames.textContent = s.names;
+    pvNames.style.fontSize = '';
     pvNames.style.transform = 'translate(' +
       (s.nameX * sheet.clientWidth).toFixed(2) + 'px,' +
       (s.nameY * sheet.clientHeight).toFixed(2) + 'px)';
