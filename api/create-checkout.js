@@ -94,7 +94,6 @@ module.exports = async function handler(req, res) {
   params.set('success_url', origin + '/?checkout=success&session_id={CHECKOUT_SESSION_ID}');
   params.set('cancel_url', origin + '/?checkout=cancelled#configurator');
   params.set('client_reference_id', reference || variant);
-  params.set('automatic_payment_methods[enabled]', 'true');
   params.set('billing_address_collection', 'auto');
   params.set('customer_creation', 'always');
   params.set('shipping_address_collection[allowed_countries][0]', country);
