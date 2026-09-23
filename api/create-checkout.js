@@ -119,8 +119,12 @@ module.exports = async function handler(req, res) {
 
     const data = await stripe.json();
     if (!stripe.ok || !data.url) {
-      console.error('Stripe checkout session error', data && data.error && data.error.type);
-      return json(res, 502, { error: 'Stripe could not start checkout. Please try again.' });
+      const stripeError = data && data.error || {};
+      console.error('Stripe checkout session error', stripeError.type, stripeError.code, stripeError.param);
+      const safePreviewMessage = process.env.VERCEL_ENV !== 'production' && stripeError.message
+        ? 'Stripe: ' + stripeError.message
+        : 'Stripe could not start checkout. Please try again.';
+      return json(res, 502, { error: safePreviewMessage });
     }
 
     return json(res, 200, { url: data.url });
