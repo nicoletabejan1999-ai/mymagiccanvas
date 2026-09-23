@@ -383,7 +383,21 @@
         body: JSON.stringify({
           variant: X.variantKey(X.state),
           country: country.value,
-          reference: X.reference(X.state)
+          design: {
+            size: X.state.size,
+            framed: X.state.framed,
+            easel: X.state.easel,
+            names: X.state.names,
+            date: X.state.date,
+            font: X.state.font,
+            nameX: X.state.nameX,
+            nameY: X.state.nameY,
+            nameScale: X.state.nameScale,
+            inks: X.state.inks,
+            guests: X.state.guests,
+            lang: X.state.lang,
+            ads: Boolean($('#okAds') && $('#okAds').checked)
+          }
         })
       });
       const data = await response.json().catch(() => ({}));
