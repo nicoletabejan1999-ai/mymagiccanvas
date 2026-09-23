@@ -110,7 +110,11 @@ function cleanDesign(raw, variant, country) {
 
 async function saveDesign(design) {
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
-    const error = new Error('Design storage is not configured yet.');
+    const visibleNames = process.env.VERCEL_ENV !== 'production'
+      ? Object.keys(process.env).filter(k => /BLOB|STORE|STORAGE/i.test(k)).sort()
+      : [];
+    const suffix = visibleNames.length ? ' Detected env names: ' + visibleNames.join(', ') : ' No Blob-related env names are visible to this Function.';
+    const error = new Error('Design storage is not configured yet.' + suffix);
     error.code = 'STORAGE_NOT_CONFIGURED';
     throw error;
   }
