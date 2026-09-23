@@ -58,6 +58,72 @@ function addShipping(params, index, label, amount, minDays, maxDays) {
   params.set(p + '[delivery_estimate][maximum][value]', String(maxDays));
 }
 
+function cleanText(value, max) {
+  return String(value == null ? '' : value).trim().slice(0, max);
+}
+
+function cleanNumber(value, min, max, fallback) {
+  const n = Number(value);
+  return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;
+}
+
+function cleanDesign(raw, variant, country) {
+  raw = raw && typeof raw === 'object' ? raw : {};
+  const size = ['S','M','L'].includes(raw.size) ? raw.size : null;
+  const font = Number(raw.font);
+  const inks = Array.isArray(raw.inks)
+    ? raw.inks.map(Number).filter(n => Number.isInteger(n) && n >= 1 && n <= 15).slice(0, 4)
+    : [];
+  const lang = ['English','French','German','Italian','Spanish'].includes(raw.lang)
+    ? raw.lang : 'English';
+
+  if (!size || !Number.isInteger(font) || font < 1 || font > 8) return null;
+
+  const expectedVariant = [
+    raw.framed ? 'FRAMED-' : '',
+    size,
+    raw.easel ? '-EASEL' : ''
+  ].join('');
+  if (expectedVariant !== variant) return null;
+
+  return {
+    version: 1,
+    createdAt: new Date().toISOString(),
+    variant,
+    deliveryCountry: country,
+    size,
+    framed: Boolean(raw.framed),
+    easel: Boolean(raw.easel),
+    names: cleanText(raw.names, 40),
+    date: cleanText(raw.date, 24),
+    font,
+    nameX: cleanNumber(raw.nameX, -1, 1, 0),
+    nameY: cleanNumber(raw.nameY, -1, 1, 0),
+    nameScale: cleanNumber(raw.nameScale, 0.6, 2.2, 1),
+    inks,
+    guests: Math.round(cleanNumber(raw.guests, 10, 200, 80)),
+    lang,
+    adsConsent: Boolean(raw.ads)
+  };
+}
+
+async function saveDesign(design) {
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    const error = new Error('Design storage is not configured yet.');
+    error.code = 'STORAGE_NOT_CONFIGURED';
+    throw error;
+  }
+  const { put } = await import('@vercel/blob');
+  const designId = 'mc_' + crypto.randomUUID().replace(/-/g, '');
+  await put('orders/designs/' + designId + '.json', JSON.stringify(design), {
+    access: 'private',
+    addRandomSuffix: false,
+    contentType: 'application/json',
+    token: process.env.BLOB_READ_WRITE_TOKEN
+  });
+  return designId;
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
@@ -75,7 +141,6 @@ module.exports = async function handler(req, res) {
 
   const variant = String(body && body.variant || '').toUpperCase();
   const country = String(body && body.country || '').toUpperCase();
-  const reference = String(body && body.reference || '').slice(0, 200);
 
   if (!Object.prototype.hasOwnProperty.call(PRICES, variant)) {
     return json(res, 400, { error: 'This product combination is not available for online checkout.' });
@@ -84,16 +149,34 @@ module.exports = async function handler(req, res) {
     return json(res, 400, { error: 'Please select a valid delivery country.' });
   }
 
+  const design = cleanDesign(body && body.design, variant, country);
+  if (!design) {
+    return json(res, 400, { error: 'The canvas design could not be validated. Please review it and try again.' });
+  }
+
   const shipping = SHIPPING[shippingZone(country)];
   const origin = (req.headers.origin && /^https?:\/\//.test(req.headers.origin))
     ? req.headers.origin
     : 'https://mymagicanvas.com';
 
+  let designId;
+  try {
+    designId = await saveDesign(design);
+  } catch (error) {
+    console.error('Design save failed', error && error.code, error && error.message);
+    const message = process.env.VERCEL_ENV !== 'production' && error && error.message
+      ? error.message
+      : 'We could not save your design. Please try again.';
+    return json(res, 503, { error: message });
+  }
+
   const params = new URLSearchParams();
   params.set('mode', 'payment');
   params.set('success_url', origin + '/?checkout=success&session_id={CHECKOUT_SESSION_ID}');
   params.set('cancel_url', origin + '/?checkout=cancelled#configurator');
-  params.set('client_reference_id', reference || variant);
+  params.set('client_reference_id', designId);
+  params.set('metadata[design_id]', designId);
+  params.set('metadata[variant]', variant);
   params.set('billing_address_collection', 'auto');
   params.set('customer_creation', 'always');
   params.set('shipping_address_collection[allowed_countries][0]', country);
@@ -126,7 +209,7 @@ module.exports = async function handler(req, res) {
       return json(res, 502, { error: safePreviewMessage });
     }
 
-    return json(res, 200, { url: data.url });
+    return json(res, 200, { url: data.url, designId });
   } catch (error) {
     console.error('Checkout request failed', error && error.message);
     return json(res, 500, { error: 'Checkout is temporarily unavailable.' });
