@@ -434,17 +434,12 @@
     };
 
     const clampOffset = (dx, dy) => {
-      const sr = sheet.getBoundingClientRect();
-      const nr = name.getBoundingClientRect();
-      const currentX = X.state.nameX * sr.width;
-      const currentY = X.state.nameY * sr.height;
-      const baseLeft = nr.left - currentX;
-      const baseTop = nr.top - currentY;
+      const sr = active.sheetRect;
       const pad = Math.max(4, sr.width * 0.02);
-      const minX = sr.left + pad - baseLeft;
-      const maxX = sr.right - pad - nr.width - baseLeft;
-      const minY = sr.top + pad - baseTop;
-      const maxY = sr.bottom - pad - nr.height - baseTop;
+      const minX = sr.left + pad - active.baseLeft;
+      const maxX = sr.right - pad - active.nameWidth - active.baseLeft;
+      const minY = sr.top + pad - active.baseTop;
+      const maxY = sr.bottom - pad - active.nameHeight - active.baseTop;
       return [
         Math.min(maxX, Math.max(minX, dx)),
         Math.min(maxY, Math.max(minY, dy))
@@ -454,12 +449,20 @@
     name.addEventListener('pointerdown', e => {
       if (e.button != null && e.button !== 0) return;
       const sr = sheet.getBoundingClientRect();
+      const nr = name.getBoundingClientRect();
+      const startX = X.state.nameX * sr.width;
+      const startY = X.state.nameY * sr.height;
       active = {
         id: e.pointerId,
         x: e.clientX,
         y: e.clientY,
-        startX: X.state.nameX * sr.width,
-        startY: X.state.nameY * sr.height
+        startX,
+        startY,
+        sheetRect: sr,
+        baseLeft: nr.left - startX,
+        baseTop: nr.top - startY,
+        nameWidth: nr.width,
+        nameHeight: nr.height
       };
       name.setPointerCapture(e.pointerId);
       name.classList.add('is-dragging');
