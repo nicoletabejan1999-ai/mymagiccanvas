@@ -19,6 +19,22 @@
   const esc = s => String(s).replace(/[&<>"']/g, c =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+  function renderNameText(host, text, font) {
+    host.textContent = '';
+    String(text).split(/(&)/).forEach(part => {
+      if (!part) return;
+      if (part === '&' && font && font.ampStand) {
+        const amp = document.createElement('span');
+        amp.className = 'name-amp-fallback';
+        amp.style.fontFamily = font.ampStand;
+        amp.textContent = '&';
+        host.appendChild(amp);
+      } else {
+        host.appendChild(document.createTextNode(part));
+      }
+    });
+  }
+
   /* ═══════════════════════════════════════════════════════════════ fonts */
 
   // The bought fonts are served from assets/fonts/. Until a file is there
@@ -343,7 +359,9 @@
         '<span class="font__s">Emma &amp; Leo</span>' +
         '<span class="font__n">' + f.n + ' · ' + f.name + '</span>',
         X.state.font === f.n, () => X.set({ font: f.n }));
-      $('.font__s', b).style.fontFamily = f.css;
+      const sample = $('.font__s', b);
+      sample.style.fontFamily = f.css;
+      if (f.ampStand) renderNameText(sample, 'Emma & Leo', f);
       // the same point size reads much wider on a serif than on a script,
       // so each sample is set at the size that font is drawn at
       $('.font__s', b).style.fontSize = (1.24 * f.scale).toFixed(2) + 'rem';
@@ -427,7 +445,7 @@
     name.textContent = '';
     const textNode = document.createElement('span');
     textNode.className = 'sheet__names-text';
-    textNode.textContent = initialText;
+    renderNameText(textNode, initialText, X.fontOf(X.state.font));
     const resize = document.createElement('button');
     resize.type = 'button';
     resize.className = 'sheet__names-resize';
@@ -480,6 +498,7 @@
       };
       name.setPointerCapture(e.pointerId);
       name.classList.add('is-dragging');
+      sheet.classList.add('is-aligning');
       e.preventDefault();
     });
 
@@ -487,7 +506,17 @@
       if (!active || e.pointerId !== active.id) return;
       const dx = active.startX + (e.clientX - active.x);
       const dy = active.startY + (e.clientY - active.y);
-      const [x, y] = clampOffset(dx, dy);
+      let [x, y] = clampOffset(dx, dy);
+
+      // Snap the visual centre of the name to the canvas centre when it is
+      // close enough to the centre guide.
+      const centreX = active.baseLeft + x + active.nameWidth / 2;
+      const sheetCentreX = active.sheetRect.left + active.sheetRect.width / 2;
+      const snap = Math.max(5, active.sheetRect.width * 0.018);
+      const snapped = Math.abs(centreX - sheetCentreX) <= snap;
+      if (snapped) x += sheetCentreX - centreX;
+      sheet.classList.toggle('is-centred', snapped);
+
       applyPx(x, y);
       active.nextX = x;
       active.nextY = y;
@@ -500,6 +529,7 @@
       const y = active.nextY == null ? active.startY : active.nextY;
       active = null;
       name.classList.remove('is-dragging');
+      sheet.classList.remove('is-aligning', 'is-centred');
       X.set({
         nameX: sr.width ? x / sr.width : 0,
         nameY: sr.height ? y / sr.height : 0
@@ -513,15 +543,20 @@
       e.stopPropagation();
       const sr = sheet.getBoundingClientRect();
       const nr = name.getBoundingClientRect();
+      const sheetCentreX = sr.left + sr.width / 2;
+      const nameCentreX = nr.left + nr.width / 2;
       sizing = {
         id: e.pointerId,
         x: e.clientX,
         startScale: X.state.nameScale,
         width: nr.width,
-        maxWidth: sr.width * 0.92
+        maxWidth: sr.width * 0.92,
+        keepCentred: Math.abs(nameCentreX - sheetCentreX) <= Math.max(6, sr.width * 0.02)
       };
       resize.setPointerCapture(e.pointerId);
       name.classList.add('is-sizing');
+      sheet.classList.add('is-aligning');
+      sheet.classList.toggle('is-centred', sizing.keepCentred);
       e.preventDefault();
     });
 
@@ -532,16 +567,23 @@
       const scale = Math.min(2.2, maxByWidth, Math.max(0.6, sizing.startScale * factor));
       name.style.setProperty('--name-scale-live', scale);
       name.style.fontSize = 'calc(var(--fs-names, 9cqw) * var(--name-scale-live, 1))';
+      if (sizing.keepCentred) {
+        // nameX = 0 is the natural centred position of this inline element.
+        name.style.transform = 'translate(0px,' +
+          (X.state.nameY * sheet.clientHeight).toFixed(2) + 'px)';
+      }
       sizing.nextScale = scale;
     });
 
     const finishSize = e => {
       if (!sizing || e.pointerId !== sizing.id) return;
       const scale = sizing.nextScale == null ? sizing.startScale : sizing.nextScale;
+      const keepCentred = sizing.keepCentred;
       sizing = null;
       name.classList.remove('is-sizing');
+      sheet.classList.remove('is-aligning', 'is-centred');
       name.style.removeProperty('--name-scale-live');
-      X.set({ nameScale: scale });
+      X.set(keepCentred ? { nameScale: scale, nameX: 0 } : { nameScale: scale });
     };
     resize.addEventListener('pointerup', finishSize);
     resize.addEventListener('pointercancel', finishSize);
@@ -583,8 +625,8 @@
 
     const pvNames = $('#pvNames');
     const pvNamesText = $('.sheet__names-text', pvNames);
-    if (pvNamesText) pvNamesText.textContent = s.names;
-    else pvNames.textContent = s.names;
+    if (pvNamesText) renderNameText(pvNamesText, s.names, font);
+    else renderNameText(pvNames, s.names, font);
     pvNames.style.fontSize = '';
     pvNames.style.transform = 'translate(' +
       (s.nameX * sheet.clientWidth).toFixed(2) + 'px,' +
