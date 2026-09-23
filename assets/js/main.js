@@ -335,6 +335,8 @@
     inNames.addEventListener('input', () => X.set({ names: inNames.value }));
     inDate.addEventListener('input', () => X.set({ date: inDate.value }));
 
+    wireNameDrag();
+
     const hFont = $('#optFont');
     C.FONTS.forEach(f => {
       const b = optBtn('font',
@@ -416,6 +418,80 @@
 
   }
 
+  function wireNameDrag() {
+    const name = $('#pvNames');
+    const sheet = $('#sheet');
+    if (!name || !sheet) return;
+
+    name.setAttribute('role', 'button');
+    name.setAttribute('tabindex', '0');
+    name.setAttribute('aria-label', 'Drag the names to reposition them on the canvas');
+
+    let active = null;
+
+    const applyPx = (dx, dy) => {
+      name.style.transform = 'translate(' + dx.toFixed(2) + 'px,' + dy.toFixed(2) + 'px)';
+    };
+
+    const clampOffset = (dx, dy) => {
+      const sr = sheet.getBoundingClientRect();
+      const nr = name.getBoundingClientRect();
+      const currentX = X.state.nameX * sr.width;
+      const currentY = X.state.nameY * sr.height;
+      const baseLeft = nr.left - currentX;
+      const baseTop = nr.top - currentY;
+      const pad = Math.max(4, sr.width * 0.02);
+      const minX = sr.left + pad - baseLeft;
+      const maxX = sr.right - pad - nr.width - baseLeft;
+      const minY = sr.top + pad - baseTop;
+      const maxY = sr.bottom - pad - nr.height - baseTop;
+      return [
+        Math.min(maxX, Math.max(minX, dx)),
+        Math.min(maxY, Math.max(minY, dy))
+      ];
+    };
+
+    name.addEventListener('pointerdown', e => {
+      if (e.button != null && e.button !== 0) return;
+      const sr = sheet.getBoundingClientRect();
+      active = {
+        id: e.pointerId,
+        x: e.clientX,
+        y: e.clientY,
+        startX: X.state.nameX * sr.width,
+        startY: X.state.nameY * sr.height
+      };
+      name.setPointerCapture(e.pointerId);
+      name.classList.add('is-dragging');
+      e.preventDefault();
+    });
+
+    name.addEventListener('pointermove', e => {
+      if (!active || e.pointerId !== active.id) return;
+      const dx = active.startX + (e.clientX - active.x);
+      const dy = active.startY + (e.clientY - active.y);
+      const [x, y] = clampOffset(dx, dy);
+      applyPx(x, y);
+      active.nextX = x;
+      active.nextY = y;
+    });
+
+    const finish = e => {
+      if (!active || e.pointerId !== active.id) return;
+      const sr = sheet.getBoundingClientRect();
+      const x = active.nextX == null ? active.startX : active.nextX;
+      const y = active.nextY == null ? active.startY : active.nextY;
+      active = null;
+      name.classList.remove('is-dragging');
+      X.set({
+        nameX: sr.width ? x / sr.width : 0,
+        nameY: sr.height ? y / sr.height : 0
+      });
+    };
+    name.addEventListener('pointerup', finish);
+    name.addEventListener('pointercancel', finish);
+  }
+
   let inkFlash;
   function flashInkLimit() {
     const n = $('#inkCount');
@@ -450,7 +526,11 @@
     sheet.style.setProperty('--date-bottom',
       (C.PREVIEW.dateFromBottomCm / heightCm * 100).toFixed(2) + '%');
 
-    $('#pvNames').textContent = s.names;
+    const pvNames = $('#pvNames');
+    pvNames.textContent = s.names;
+    pvNames.style.transform = 'translate(' +
+      (s.nameX * sheet.clientWidth).toFixed(2) + 'px,' +
+      (s.nameY * sheet.clientHeight).toFixed(2) + 'px)';
     $('#pvDate').textContent = s.date;
     $('#pvDate').style.visibility = s.date.trim() ? 'visible' : 'hidden';
 
