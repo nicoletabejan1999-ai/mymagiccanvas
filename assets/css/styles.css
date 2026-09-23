@@ -351,14 +351,15 @@ p{margin:0}
   top:7.4%; height:76.9%;
   object-fit:contain; mix-blend-mode:multiply; pointer-events:none;
 }
-.sheet__text{position:absolute; left:6%; right:6%; top:84.5%; text-align:center; line-height:1}
+.sheet__text{position:absolute; left:6%; right:6%; bottom:2cm; text-align:center; line-height:1}
 .sheet__names{
   color:#141414; line-height:1.14; white-space:nowrap;
-  font-size:var(--fs-names, 7.2cqw);
+  font-size:var(--fs-names, 8.5cqw);
   font-family:var(--f-names, 'Dancing Script', cursive);
 }
+.sheet__names span{display:inline-block; transform-origin:center bottom}
 .sheet__date{
-  margin-top:.5em; color:#2A2A2A; white-space:nowrap;
+  margin-top:.6em; color:#2A2A2A; white-space:nowrap;
   font-size:var(--fs-date, 2.5cqw);
   font-family:var(--f-date, var(--f-body)); font-weight:var(--fw-date, 400); letter-spacing:.03em;
 }
@@ -424,6 +425,18 @@ p{margin:0}
 }
 .inp input:hover{border-color:var(--sage)}
 .inp input:focus{border-color:var(--ink); outline:none; box-shadow:inset 0 0 0 1px var(--ink)}
+
+.text-size-controls{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.rng--compact{margin-top:0;padding:12px 13px;background:#fff;border:1.5px solid var(--line);border-radius:var(--r-sm)}
+.selection-size{margin-top:12px;padding:12px 13px;border:1.5px solid var(--line);border-radius:var(--r-sm);background:#fff;display:flex;align-items:center;justify-content:space-between;gap:14px}
+.selection-size strong{display:block;font-size:.86rem}
+.selection-size small{display:block;margin-top:3px;color:var(--ink-3);font-size:.76rem;line-height:1.4}
+.selection-size__buttons{display:flex;align-items:center;gap:7px;flex:none}
+.selection-size__buttons output{min-width:46px;text-align:center;font-size:.82rem;font-weight:700;color:var(--ink)}
+.mini-btn{min-width:34px;height:34px;border:1.5px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);font-size:1.05rem;font-weight:700;cursor:pointer}
+.mini-btn:hover{border-color:var(--ink)}
+.mini-btn--reset{font-size:.72rem;padding:0 10px}
+@media (max-width:560px){.text-size-controls{grid-template-columns:1fr}.selection-size{align-items:flex-start;flex-direction:column}.selection-size__buttons{width:100%}}
 
 .fonts{display:grid; grid-template-columns:repeat(auto-fit,minmax(118px,1fr)); gap:8px}
 .font{
