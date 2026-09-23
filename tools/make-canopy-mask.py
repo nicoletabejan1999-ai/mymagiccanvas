@@ -13,8 +13,9 @@ import base64, sys
 
 SRC        = 'assets/img/tree-base.jpg'
 WORK_W     = 300      # work small; the mask only needs to be approximate
-CANOPY_END = 0.665    # fraction of tree height where leaves stop (measured off the product photo)
-DILATE     = 21       # odd; how far leaves reach past a branch
+CANOPY_END = 0.665    # fraction of tree height where leaves stop at the sides
+CANOPY_MID = 0.500    # over the trunk the canopy lifts, so the bark shows
+DILATE     = 29       # odd; how far leaves reach past a branch
 SMOOTH     = 5.0
 GRID_W     = 120      # exported resolution
 
@@ -26,16 +27,22 @@ im = im.resize((w, h), Image.LANCZOS)
 # branches = anything darker than paper
 ink = im.point(lambda v: 255 if v < 232 else 0).convert('L')
 
-# keep only the canopy band
+# Keep only the canopy band. The lower edge is not a straight line: leaves
+# hang lowest over the outer branches and lift in the middle, where the
+# trunk climbs through — cutting flat would leave a shelf across the tree.
 px = ink.load()
-cut = int(h * CANOPY_END)
-for y in range(cut, h):
-    for x in range(w):
+side = h * CANOPY_END
+mid  = h * CANOPY_MID
+half = w * 0.32
+for x in range(w):
+    t = max(0.0, 1 - ((x - w / 2) / half) ** 2)
+    limit = int(side - (side - mid) * t)
+    for y in range(limit, h):
         px[x, y] = 0
 
 # grow the branches until they close into a single mass
 blob = ink.filter(ImageFilter.MaxFilter(DILATE))
-blob = blob.filter(ImageFilter.MinFilter(7))          # pull the outline back in a little
+blob = blob.filter(ImageFilter.MinFilter(5))          # pull the outline back in a little
 
 # fill the holes between branches: flood the outside, then invert it
 bp = blob.load()
