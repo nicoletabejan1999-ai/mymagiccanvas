@@ -475,6 +475,14 @@
     const sheet = $('#sheet');
     // --ar lives on the scene so the easel spacer can read it too
     $('#scene').style.setProperty('--ar', size.ratio);
+
+    // Keep the date 2 physical centimetres above the canvas bottom.
+    // CSS percentages scale with the preview, so convert 2 cm to a share
+    // of the real canvas height: S 40cm -> 5%, M 50cm -> 4%, L 60cm -> 3.33%.
+    const cmParts = size.cm.match(/[\d.]+/g) || [];
+    const canvasHeightCm = +(cmParts[1] || 50);
+    sheet.style.setProperty('--text-bottom', ((2 / canvasHeightCm) * 100).toFixed(3) + '%');
+
     sheet.style.setProperty('--f-names', font.css);
     sheet.style.setProperty('--fs-names', (7.2 * font.scale * (s.nameSize / 100)).toFixed(2) + 'cqw');
     sheet.style.setProperty('--f-date', C.DATE_FONT.css);
