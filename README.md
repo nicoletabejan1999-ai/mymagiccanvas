@@ -145,6 +145,14 @@ moulding thickness in pixels (top right bottom left). `--fw` is that thickness
 as a share of the frame's width — 4.45% in the current photo — and it is the
 same on all three sizes.
 
+**The easel.** Also a photograph, cut out of its background with a soft alpha
+so the thin legs keep clean edges — `assets/img/easel.*`. It sets the size of
+the scene, and the canvas is placed on it by two numbers in `styles.css` that
+were measured off the photo: the ledge is **45.57%** down the easel (so the
+canvas gets `bottom: 54.43%`) and spans **61.5%** of its width (so a canvas at
+`width: 50%` rests comfortably inside it). Photograph a different easel
+straight on against a plain wall, re-measure those two, and it drops in.
+
 **Guest capacity.** `SIZES[].capacity` does two jobs: it prints the "room for
 about N fingerprints" note under the preview and it decides which size the
 guest-count slider recommends. Change the number and both follow.

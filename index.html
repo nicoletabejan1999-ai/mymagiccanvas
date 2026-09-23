@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=Allura&family=Dancing+Script:wght@500&family=Great+Vibes&family=Italianno&family=Marck+Script&family=Mrs+Saint+Delafield&family=Parisienne&family=Pinyon+Script&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/styles.css?v=11">
+<link rel="stylesheet" href="assets/css/styles.css?v=12">
 </head>
 <body>
 
@@ -123,30 +123,10 @@
           <div class="stage" id="stage">
             <div class="stage__scene" id="scene">
               <div class="easel" id="easel" hidden aria-hidden="true">
-                <svg viewBox="0 0 540 880" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-                  <defs>
-                    <linearGradient id="beech" x1="0" y1="0" x2="1" y2="0">
-                      <stop offset="0"   stop-color="#C9A275"/>
-                      <stop offset=".35" stop-color="#E4C79C"/>
-                      <stop offset=".72" stop-color="#D4B287"/>
-                      <stop offset="1"   stop-color="#BE9668"/>
-                    </linearGradient>
-                  </defs>
-                  <path d="M272 30 L366 846" stroke="#C09A6C" stroke-width="9" stroke-linecap="round"/>
-                  <path d="M268 24 L86 852"  stroke="url(#beech)" stroke-width="11" stroke-linecap="round"/>
-                  <path d="M274 24 L452 852" stroke="url(#beech)" stroke-width="11" stroke-linecap="round"/>
-                  <path d="M270 34 L270 626" stroke="url(#beech)" stroke-width="10" stroke-linecap="round"/>
-                  <path d="M168 430 Q270 468 372 430" stroke="#CFC0A6" stroke-width="3" fill="none"/>
-                  <rect x="158" y="416" width="16" height="30" rx="4" fill="#C9A87E"/>
-                  <rect x="366" y="416" width="16" height="30" rx="4" fill="#C9A87E"/>
-                  <rect x="246" y="548" width="48" height="88" rx="6" fill="#D2AF83"/>
-                  <rect x="120" y="556" width="300" height="15" rx="7" fill="url(#beech)"/>
-                  <rect x="120" y="567" width="300" height="7"  rx="3" fill="#A9804F" opacity=".45"/>
-                  <circle cx="271" cy="27"  r="5" fill="#9A9A96"/>
-                  <circle cx="270" cy="600" r="5" fill="#9A9A96"/>
-                  <circle cx="166" cy="431" r="4" fill="#9A9A96"/>
-                  <circle cx="374" cy="431" r="4" fill="#9A9A96"/>
-                </svg>
+                <picture>
+                  <source srcset="assets/img/easel.webp" type="image/webp">
+                  <img src="assets/img/easel.png" alt="" width="660" height="1224" decoding="async">
+                </picture>
               </div>
 
               <div class="rig">
@@ -464,9 +444,9 @@
   </div>
 </div>
 
-<script src="assets/js/canopy-mask.js?v=11"></script>
-<script src="assets/js/config.js?v=11"></script>
-<script src="assets/js/configurator.js?v=11"></script>
-<script src="assets/js/main.js?v=11"></script>
+<script src="assets/js/canopy-mask.js?v=12"></script>
+<script src="assets/js/config.js?v=12"></script>
+<script src="assets/js/configurator.js?v=12"></script>
+<script src="assets/js/main.js?v=12"></script>
 </body>
 </html>
