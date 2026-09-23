@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=Allura&family=Cormorant+Garamond:wght@400;500&family=Dancing+Script:wght@500&family=Mrs+Saint+Delafield&family=Mukta+Mahee:wght@200&family=Parisienne&family=Playfair+Display:wght@400;500&family=Prata&family=Sacramento&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/styles.css?v=16">
+<link rel="stylesheet" href="assets/css/styles.css?v=17">
 </head>
 <body>
 
@@ -134,7 +134,7 @@
                 <div class="sheet" id="sheet">
                   <canvas class="sheet__prints" id="prints"></canvas>
                   <img class="sheet__tree" id="treeImg" src="assets/img/tree-base.webp" alt="" aria-hidden="true">
-                  <div class="sheet__text">
+                  <div class="sheet__text" id="pvText">
                     <div class="sheet__names" id="pvNames">Noah &amp; Rose</div>
                     <div class="sheet__date"  id="pvDate">25.06.2025</div>
                   </div>
@@ -185,6 +185,30 @@
           <p class="fld__lbl">Font <small>— order by number, the way the chart shows it</small></p>
           <div class="fonts" id="optFont"></div>
           <p class="hint">The preview uses the closest web equivalent of each font. We print the real numbered one.</p>
+
+          <p class="fld__lbl">Size of the lettering</p>
+          <div class="szr">
+            <label class="rng">
+              <span class="rng__top">All the names <output id="szAllOut">100%</output></span>
+              <input type="range" id="szAll" min="70" max="170" step="5" value="100"
+                     aria-label="Size of all the names">
+            </label>
+            <label class="rng">
+              <span class="rng__top">The date <output id="szDateOut">100%</output></span>
+              <input type="range" id="szDate" min="70" max="170" step="5" value="100"
+                     aria-label="Size of the date">
+            </label>
+
+            <p class="fld__lbl szr__lbl">One word, or one letter</p>
+            <div class="opts opts--2" id="szMode"></div>
+            <p class="szr__pick" id="szPick">Tap a word on the canvas to change that one on its own.</p>
+            <label class="rng">
+              <span class="rng__top">Selected <output id="szSelOut">—</output></span>
+              <input type="range" id="szSel" min="50" max="200" step="5" value="100" disabled
+                     aria-label="Size of the selected word or letter">
+            </label>
+            <button type="button" class="btn btn--sm btn--ghost" id="szReset">Put every size back</button>
+          </div>
         </fieldset>
 
         <fieldset class="fld">
@@ -444,9 +468,9 @@
   </div>
 </div>
 
-<script src="assets/js/canopy-mask.js?v=16"></script>
-<script src="assets/js/config.js?v=16"></script>
-<script src="assets/js/configurator.js?v=16"></script>
-<script src="assets/js/main.js?v=16"></script>
+<script src="assets/js/canopy-mask.js?v=17"></script>
+<script src="assets/js/config.js?v=17"></script>
+<script src="assets/js/configurator.js?v=17"></script>
+<script src="assets/js/main.js?v=17"></script>
 </body>
 </html>
