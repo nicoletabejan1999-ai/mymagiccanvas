@@ -364,10 +364,22 @@ p{margin:0}
   font-size:var(--fs-names, 9cqw);
   font-family:var(--f-names, 'Dancing Script', cursive);
   cursor:grab; touch-action:none; user-select:none; -webkit-user-select:none;
-  will-change:transform;
+  will-change:transform; position:relative; display:inline-block;
 }
+.sheet__names-text{pointer-events:none}
 .sheet__names.is-dragging{cursor:grabbing}
 .sheet__names:focus-visible{outline:2px dashed rgba(42,42,42,.45); outline-offset:.18em}
+.sheet__names-resize{
+  position:absolute; right:-.38em; bottom:-.38em;
+  width:.72em; height:.72em; min-width:14px; min-height:14px;
+  padding:0; border:1.5px solid #fff; border-radius:50%;
+  background:#2A2A2A; box-shadow:0 1px 4px rgba(0,0,0,.22);
+  cursor:nwse-resize; touch-action:none; opacity:.82;
+}
+.sheet__names:hover .sheet__names-resize,
+.sheet__names:focus-within .sheet__names-resize,
+.sheet__names.is-sizing .sheet__names-resize{opacity:1}
+.sheet__names.is-sizing{cursor:nwse-resize}
 .sheet__date{
   margin-top:.5em; color:#2A2A2A; white-space:nowrap;
   font-size:var(--fs-date, 2.5cqw);
