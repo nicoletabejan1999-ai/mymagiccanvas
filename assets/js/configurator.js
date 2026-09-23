@@ -22,6 +22,14 @@ window.MMCConfigurator = (function () {
     names: 'Noah & Rose',
     date: '25.06.2025',
     font: 7,
+    // Text sizing is stored with the design so the preview and order recap
+    // describe the same artwork. 100 = the normal chart size.
+    nameSize: 118,
+    dateSize: 100,
+    // Optional per-character multipliers for the names/text. Entries omitted
+    // from the array are treated as 100%. This lets a buyer highlight one
+    // word or even one letter and resize only that part.
+    nameCharScale: [],
     inks: [3, 4, 6],
     guests: 80,
     lang: 'English',
@@ -298,6 +306,22 @@ window.MMCConfigurator = (function () {
   }
 
   /* --------------------------------------------------- personalisation */
+  function nameSizingSummary(s) {
+    const scales = s.nameCharScale || [];
+    const text = s.names || '';
+    const runs = [];
+    let i = 0;
+    while (i < text.length) {
+      const scale = scales[i] || 100;
+      if (scale === 100) { i++; continue; }
+      let j = i + 1;
+      while (j < text.length && (scales[j] || 100) === scale) j++;
+      runs.push('“' + text.slice(i, j) + '” ' + scale + '%');
+      i = j;
+    }
+    return runs.length ? runs.join(', ') : 'none';
+  }
+
   function recap(s = state) {
     const sz = sizeOf(s.size);
     const lines = [
@@ -309,7 +333,10 @@ window.MMCConfigurator = (function () {
         : '—'),
       'Font: ' + s.font + ' (' + fontOf(s.font).name + ')',
       'Names / text: ' + (s.names.trim() || '—'),
+      'Name size: ' + s.nameSize + '%',
+      'Selected letters / words: ' + nameSizingSummary(s),
       'Date: ' + (s.date.trim() || '—'),
+      'Date size: ' + s.dateSize + '%',
       'Instruction card language: ' + s.lang
     ];
     return lines.join('\n');
@@ -323,6 +350,8 @@ window.MMCConfigurator = (function () {
       s.easel ? 'E1' : 'E0',
       'C' + (s.inks.slice().sort((a, b) => a - b).join('-') || '0'),
       'T' + s.font,
+      'NS' + s.nameSize,
+      'DS' + s.dateSize,
       'L' + s.lang.slice(0, 2).toUpperCase(),
       s.ads ? 'ADS1' : 'ADS0'
     ].join('_');
