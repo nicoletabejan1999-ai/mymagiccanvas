@@ -109,22 +109,34 @@ function cleanDesign(raw, variant, country) {
 }
 
 async function saveDesign(design) {
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+  const { put } = await import('@vercel/blob');
+
+  const auth = process.env.BLOB_READ_WRITE_TOKEN
+    ? { token: process.env.BLOB_READ_WRITE_TOKEN }
+    : (process.env.VERCEL_OIDC_TOKEN && process.env.BLOB_STORE_ID
+      ? { oidcToken: process.env.VERCEL_OIDC_TOKEN, storeId: process.env.BLOB_STORE_ID }
+      : null);
+
+  if (!auth) {
     const visibleNames = process.env.VERCEL_ENV !== 'production'
-      ? Object.keys(process.env).filter(k => /BLOB|STORE|STORAGE/i.test(k)).sort()
+      ? Object.keys(process.env)
+          .filter(k => /BLOB|STORE|STORAGE|OIDC/i.test(k))
+          .sort()
       : [];
-    const suffix = visibleNames.length ? ' Detected env names: ' + visibleNames.join(', ') : ' No Blob-related env names are visible to this Function.';
+    const suffix = visibleNames.length
+      ? ' Detected env names: ' + visibleNames.join(', ')
+      : ' No Blob/OIDC environment variables are visible to this Function.';
     const error = new Error('Design storage is not configured yet.' + suffix);
     error.code = 'STORAGE_NOT_CONFIGURED';
     throw error;
   }
-  const { put } = await import('@vercel/blob');
+
   const designId = 'mc_' + crypto.randomUUID().replace(/-/g, '');
   await put('orders/designs/' + designId + '.json', JSON.stringify(design), {
     access: 'private',
     addRandomSuffix: false,
     contentType: 'application/json',
-    token: process.env.BLOB_READ_WRITE_TOKEN
+    ...auth
   });
   return designId;
 }
