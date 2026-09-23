@@ -272,7 +272,7 @@ p{margin:0}
 }
 /* .rig is exactly as tall as the framed canvas, so the easel — which is
    positioned against it — always lands with its ledge under the canvas. */
-.rig{position:relative; width:100%}
+.rig{position:relative; width:100%; container-type:inline-size}
 
 /* ── the easel ──
    In easel mode the easel sets the size of the scene and the canvas is
@@ -281,7 +281,7 @@ p{margin:0}
 .easel{width:100%; pointer-events:none}
 .easel svg{width:100%; height:auto; filter:drop-shadow(0 14px 26px rgba(29,30,26,.16))}
 
-.rig{position:relative; width:100%}
+
 .stage__scene.is-easel{position:relative}
 .stage__scene.is-easel .rig{
   position:absolute; left:50%; translate:-50% 0;
@@ -295,27 +295,27 @@ p{margin:0}
   transition:padding .28s cubic-bezier(.2,.7,.3,1), background .28s, box-shadow .28s;
   border-radius:3px;
 }
+/* The framed option uses a photograph of the real moulding, sliced as a
+   border-image so the corners stay square and the wood never stretches out
+   of shape whatever the canvas ratio. The slice numbers are the moulding
+   thickness in the source file, measured off the photo. */
 .frame.is-framed{
-  padding:3.4%;
-  border-radius:2px;
-  background:
-    /* barely-there grain, just enough to read as timber */
-    repeating-linear-gradient(93deg,
-      rgba(255,255,255,.05) 0 3px, rgba(150,112,64,.035) 3px 7px,
-      rgba(255,255,255,.02) 7px 14px),
-    linear-gradient(120deg,#E8CFA6 0%,#DCBF92 22%,#C8A576 48%,#D9BE95 70%,#E9D1A9 100%);
-  box-shadow:
-    inset 0 0 0 1px rgba(122,92,52,.55),      /* outer edge of the timber   */
-    inset 0 0 0 2px rgba(255,255,255,.30),    /* highlight along the face   */
-    0 18px 38px rgba(29,30,26,.16);
+  --fw: 4.45cqw;                 /* the moulding, as it sits in the photo */
+  padding: 0;
+  background: none;
+  border-style: solid;
+  border-left-width:   var(--fw);
+  border-top-width:    calc(var(--fw) * 53 / 55);
+  border-right-width:  calc(var(--fw) * 57 / 55);
+  border-bottom-width: calc(var(--fw) * 62 / 55);
+  border-image-source: image-set(
+      url('../img/frame-oak.webp') type('image/webp'),
+      url('../img/frame-oak.png')  type('image/png'));
+  border-image-slice: 53 57 62 55;
+  border-image-repeat: stretch;
+  filter: drop-shadow(0 16px 26px rgba(29,30,26,.17));
 }
-/* the lip where the frame steps down onto the print */
-.frame.is-framed .sheet{
-  box-shadow:
-    0 0 0 1px rgba(122,92,52,.5),
-    0 0 0 3px rgba(255,255,255,.34),
-    0 1px 7px rgba(70,50,22,.28) inset;
-}
+
 
 .sheet{
   position:relative; width:100%; overflow:hidden;

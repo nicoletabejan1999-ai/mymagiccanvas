@@ -135,6 +135,16 @@ how far they spread past a branch. In `configurator.js`, `PRINT_CM` is how wide
 a thumbprint lands in centimetres — which is why a bigger canvas shows smaller,
 more numerous prints — and `SPACING` is how close their centres may sit.
 
+**The frame.** The framed option is a photograph of the real oak moulding,
+`assets/img/frame-oak.*`, applied as a CSS `border-image`. Slicing it that way
+keeps the corners square and stops the wood stretching out of shape when the
+canvas changes ratio. To swap in a different moulding: photograph it straight
+on against a plain wall, crop to the outer edge of the wood, clear the middle
+to transparent, and update `border-image-slice` in `styles.css` with the
+moulding thickness in pixels (top right bottom left). `--fw` is that thickness
+as a share of the frame's width — 4.45% in the current photo — and it is the
+same on all three sizes.
+
 **Guest capacity.** `SIZES[].capacity` does two jobs: it prints the "room for
 about N fingerprints" note under the preview and it decides which size the
 guest-count slider recommends. Change the number and both follow.
