@@ -120,11 +120,11 @@ window.MMCConfigurator = (function () {
     ctx.rotate(rot);
     ctx.globalAlpha = alpha;
 
-    // a thumb leaves a narrow oval, taller than it is wide, and a little
-    // out of true wherever the finger rolled
-    const rx = r * 0.70, ry = r * 1.00;
+    // a thumb leaves a narrow oval, clearly taller than it is wide, and
+    // only a little out of true wherever the finger rolled
+    const rx = r * 0.66, ry = r * 1.00;
     const p1 = rnd() * 6.2832, p2 = rnd() * 6.2832;
-    const wob = 0.045 + rnd() * 0.045;
+    const wob = 0.020 + rnd() * 0.022;
     ctx.beginPath();
     for (let k = 0; k <= 44; k++) {
       const a = k / 44 * 6.2832;
@@ -164,6 +164,32 @@ window.MMCConfigurator = (function () {
     ctx.fillStyle = bl;
     ctx.fillRect(-r * 1.4, -r * 1.4, r * 2.8, r * 2.8);
 
+    // The ridges. They arch around the core of the print and run almost
+    // flat across the base of the pad, and it is the ink itself that
+    // draws them — the paper between is what stays light.
+    const coreX = (rnd() - 0.5) * rx * 0.28;
+    const coreY = ry * (0.06 + rnd() * 0.16);
+    const step  = ry * 0.128;
+    const lean  = (rnd() - 0.5) * 0.40;
+    ctx.lineCap = 'round';
+    ctx.lineWidth = Math.max(0.5, r * 0.052);
+    for (let k = 1; k <= 8; k++) {
+      const rr = step * k;
+      ctx.strokeStyle = hex + (k & 1 ? '86' : '6E');
+      ctx.beginPath();
+      ctx.ellipse(coreX, coreY - rr * 0.22, rr * 0.96, rr * 0.80, lean,
+                  Math.PI * (0.90 + rnd() * 0.10), Math.PI * (2.10 - rnd() * 0.10));
+      ctx.stroke();
+    }
+    for (let k = 1; k <= 4; k++) {
+      const rr = step * k * 1.25;
+      ctx.strokeStyle = hex + (k & 1 ? '7A' : '64');
+      ctx.beginPath();
+      ctx.ellipse(coreX, coreY + ry * 0.34, rx * (0.46 + k * 0.16), rr * 0.86, lean,
+                  0.16, Math.PI - 0.16);
+      ctx.stroke();
+    }
+
     // the darker line the pigment leaves as it is pushed to the rim, and
     // the heavier pool on the side the wash ran to
     ctx.lineWidth = Math.max(0.7, r * 0.15);
@@ -178,15 +204,16 @@ window.MMCConfigurator = (function () {
 
     ctx.restore();
 
-    // ridge hint — only worth drawing once the print is big enough to see
+    // a couple of valleys opened between the ridges, where the skin did
+    // not touch — only worth drawing once the print is big enough to see
     if (r > 5) {
-      ctx.globalAlpha = alpha * 0.40;
+      ctx.globalAlpha = alpha * 0.34;
       ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = Math.max(0.55, r * 0.075);
+      ctx.lineWidth = Math.max(0.5, r * 0.055);
       for (let k = 1; k <= 3; k++) {
-        const rr = r * (0.18 + k * 0.19);
+        const rr = r * (0.22 + k * 0.22);
         ctx.beginPath();
-        ctx.ellipse(0, -r * 0.04, rr * 0.68, rr, 0, 0.6, Math.PI * 1.7);
+        ctx.ellipse(0, -r * 0.04, rr * 0.66, rr * 0.86, 0, 0.7, Math.PI * 1.6);
         ctx.stroke();
       }
     }
