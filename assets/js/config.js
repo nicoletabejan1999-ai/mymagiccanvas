@@ -104,7 +104,7 @@ window.MMC = (function () {
   // different from each other.
   const PREVIEW = {
     // How far above the foot of the canvas the date is set, in centimetres.
-    dateFromBottomCm: 2,
+    dateFromBottomCm: 1,
     // The display easel is a real object of a known height, so on the easel
     // the canvas is measured against it — that is what makes S read as small
     // and L as large.
