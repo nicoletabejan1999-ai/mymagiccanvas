@@ -181,27 +181,23 @@ window.MMC = (function () {
   /* --------------------------------------------------------------- fonts */
   // The eight numbered fonts on the chart, in the order they appear on it.
   //
-  // `file` is the font itself, sitting in assets/fonts/ — see the note in
-  // that folder for what each one must be called. Two of the eight are
-  // free and come from Google Fonts, so they are already exact; the other
-  // six are bought fonts and cannot be downloaded here, so until their
-  // files are dropped in, `file` stays null and the preview falls back to
-  // the nearest free face in `stand`. The print always uses the numbered
-  // font from the chart either way.
+  // `file` is the font served locally from assets/fonts/. The chart fonts
+  // below now use the exact files supplied in the Drive "fonts" folder.
+  // `stand` remains only as a fallback if a local font fails to load.
   //
   // `scale` sizes the lettering in the preview, because the same point
   // size looks quite different from one face to the next. Each one is set
   // for the face actually being shown, so it wants a look when a bought
   // font arrives.
   const FONTS = [
-    { n: 1, name: 'Hubiland',          file: null, stand: "'Sacramento', cursive",         scale: 1.06 },
-    { n: 2, name: 'Millerstone Demo',  file: null, stand: "'Playfair Display', serif",     scale: 0.80 },
-    { n: 3, name: 'Boheme Floral',     file: null, stand: "'Mrs Saint Delafield', cursive", scale: 1.18 },
-    { n: 4, name: 'Francisco',         file: null, stand: "'Cormorant Garamond', serif",   scale: 0.88 },
-    { n: 5, name: 'Belista',           file: null, stand: "'Prata', serif",                scale: 0.80 },
-    { n: 6, name: 'Poppy Shower',      file: null, stand: "'Parisienne', cursive",         scale: 1.02 },
-    { n: 7, name: 'Dancing Script',    file: null, stand: "'Dancing Script', cursive",     scale: 0.94 },
-    { n: 8, name: 'Savoye LET',        file: null, stand: "'Allura', cursive",             scale: 1.10 }
+    { n: 1, name: 'Hubiland',          file: 'hubiland.otf', stand: "'Sacramento', cursive",         scale: 1.06 },
+    { n: 2, name: 'Millerstone Demo',  file: 'millerstone.ttf', stand: "'Playfair Display', serif",     scale: 0.80 },
+    { n: 3, name: 'Boheme Floral',     file: 'boheme-floral.ttf', stand: "'Mrs Saint Delafield', cursive", scale: 1.18 },
+    { n: 4, name: 'Francisco',         file: 'francisco.ttf', stand: "'Cormorant Garamond', serif",   scale: 0.88 },
+    { n: 5, name: 'Belista',           file: 'belista.ttf', stand: "'Prata', serif",                scale: 0.80 },
+    { n: 6, name: 'Poppy Shower',      file: 'poppy-shower.ttf', stand: "'Parisienne', cursive",         scale: 1.02 },
+    { n: 7, name: 'Dancing Script',    file: 'dancing-script.ttf', stand: "'Dancing Script', cursive",     scale: 0.94 },
+    { n: 8, name: 'Savoye LET',        file: 'savoye-let.ttf', stand: "'Allura', cursive",             scale: 1.10 }
   ];
 
   // The date is always set in the same face, whatever the lettering.
