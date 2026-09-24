@@ -28,7 +28,7 @@ async function rawBody(req) {
   return Buffer.concat(chunks);
 }
 
-async function readPrivateJson(pathname, auth) {
+async function readPrivateBlob(pathname, auth) {
   const { get } = await import('@vercel/blob');
   const result = await get(pathname, {
     access: 'private',
@@ -36,7 +36,19 @@ async function readPrivateJson(pathname, auth) {
     ...auth
   });
   if (!result || result.statusCode !== 200) return null;
+  return result;
+}
+
+async function readPrivateJson(pathname, auth) {
+  const result = await readPrivateBlob(pathname, auth);
+  if (!result) return null;
   return JSON.parse(await new Response(result.stream).text());
+}
+
+async function readPrivateBytes(pathname, auth) {
+  const result = await readPrivateBlob(pathname, auth);
+  if (!result) return null;
+  return Buffer.from(await new Response(result.stream).arrayBuffer());
 }
 
 async function writePrivate(pathname, body, contentType, auth) {
@@ -63,7 +75,10 @@ async function fulfillPaidSession(session) {
   const design = await readPrivateJson(designPath, auth);
   if (!design) throw new Error('Saved design not found: ' + designId);
 
-  const pdfBytes = await generatePrintPdf(design, designId, session.id);
+  const treePngBytes = await readPrivateBytes('tree-base.png', auth);
+  if (!treePngBytes) throw new Error('Print tree PNG not found in Blob: tree-base.png');
+
+  const pdfBytes = await generatePrintPdf(design, designId, session.id, treePngBytes);
   const pdfPath = 'orders/print/' + designId + '.pdf';
   const pdfBlob = await writePrivate(pdfPath, pdfBytes, 'application/pdf', auth);
 
