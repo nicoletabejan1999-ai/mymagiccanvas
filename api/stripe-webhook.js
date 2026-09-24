@@ -1,3 +1,4 @@
+const crypto = require('node:crypto');
 const Stripe = require('stripe');
 const { generatePrintPdf } = require('../lib/order-pdf');
 
@@ -62,6 +63,65 @@ async function writePrivate(pathname, body, contentType, auth) {
   });
 }
 
+function fontName(number) {
+  return ({
+    1: 'Hubiland',
+    2: 'Millerstone Demo',
+    3: 'Boheme Floral',
+    4: 'Francisco',
+    5: 'Belista',
+    6: 'Poppy Shower',
+    7: 'Dancing Script',
+    8: 'Savoye LET'
+  })[Number(number)] || String(number || '');
+}
+
+function pdfFileName(design, designId) {
+  const safeNames = String(design.names || 'order')
+    .normalize('NFKD')
+    .replace(/[^a-z0-9]+/gi, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 48) || 'order';
+  return [safeNames, design.size || 'canvas', designId].join('_') + '.pdf';
+}
+
+async function sendGoogleFulfillment(order, pdfBytes) {
+  const url = process.env.GOOGLE_FULFILLMENT_URL;
+  const secret = process.env.GOOGLE_FULFILLMENT_SECRET;
+  if (!url || !secret) {
+    throw new Error('Google fulfillment is not configured');
+  }
+
+  const payload = {
+    ...order,
+    pdfBase64: Buffer.from(pdfBytes).toString('base64')
+  };
+  const payloadB64 = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64');
+  const signature = crypto
+    .createHmac('sha256', secret)
+    .update(payloadB64)
+    .digest('hex');
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ payload: payloadB64, signature })
+  });
+
+  const text = await response.text();
+  let body = null;
+  try { body = JSON.parse(text); } catch (_) {}
+
+  if (!response.ok || !body || body.ok !== true) {
+    throw new Error(
+      'Google fulfillment failed' +
+      (body && body.error ? ': ' + body.error : ' (HTTP ' + response.status + ')')
+    );
+  }
+
+  return body;
+}
+
 async function fulfillPaidSession(session) {
   const designId = session.metadata && session.metadata.design_id || session.client_reference_id;
   if (!designId || !/^mc_[a-f0-9]{32}$/i.test(designId)) {
@@ -79,15 +139,13 @@ async function fulfillPaidSession(session) {
   if (!treePngBytes) throw new Error('Print tree PNG not found in Blob: tree-base.png');
 
   const pdfBytes = await generatePrintPdf(design, designId, session.id, treePngBytes);
-  const pdfPath = 'orders/print/' + designId + '.pdf';
-  const pdfBlob = await writePrivate(pdfPath, pdfBytes, 'application/pdf', auth);
 
   const shipping = session.shipping_details ||
     (session.collected_information && session.collected_information.shipping_details) ||
     null;
 
   const order = {
-    version: 1,
+    version: 2,
     paidAt: new Date().toISOString(),
     stripeSessionId: session.id,
     paymentStatus: session.payment_status,
@@ -99,18 +157,21 @@ async function fulfillPaidSession(session) {
     customer: session.customer_details || null,
     shipping,
     shippingCost: session.total_details && session.total_details.amount_shipping || null,
-    pdfPath,
-    pdfUrl: pdfBlob.url
+    size: design.size,
+    framed: Boolean(design.framed),
+    easel: Boolean(design.easel),
+    names: design.names,
+    canvasDate: design.date,
+    font: design.font,
+    fontName: fontName(design.font),
+    inks: design.inks,
+    guests: design.guests,
+    pdfFileName: pdfFileName(design, designId)
   };
 
-  await writePrivate(
-    'orders/paid/' + session.id + '.json',
-    JSON.stringify(order),
-    'application/json',
-    auth
-  );
+  const google = await sendGoogleFulfillment(order, pdfBytes);
 
-  return { designId, pdfPath };
+  return { designId, driveUrl: google.driveUrl || null };
 }
 
 async function handler(req, res) {
