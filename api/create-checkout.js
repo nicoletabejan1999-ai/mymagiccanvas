@@ -88,8 +88,18 @@ function cleanDesign(raw, variant, country) {
   ].join('');
   if (expectedVariant !== variant) return null;
 
+  const rawLayout = raw.layout && typeof raw.layout === 'object' ? raw.layout : null;
+  const layout = rawLayout ? {
+    nameCenterX: cleanNumber(rawLayout.nameCenterX, 0, 1, 0.5),
+    nameBaselineY: cleanNumber(rawLayout.nameBaselineY, 0, 1, 0.9),
+    nameFontSize: cleanNumber(rawLayout.nameFontSize, 0.001, 0.5, 0.09),
+    dateCenterX: cleanNumber(rawLayout.dateCenterX, 0, 1, 0.5),
+    dateBaselineY: cleanNumber(rawLayout.dateBaselineY, 0, 1, 0.97),
+    dateFontSize: cleanNumber(rawLayout.dateFontSize, 0.001, 0.25, 0.025)
+  } : null;
+
   return {
-    version: 1,
+    version: 2,
     createdAt: new Date().toISOString(),
     variant,
     deliveryCountry: country,
@@ -102,6 +112,7 @@ function cleanDesign(raw, variant, country) {
     nameX: cleanNumber(raw.nameX, -1, 1, 0),
     nameY: cleanNumber(raw.nameY, -1, 1, 0),
     nameScale: cleanNumber(raw.nameScale, 0.6, 2.2, 1),
+    layout,
     inks,
     guests: Math.round(cleanNumber(raw.guests, 10, 200, 80)),
     lang,
