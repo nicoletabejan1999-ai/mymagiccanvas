@@ -345,6 +345,40 @@
     });
   }
 
+  function measurePrintLayout() {
+    const sheet = $('#sheet');
+    const names = $('#pvNames');
+    const date = $('#pvDate');
+    if (!sheet || !names || !date) return null;
+
+    const sr = sheet.getBoundingClientRect();
+    if (!sr.width || !sr.height) return null;
+
+    const baselineOf = el => {
+      const marker = document.createElement('span');
+      marker.setAttribute('aria-hidden', 'true');
+      marker.style.cssText = 'display:inline-block;width:0;height:0;padding:0;margin:0;border:0;vertical-align:baseline;overflow:hidden;pointer-events:none;';
+      el.appendChild(marker);
+      const y = marker.getBoundingClientRect().bottom;
+      marker.remove();
+      return y;
+    };
+
+    const nr = names.getBoundingClientRect();
+    const dr = date.getBoundingClientRect();
+    const ns = getComputedStyle(names);
+    const ds = getComputedStyle(date);
+
+    return {
+      nameCenterX: (nr.left + nr.width / 2 - sr.left) / sr.width,
+      nameBaselineY: (baselineOf(names) - sr.top) / sr.height,
+      nameFontSize: parseFloat(ns.fontSize) / sr.width,
+      dateCenterX: (dr.left + dr.width / 2 - sr.left) / sr.width,
+      dateBaselineY: (baselineOf(date) - sr.top) / sr.height,
+      dateFontSize: parseFloat(ds.fontSize) / sr.width
+    };
+  }
+
   async function startCheckout(e) {
     e.preventDefault();
 
@@ -393,6 +427,7 @@
             nameX: X.state.nameX,
             nameY: X.state.nameY,
             nameScale: X.state.nameScale,
+            layout: measurePrintLayout(),
             inks: X.state.inks,
             guests: X.state.guests,
             lang: X.state.lang,
