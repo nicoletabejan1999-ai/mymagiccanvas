@@ -349,7 +349,7 @@ p{margin:0}
 .sheet__tree{
   position:absolute; left:0; width:100%;
   top:7.4%; height:76.9%;
-  object-fit:contain; mix-blend-mode:multiply; pointer-events:none;
+  object-fit:contain; pointer-events:none;
 }
 /* The lettering hangs from the foot of the canvas: the date stays fixed
    one physical centimetre above the bottom edge. The names may be dragged
