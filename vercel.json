@@ -40,10 +40,7 @@
   ],
   "functions": {
     "api/stripe-webhook.js": {
-      "includeFiles": [
-        "assets/img/tree-base.jpg",
-        "assets/fonts/**"
-      ]
+      "includeFiles": "{assets/img/tree-base.jpg,assets/fonts/**}"
     }
   }
 }
