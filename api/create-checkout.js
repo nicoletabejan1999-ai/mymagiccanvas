@@ -116,8 +116,7 @@ function cleanDesign(raw, variant, country) {
     phone: cleanText(raw.phone, 32),
     inks,
     guests: Math.round(cleanNumber(raw.guests, 10, 200, 80)),
-    lang,
-    adsConsent: Boolean(raw.ads)
+    lang
   };
 }
 
