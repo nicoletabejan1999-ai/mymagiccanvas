@@ -74,7 +74,8 @@ function cleanDesign(raw, variant, country) {
   const size = ['S','M','L'].includes(raw.size) ? raw.size : null;
   const font = Number(raw.font);
   const inks = Array.isArray(raw.inks)
-    ? raw.inks.map(Number).filter(n => Number.isInteger(n) && n >= 1 && n <= 15).slice(0, 4)
+    ? Array.from(new Set(raw.inks.map(Number)
+        .filter(n => Number.isInteger(n) && n >= 1 && n <= 15))).slice(0, 15)
     : [];
   const lang = ['English','French','German','Italian','Spanish'].includes(raw.lang)
     ? raw.lang : 'English';
@@ -207,6 +208,8 @@ module.exports = async function handler(req, res) {
   params.set('client_reference_id', designId);
   params.set('metadata[design_id]', designId);
   params.set('metadata[variant]', variant);
+  const extraInkCount = Math.max(0, design.inks.length - 4);
+  params.set('metadata[extra_ink_count]', String(extraInkCount));
   params.set('billing_address_collection', 'auto');
   params.set('customer_creation', 'always');
   params.set('shipping_address_collection[allowed_countries][0]', country);
@@ -215,6 +218,13 @@ module.exports = async function handler(req, res) {
   params.set('line_items[0][price_data][currency]', 'eur');
   params.set('line_items[0][price_data][unit_amount]', String(PRICES[variant]));
   params.set('line_items[0][price_data][product_data][name]', productName(variant));
+
+  if (extraInkCount > 0) {
+    params.set('line_items[1][quantity]', String(extraInkCount));
+    params.set('line_items[1][price_data][currency]', 'eur');
+    params.set('line_items[1][price_data][unit_amount]', '300');
+    params.set('line_items[1][price_data][product_data][name]', 'Extra ink pad');
+  }
 
   addShipping(params, 0, 'Standard delivery · 3–7 days', shipping.standard, 3, 7);
   addShipping(params, 1, 'Express delivery · 1–3 days', shipping.express, 1, 3);
