@@ -105,9 +105,14 @@ window.MMCConfigurator = (function () {
     return (s.framed ? 'FRAMED-' : '') + s.size + (s.easel ? '-EASEL' : '');
   }
 
+  function extraInkCount(s = state) {
+    return Math.max(0, s.inks.length - C.INCLUDED_INKS);
+  }
+
   function priceOf(s = state) {
     const v = C.VARIANTS[variantKey(s)];
-    return v ? v.price : null;
+    if (!v || v.price == null) return null;
+    return v.price + extraInkCount(s) * C.EXTRA_INK_PRICE;
   }
 
   function money(n) {
@@ -312,6 +317,8 @@ window.MMCConfigurator = (function () {
       'Ink pad colours: ' + (s.inks.length
         ? s.inks.slice().sort((a, b) => a - b).map(n => n + ' (' + inkOf(n).name + ')').join(', ')
         : '—'),
+      'Extra ink pads: ' + extraInkCount(s) +
+        (extraInkCount(s) ? ' (+' + money(extraInkCount(s) * C.EXTRA_INK_PRICE) + ')' : ''),
       'Font: ' + s.font + ' (' + fontOf(s.font).name + ')',
       'Names / text: ' + (s.names.trim() || '—'),
       'Name position: ' + Math.round(s.nameX * 100) + '% horizontal, ' +
@@ -375,7 +382,7 @@ window.MMCConfigurator = (function () {
 
   return {
     state, set, toggleInk, onChange, mount, render, recommendedSize,
-    recap, reference, checkoutUrl, variantKey, priceOf, money,
+    recap, reference, checkoutUrl, variantKey, priceOf, extraInkCount, money,
     sizeOf, fontOf, inkOf
   };
 })();
