@@ -99,7 +99,7 @@ function cleanDesign(raw, variant, country) {
   } : null;
 
   return {
-    version: 2,
+    version: 3,
     createdAt: new Date().toISOString(),
     variant,
     deliveryCountry: country,
@@ -113,6 +113,7 @@ function cleanDesign(raw, variant, country) {
     nameY: cleanNumber(raw.nameY, -1, 1, 0),
     nameScale: cleanNumber(raw.nameScale, 0.6, 2.2, 1),
     layout,
+    phone: cleanText(raw.phone, 32),
     inks,
     guests: Math.round(cleanNumber(raw.guests, 10, 200, 80)),
     lang,
