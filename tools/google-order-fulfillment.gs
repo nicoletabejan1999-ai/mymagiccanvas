@@ -90,7 +90,19 @@ function sendCustomerEmail_(order, customer, adminEmail) {
 
   const ref = orderRef_(order);
   const total = money_(order.amountTotal, order.currency);
+  const shipping = order.shipping || {};
+  const address = shipping.address || {};
+  const deliveryName = safe_(shipping.name || customer.name).trim();
   const deliveryPhone = safe_(order.phone || customer.phone).trim();
+  const addressLine = [
+    safe_(address.line1).trim(),
+    safe_(address.line2).trim()
+  ].filter(Boolean).join(', ');
+  const cityLine = [
+    safe_(address.postal_code).trim(),
+    safe_(address.city).trim()
+  ].filter(Boolean).join(' ');
+  const deliveryCountry = safe_(address.country).trim();
   const plain = [
     'Thank you for your MyMagiCanvas order.',
     '',
@@ -100,8 +112,14 @@ function sendCustomerEmail_(order, customer, adminEmail) {
     'Names: ' + safe_(order.names),
     'Date: ' + safe_(order.canvasDate),
     'Canvas size: ' + safe_(order.size),
-    deliveryPhone ? 'Delivery phone: ' + deliveryPhone : '',
     'Total paid: ' + total,
+    '',
+    'Delivery details:',
+    deliveryName ? 'Name: ' + deliveryName : '',
+    addressLine ? 'Address: ' + addressLine : '',
+    cityLine ? 'City / postal code: ' + cityLine : '',
+    deliveryCountry ? 'Country: ' + deliveryCountry : '',
+    deliveryPhone ? 'Phone: ' + deliveryPhone : '',
     '',
     'We will prepare your canvas using the personalization submitted at checkout.',
     'Please keep this email as your order confirmation.',
@@ -112,9 +130,23 @@ function sendCustomerEmail_(order, customer, adminEmail) {
     'MyMagiCanvas'
   ].join('\n');
 
-  const phoneRow = deliveryPhone
-    ? '<tr><td style="padding:4px 12px 4px 0;color:#7a7c72;">Delivery phone</td><td style="padding:4px 0;text-align:right;">' + html_(deliveryPhone) + '</td></tr>'
-    : '';
+  const deliveryRows = [
+    deliveryName
+      ? '<tr><td style="padding:4px 12px 4px 0;color:#7a7c72;">Name</td><td style="padding:4px 0;text-align:right;">' + html_(deliveryName) + '</td></tr>'
+      : '',
+    addressLine
+      ? '<tr><td style="padding:4px 12px 4px 0;color:#7a7c72;">Address</td><td style="padding:4px 0;text-align:right;">' + html_(addressLine) + '</td></tr>'
+      : '',
+    cityLine
+      ? '<tr><td style="padding:4px 12px 4px 0;color:#7a7c72;">City / postal code</td><td style="padding:4px 0;text-align:right;">' + html_(cityLine) + '</td></tr>'
+      : '',
+    deliveryCountry
+      ? '<tr><td style="padding:4px 12px 4px 0;color:#7a7c72;">Country</td><td style="padding:4px 0;text-align:right;">' + html_(deliveryCountry) + '</td></tr>'
+      : '',
+    deliveryPhone
+      ? '<tr><td style="padding:4px 12px 4px 0;color:#7a7c72;">Phone</td><td style="padding:4px 0;text-align:right;">' + html_(deliveryPhone) + '</td></tr>'
+      : ''
+  ].join('');
 
   const htmlBody =
     '<div style="margin:0;padding:32px 16px;background:#f7f4e8;font-family:Arial,sans-serif;color:#1d1e1a;">' +
@@ -130,8 +162,13 @@ function sendCustomerEmail_(order, customer, adminEmail) {
             '<tr><td style="padding:4px 12px 4px 0;color:#7a7c72;">Names</td><td style="padding:4px 0;text-align:right;font-weight:600;">' + html_(order.names) + '</td></tr>' +
             '<tr><td style="padding:4px 12px 4px 0;color:#7a7c72;">Date</td><td style="padding:4px 0;text-align:right;">' + html_(order.canvasDate) + '</td></tr>' +
             '<tr><td style="padding:4px 12px 4px 0;color:#7a7c72;">Canvas size</td><td style="padding:4px 0;text-align:right;">' + html_(order.size) + '</td></tr>' +
-            phoneRow +
             '<tr><td style="padding:4px 12px 4px 0;color:#7a7c72;">Total paid</td><td style="padding:4px 0;text-align:right;font-weight:600;">' + html_(total) + '</td></tr>' +
+          '</table>' +
+        '</div>' +
+        '<div style="background:#ffffff;border:1px solid #e7e5dc;border-radius:12px;padding:20px;margin-bottom:26px;">' +
+          '<p style="margin:0 0 10px;font-size:13px;color:#7a7c72;">DELIVERY DETAILS</p>' +
+          '<table role="presentation" style="width:100%;border-collapse:collapse;font-size:14px;line-height:1.6;">' +
+            deliveryRows +
           '</table>' +
         '</div>' +
         '<p style="font-size:14px;line-height:1.65;color:#4a4c45;margin:0 0 12px;">We will prepare your canvas using the personalization submitted at checkout. Please keep this email as your order confirmation.</p>' +
