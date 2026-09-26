@@ -101,8 +101,12 @@ window.MMCConfigurator = (function () {
     return (C.SIZES.find(s => guests <= s.capacity) || C.SIZES[C.SIZES.length - 1]).id;
   }
 
+  function baseVariantKey(s = state) {
+    return (s.framed ? 'FRAMED-' : '') + s.size;
+  }
+
   function variantKey(s = state) {
-    return (s.framed ? 'FRAMED-' : '') + s.size + (s.easel ? '-EASEL' : '');
+    return baseVariantKey(s) + (s.easel ? '-EASEL' : '');
   }
 
   function extraInkCount(s = state) {
@@ -110,9 +114,11 @@ window.MMCConfigurator = (function () {
   }
 
   function priceOf(s = state) {
-    const v = C.VARIANTS[variantKey(s)];
+    const v = C.VARIANTS[baseVariantKey(s)];
     if (!v || v.price == null) return null;
-    return v.price + extraInkCount(s) * C.EXTRA_INK_PRICE;
+    return v.price +
+      (s.easel ? C.EASEL_PRICE : 0) +
+      extraInkCount(s) * C.EXTRA_INK_PRICE;
   }
 
   function money(n) {
@@ -313,7 +319,7 @@ window.MMCConfigurator = (function () {
     const lines = [
       'Canvas size: ' + sz.label + ' — ' + sz.cm + ' (' + sz.inch + ')',
       'Finish: ' + (s.framed ? 'Premium wooden frame' : 'Canvas on wooden stretcher'),
-      'Display easel: ' + (s.easel ? 'Yes' : 'No'),
+      'Display easel: ' + (s.easel ? 'Yes (+' + money(C.EASEL_PRICE) + ')' : 'No'),
       'Ink pad colours: ' + (s.inks.length
         ? s.inks.slice().sort((a, b) => a - b).map(n => n + ' (' + inkOf(n).name + ')').join(', ')
         : '—'),
@@ -382,7 +388,7 @@ window.MMCConfigurator = (function () {
 
   return {
     state, set, toggleInk, onChange, mount, render, recommendedSize,
-    recap, reference, checkoutUrl, variantKey, priceOf, extraInkCount, money,
+    recap, reference, checkoutUrl, baseVariantKey, variantKey, priceOf, extraInkCount, money,
     sizeOf, fontOf, inkOf
   };
 })();
