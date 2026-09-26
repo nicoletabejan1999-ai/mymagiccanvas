@@ -476,6 +476,17 @@ p{margin:0}
 .buy__country{display:grid; gap:7px; margin:4px 0 16px}
 .buy__country > span{font-size:.855rem; color:var(--ink-2)}
 .buy__country > small{font-size:.75rem; line-height:1.45; color:var(--ink-3)}
+.buy__phone{display:grid;gap:7px;margin:0 0 16px}
+.buy__phone > span{font-size:.855rem;color:var(--ink-2)}
+.buy__phone > small{font-size:.75rem;line-height:1.45;color:var(--ink-3)}
+.phone-field{display:flex;align-items:stretch}
+.phone-field__prefix{
+  display:flex!important;align-items:center;justify-content:center;min-width:62px;
+  margin:0!important;padding:0 12px;border:1.5px solid var(--line);border-right:0;
+  border-radius:var(--r-sm) 0 0 var(--r-sm);background:var(--sand-soft);
+  color:var(--ink)!important;font-size:.95rem!important;font-weight:600
+}
+.phone-field input{border-radius:0 var(--r-sm) var(--r-sm) 0!important}
 
 .fonts{display:grid; grid-template-columns:repeat(auto-fit,minmax(118px,1fr)); gap:8px}
 .font{
