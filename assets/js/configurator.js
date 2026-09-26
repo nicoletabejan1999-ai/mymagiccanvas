@@ -30,7 +30,6 @@ window.MMCConfigurator = (function () {
     inks: [3, 4, 6],
     guests: 80,
     lang: 'English',
-    ads: false,        // advertising consent, recorded with the order
 
     seed: 20250625
   };
@@ -347,8 +346,7 @@ window.MMCConfigurator = (function () {
       'PX' + Math.round(s.nameX * 1000),
       'PY' + Math.round(s.nameY * 1000),
       'PS' + Math.round(s.nameScale * 100),
-      'L' + s.lang.slice(0, 2).toUpperCase(),
-      s.ads ? 'ADS1' : 'ADS0'
+      'L' + s.lang.slice(0, 2).toUpperCase()
     ].join('_');
   }
 
