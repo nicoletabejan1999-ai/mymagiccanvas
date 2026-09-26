@@ -493,8 +493,7 @@
             phone: deliveryPhoneValue(),
             inks: X.state.inks,
             guests: X.state.guests,
-            lang: X.state.lang,
-            ads: Boolean($('#okAds') && $('#okAds').checked)
+            lang: X.state.lang
           }
         })
       });
@@ -594,32 +593,15 @@
         X.state.lang === l, () => X.set({ lang: l })));
     });
 
-    /* consent — the terms box gates checkout, the advertising box never does */
-    const okTerms = $('#okTerms'), okAds = $('#okAds');
+    /* the single terms/privacy checkbox gates checkout */
+    const okTerms = $('#okTerms');
     okTerms.addEventListener('change', () => {
       if (okTerms.checked) $('#consentErr').hidden = true;
       sync(X.state);
     });
-    okAds.addEventListener('change', () => X.set({ ads: okAds.checked }));
 
     $('#buyBtn').addEventListener('click', startCheckout);
     $('#dockBtn').addEventListener('click', startCheckout);
-
-    /* copy */
-    $('#btnCopy').addEventListener('click', async e => {
-      const b = e.currentTarget, old = b.textContent;
-      try {
-        await navigator.clipboard.writeText(X.recap());
-        b.textContent = 'Copied';
-      } catch (_) {
-        const pre = $('#recText'), r = document.createRange();
-        r.selectNodeContents(pre);
-        const sel = window.getSelection();
-        sel.removeAllRanges(); sel.addRange(r);
-        b.textContent = 'Select & copy';
-      }
-      setTimeout(() => { b.textContent = old; }, 1800);
-    });
 
   }
 
@@ -962,9 +944,6 @@
     /* the button stays visibly inert until the terms are accepted */
     const agreed = $('#okTerms') && $('#okTerms').checked;
     btn.classList.toggle('is-locked', !agreed);
-
-    /* recap */
-    $('#recText').textContent = X.recap(s);
 
     /* mobile dock */
     $('#dockWhat').textContent = what;
