@@ -515,7 +515,8 @@
     const hSize = $('#optSize');
     C.SIZES.forEach(s => {
       hSize.appendChild(optBtn('opt',
-        '<span class="opt__t">' + s.label + '</span><span class="opt__s">' + s.cm + '</span>',
+        '<span class="opt__t">' + s.label + '</span><span class="opt__s">' + s.cm +
+        '</span><span class="opt__p"></span>',
         X.state.size === s.id, () => X.set({ size: s.id })));
     });
 
@@ -524,7 +525,8 @@
     [[false, 'Canvas', 'Stretched on wood, ready to hang'],
      [true,  'Framed', 'Premium solid wood frame']].forEach(([v, t, s]) => {
       hFrame.appendChild(optBtn('opt',
-        '<span class="opt__t">' + t + '</span><span class="opt__s">' + s + '</span>',
+        '<span class="opt__t">' + t + '</span><span class="opt__s">' + s +
+        '</span><span class="opt__p"></span>',
         X.state.framed === v, () => X.set({ framed: v })));
     });
 
@@ -561,7 +563,8 @@
     const hInks = $('#optInks');
     C.INKS.forEach(i => {
       const b = optBtn('ink',
-        '<span class="ink__sw" style="background:' + i.hex + '"></span><span class="ink__n">' + i.n + '</span>',
+        '<span class="ink__sw" style="background:' + i.hex + '"></span><span class="ink__n">' + i.n +
+        '</span><span class="ink__price"></span>',
         X.state.inks.includes(i.n), () => {
           if (!X.toggleInk(i.n)) flashInkLimit();
         });
@@ -776,13 +779,54 @@
   let inkFlash;
   function flashInkLimit() {
     const n = $('#inkCount');
-    n.textContent = '— four is the maximum';
+    n.textContent = '— all 15 colours are already selected';
     n.style.color = '#A8442E';
     clearTimeout(inkFlash);
     inkFlash = setTimeout(() => { n.style.color = ''; syncInkCount(); }, 1600);
   }
+
   function syncInkCount() {
-    $('#inkCount').textContent = '— ' + X.state.inks.length + ' of ' + C.MAX_INKS + ' chosen';
+    const count = X.state.inks.length;
+    const extra = X.extraInkCount(X.state);
+    $('#inkCount').textContent = extra
+      ? '— ' + count + ' selected · ' + extra + ' extra (+' + X.money(extra * C.EXTRA_INK_PRICE) + ')'
+      : '— ' + count + ' selected · up to ' + C.INCLUDED_INKS + ' included';
+  }
+
+  function syncOptionPrices(s) {
+    $('#optSize > button').forEach((b, i) => {
+      const base = C.VARIANTS[C.SIZES[i].id] && C.VARIANTS[C.SIZES[i].id].price;
+      const tag = $('.opt__p', b);
+      if (tag) tag.textContent = base == null ? 'Price on request' : X.money(base) + ' base';
+    });
+
+    const canvasState = Object.assign({}, s, { framed: false });
+    const framedState = Object.assign({}, s, { framed: true });
+    const canvasPrice = X.priceOf(canvasState);
+    const framedPrice = X.priceOf(framedState);
+    const frameButtons = $('#optFrame > button');
+
+    if (frameButtons[0]) {
+      const tag = $('.opt__p', frameButtons[0]);
+      if (tag) tag.textContent = 'Base';
+    }
+    if (frameButtons[1]) {
+      const tag = $('.opt__p', frameButtons[1]);
+      if (tag) tag.textContent = (canvasPrice == null || framedPrice == null)
+        ? 'Not available with this selection'
+        : '+' + X.money(framedPrice - canvasPrice);
+    }
+
+    const noEasel = Object.assign({}, s, { easel: false });
+    const withEasel = Object.assign({}, s, { easel: true });
+    const noEaselPrice = X.priceOf(noEasel);
+    const withEaselPrice = X.priceOf(withEasel);
+    const easelTag = $('#easelPriceBadge');
+    if (easelTag) {
+      easelTag.textContent = (noEaselPrice == null || withEaselPrice == null)
+        ? 'Not available'
+        : '+' + X.money(withEaselPrice - noEaselPrice);
+    }
   }
 
   /* ══════════════════════════════════════════════════════════════ sync */
@@ -853,9 +897,21 @@
       b.setAttribute('aria-pressed', on ? 'true' : 'false');
       const full = !on && s.inks.length >= C.MAX_INKS;
       b.setAttribute('aria-disabled', full ? 'true' : 'false');
+
+      const tag = $('.ink__price', b);
+      if (tag) {
+        const selectedIndex = s.inks.indexOf(n);
+        const isPaidSelected = on && selectedIndex >= C.INCLUDED_INKS;
+        const wouldBePaid = !on && s.inks.length >= C.INCLUDED_INKS;
+        tag.textContent = (isPaidSelected || wouldBePaid)
+          ? '+' + X.money(C.EXTRA_INK_PRICE)
+          : 'Included';
+        tag.classList.toggle('is-extra', isPaidSelected || wouldBePaid);
+      }
     });
     $('#optEasel').checked = s.easel;
     syncInkCount();
+    syncOptionPrices(s);
 
     /* what this size holds, right under the canvas */
     $('#fillNote').innerHTML = 'Room for <b>' + size.capacityLabel + '</b>';
