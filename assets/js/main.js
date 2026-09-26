@@ -817,16 +817,8 @@
         : '+' + X.money(framedPrice - canvasPrice);
     }
 
-    const noEasel = Object.assign({}, s, { easel: false });
-    const withEasel = Object.assign({}, s, { easel: true });
-    const noEaselPrice = X.priceOf(noEasel);
-    const withEaselPrice = X.priceOf(withEasel);
     const easelTag = $('#easelPriceBadge');
-    if (easelTag) {
-      easelTag.textContent = (noEaselPrice == null || withEaselPrice == null)
-        ? 'Not available'
-        : '+' + X.money(withEaselPrice - noEaselPrice);
-    }
+    if (easelTag) easelTag.textContent = '+' + X.money(C.EASEL_PRICE);
   }
 
   /* ══════════════════════════════════════════════════════════════ sync */
