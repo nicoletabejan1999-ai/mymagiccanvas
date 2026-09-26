@@ -16,7 +16,7 @@ window.MMC = (function () {
   const SHOP = {
     name: 'MyMagiCanvas',
     tagline: 'Fingerprint guest book canvases, made in Europe and posted worldwide',
-    email: 'hello@mymagicanvas.com',        // ← replace with your real address
+    email: 'contact@mymagicanvas.com',        // ← replace with your real address
     whatsapp: '33605881810',                // +33 6 05 88 18 10
     etsyUrl: '',                            // ← optional: your Etsy listing
     city: '',                               // left blank on purpose: we say Europe, not a country
