@@ -11,12 +11,11 @@ const PRICES = Object.freeze({
   'L': 6490,
   'FRAMED-S': 7999,
   'FRAMED-M': 10999,
-  'FRAMED-L': 14999,
-  'S-EASEL': 8490,
-  'M-EASEL': 9990,
-  'L-EASEL': 11490,
-  'FRAMED-S-EASEL': 11299
+  'FRAMED-L': 14999
 });
+
+const EASEL_PRICE = 5300;
+const EXTRA_INK_PRICE = 300;
 
 const SHIPPING = Object.freeze({
   EU:   { standard: 1890, express: 3490 },
@@ -173,7 +172,8 @@ module.exports = async function handler(req, res) {
   const variant = String(body && body.variant || '').toUpperCase();
   const country = String(body && body.country || '').toUpperCase();
 
-  if (!Object.prototype.hasOwnProperty.call(PRICES, variant)) {
+  const baseVariant = variant.replace(/-EASEL$/, '');
+  if (!Object.prototype.hasOwnProperty.call(PRICES, baseVariant)) {
     return json(res, 400, { error: 'This product combination is not available for online checkout.' });
   }
   if (!/^[A-Z]{2}$/.test(country)) {
@@ -214,16 +214,27 @@ module.exports = async function handler(req, res) {
   params.set('customer_creation', 'always');
   params.set('shipping_address_collection[allowed_countries][0]', country);
 
-  params.set('line_items[0][quantity]', '1');
-  params.set('line_items[0][price_data][currency]', 'eur');
-  params.set('line_items[0][price_data][unit_amount]', String(PRICES[variant]));
-  params.set('line_items[0][price_data][product_data][name]', productName(variant));
+  let itemIndex = 0;
+
+  params.set('line_items[' + itemIndex + '][quantity]', '1');
+  params.set('line_items[' + itemIndex + '][price_data][currency]', 'eur');
+  params.set('line_items[' + itemIndex + '][price_data][unit_amount]', String(PRICES[baseVariant]));
+  params.set('line_items[' + itemIndex + '][price_data][product_data][name]', productName(baseVariant));
+  itemIndex++;
+
+  if (design.easel) {
+    params.set('line_items[' + itemIndex + '][quantity]', '1');
+    params.set('line_items[' + itemIndex + '][price_data][currency]', 'eur');
+    params.set('line_items[' + itemIndex + '][price_data][unit_amount]', String(EASEL_PRICE));
+    params.set('line_items[' + itemIndex + '][price_data][product_data][name]', 'Display easel');
+    itemIndex++;
+  }
 
   if (extraInkCount > 0) {
-    params.set('line_items[1][quantity]', String(extraInkCount));
-    params.set('line_items[1][price_data][currency]', 'eur');
-    params.set('line_items[1][price_data][unit_amount]', '300');
-    params.set('line_items[1][price_data][product_data][name]', 'Extra ink pad');
+    params.set('line_items[' + itemIndex + '][quantity]', String(extraInkCount));
+    params.set('line_items[' + itemIndex + '][price_data][currency]', 'eur');
+    params.set('line_items[' + itemIndex + '][price_data][unit_amount]', String(EXTRA_INK_PRICE));
+    params.set('line_items[' + itemIndex + '][price_data][product_data][name]', 'Extra ink pad');
   }
 
   addShipping(params, 0, 'Standard delivery · 3–7 days', shipping.standard, 3, 7);
