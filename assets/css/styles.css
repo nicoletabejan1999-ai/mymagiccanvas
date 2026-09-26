@@ -817,3 +817,53 @@ p{margin:0}
 }
 .legal__nav a{font-size:.9rem; font-weight:600; color:var(--ink); text-decoration:none}
 .legal__nav a:hover{color:var(--sage-ink); text-decoration:underline; text-underline-offset:3px}
+
+
+/* ───────────────────────────────────────────────────── order success */
+.success-page{min-height:100vh;background:linear-gradient(180deg,#fff 0%,var(--sand-soft) 100%)}
+.success-hdr{position:static;background:#fff;border-bottom:1px solid var(--line)}
+.success-main{
+  min-height:calc(100vh - 71px);display:grid;place-items:center;
+  padding:clamp(36px,7vw,84px) var(--pad);
+}
+.success-card{
+  width:min(760px,100%);background:#fff;border:1px solid var(--line);
+  border-radius:var(--r-xl);box-shadow:var(--sh-2);
+  padding:clamp(34px,6vw,64px);text-align:center;
+}
+.success-check{
+  width:72px;height:72px;margin:0 auto 24px;color:var(--sage-deep);
+}
+.success-check svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.success-eyebrow{margin-bottom:14px}
+.success-card h1{font-size:clamp(2.25rem,5vw,3.6rem);margin-bottom:18px}
+.success-lede{
+  max-width:56ch;margin:0 auto;color:var(--ink-2);
+  font-size:clamp(1rem,2vw,1.13rem);line-height:1.7;
+}
+.success-email{
+  margin:30px auto 0;padding:20px 22px;max-width:590px;
+  background:var(--sand-soft);border:1px solid var(--sand-deep);
+  border-radius:var(--r);text-align:left;
+}
+.success-email strong{display:block;font-family:var(--f-head);font-size:1.08rem;margin-bottom:4px}
+.success-email p{color:var(--ink-2);font-size:.94rem;line-height:1.55}
+.success-steps{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:14px;
+  margin:30px 0;text-align:left;
+}
+.success-steps>div{border:1px solid var(--line);border-radius:var(--r);padding:18px;background:#fff}
+.success-steps span{
+  display:grid;place-items:center;width:29px;height:29px;margin-bottom:12px;
+  border-radius:50%;background:var(--sage);color:var(--sage-ink);
+  font-size:.78rem;font-weight:700;
+}
+.success-steps p{font-size:.86rem;line-height:1.5;color:var(--ink-2)}
+.success-steps strong{color:var(--ink);font-size:.9rem}
+.success-note{margin:0 auto 26px;max-width:58ch;color:var(--ink-3);font-size:.84rem;line-height:1.55}
+@media (max-width:680px){
+  .success-card{padding:30px 20px}
+  .success-steps{grid-template-columns:1fr}
+  .success-steps>div{display:grid;grid-template-columns:34px 1fr;column-gap:10px;align-items:start}
+  .success-steps span{grid-row:1/3}
+}
