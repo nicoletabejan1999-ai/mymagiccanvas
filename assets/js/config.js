@@ -4,11 +4,9 @@
 
    TO DO BEFORE GOING LIVE
    1. STRIPE  — paste one Payment Link per variant in CHECKOUT.links below.
-   2. PRICES  — two variants are still missing a price (FRAMED M + EASEL,
-                FRAMED L + EASEL). Fill in `price` and they light up by
-                themselves; until then the configurator asks the buyer to
-                request a quote.
-   3. LINKS   — SHOP.etsyUrl / SHOP.email are used by the quote + help buttons.
+   2. PRICES  — base canvas and framed-canvas prices live in VARIANTS.
+                The display easel is a fixed add-on price for every size.
+   3. LINKS   — SHOP.etsyUrl / SHOP.email are used by the help buttons.
    ========================================================================== */
 
 window.MMC = (function () {
@@ -129,21 +127,17 @@ window.MMC = (function () {
   ];
 
   /* ------------------------------------------------------------ variants */
-  // price === null  →  not published yet, the configurator asks for a quote.
+  // Base product prices. Easel and extra ink pads are independent add-ons.
   const VARIANTS = {
-    'S':                { price: 31.90 },
-    'M':                { price: 49.90 },
-    'L':                { price: 64.90 },
-    'FRAMED-S':         { price: 79.99 },
-    'FRAMED-M':         { price: 109.99 },
-    'FRAMED-L':         { price: 149.99 },
-    'S-EASEL':          { price: 84.90 },
-    'M-EASEL':          { price: 99.90 },
-    'L-EASEL':          { price: 114.90 },
-    'FRAMED-S-EASEL':   { price: 112.99 },
-    'FRAMED-M-EASEL':   { price: null },   // ← add your price
-    'FRAMED-L-EASEL':   { price: null }    // ← add your price
+    'S':        { price: 31.90 },
+    'M':        { price: 49.90 },
+    'L':        { price: 64.90 },
+    'FRAMED-S': { price: 79.99 },
+    'FRAMED-M': { price: 109.99 },
+    'FRAMED-L': { price: 149.99 }
   };
+
+  const EASEL_PRICE = 53.00;
 
   /* ----------------------------------------------------------- ink pads */
   // The 15 numbered colours from the ink-pad chart. Numbers must stay in
@@ -291,7 +285,7 @@ window.MMC = (function () {
       a: 'Send us a photo the day it lands and we will put it right — a damaged, misprinted or wrong canvas gets replaced at our cost. That is your legal right and we would rather reprint one than argue about it. Check the names and the date on your order confirmation while there is still time to change them, because once it is printed it cannot be unprinted.' }
   ];
 
-  return { SHOP, LEGAL, META, CHECKOUT, PREVIEW, SIZES, VARIANTS, INKS,
+  return { SHOP, LEGAL, META, CHECKOUT, PREVIEW, SIZES, VARIANTS, EASEL_PRICE, INKS,
            INCLUDED_INKS, EXTRA_INK_PRICE, MAX_INKS, PALETTES, FONTS,
            DATE_FONT, CARD_LANGUAGES, GALLERY, PRODUCTION_FILM, DELIVERY, REVIEWS, FAQ };
 })();
