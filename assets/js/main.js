@@ -428,6 +428,7 @@
             nameY: X.state.nameY,
             nameScale: X.state.nameScale,
             layout: measurePrintLayout(),
+            phone: ($('#shipPhone') && $('#shipPhone').value || '').trim(),
             inks: X.state.inks,
             guests: X.state.guests,
             lang: X.state.lang,
