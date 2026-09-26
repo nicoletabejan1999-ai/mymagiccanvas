@@ -309,6 +309,12 @@
     const mail = $('#ftrMail');
     mail.href = 'mailto:' + C.SHOP.email;
     mail.textContent = C.SHOP.email;
+
+    const whatsapp = $('#whatsappBtn');
+    if (whatsapp && C.SHOP.whatsapp) {
+      const message = 'Hello MyMagiCanvas, I have a question about a fingerprint tree canvas.';
+      whatsapp.href = 'https://wa.me/' + C.SHOP.whatsapp + '?text=' + encodeURIComponent(message);
+    }
   }
 
   /* ══════════════════════════════════════════════════ configurator UI */
