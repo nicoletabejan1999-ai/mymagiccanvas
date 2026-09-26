@@ -364,26 +364,24 @@
     if (!country || !input || !prefixNode) return;
 
     const nextPrefix = PHONE_PREFIXES[country.value] || '';
-    const oldPrefix = input.dataset.autoPrefix || '';
-    const current = input.value.trim();
-
     prefixNode.textContent = nextPrefix || '+';
     input.placeholder = nextPrefix ? 'Phone number' : 'Select delivery country first';
-
-    // Only replace a prefix that the interface inserted itself. Never overwrite
-    // a number the customer has already typed.
-    if (!current || current === oldPrefix) {
-      input.value = nextPrefix ? nextPrefix + ' ' : '';
-    }
     input.dataset.autoPrefix = nextPrefix;
   }
 
   function deliveryPhoneValue() {
     const input = $('#shipPhone');
     if (!input) return '';
+
     const value = input.value.trim();
-    const autoPrefix = input.dataset.autoPrefix || '';
-    return value && value !== autoPrefix ? value : '';
+    if (!value) return '';
+
+    // A customer may intentionally use a phone number from another country.
+    // Preserve a complete international number exactly as entered.
+    if (value.charAt(0) === '+') return value;
+
+    const prefix = input.dataset.autoPrefix || '';
+    return prefix ? prefix + ' ' + value : value;
   }
 
   function buildCountrySelect() {
