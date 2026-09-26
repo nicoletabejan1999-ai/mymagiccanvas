@@ -746,6 +746,29 @@ p{margin:0}
 .end h2{margin-bottom:16px}
 .end p{color:var(--ink-2); font-size:1.06rem; margin-bottom:30px; line-height:1.64}
 
+/* ───────────────────────────────────────────────────────────── contact */
+.sec--contact{padding-block:clamp(52px,7vw,86px);background:#fff}
+.contact-card{
+  max-width:920px;margin-inline:auto;padding:clamp(28px,5vw,54px);
+  border:1px solid var(--line);border-radius:var(--r-xl);background:var(--sand-soft);
+  display:flex;align-items:center;justify-content:space-between;gap:clamp(28px,5vw,60px);
+  box-shadow:var(--sh-1)
+}
+.contact-card__copy{max-width:560px}
+.contact-card__copy h2{margin:6px 0 14px}
+.contact-card__copy p{color:var(--ink-2);font-size:1.02rem;line-height:1.65;margin:0}
+.contact-card__copy .contact-card__note{margin-top:8px;font-size:.88rem;color:var(--ink-3)}
+.btn--whatsapp{
+  --bg:#25D366;--bd:#25D366;--fg:#fff;
+  flex:none
+}
+.btn--whatsapp:hover{--bg:#1fbd5a;--bd:#1fbd5a}
+.btn--whatsapp svg{width:20px;height:20px;flex:none}
+@media (max-width:720px){
+  .contact-card{align-items:stretch;flex-direction:column}
+  .btn--whatsapp{width:100%}
+}
+
 /* ────────────────────────────────────────────────────────────── footer */
 .ftr{border-top:1px solid var(--line); padding-block:36px; background:#fff}
 .ftr__in{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:18px}
