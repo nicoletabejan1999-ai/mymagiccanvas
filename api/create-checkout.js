@@ -201,7 +201,7 @@ module.exports = async function handler(req, res) {
 
   const params = new URLSearchParams();
   params.set('mode', 'payment');
-  params.set('success_url', origin + '/?checkout=success&session_id={CHECKOUT_SESSION_ID}');
+  params.set('success_url', origin + '/success.html?session_id={CHECKOUT_SESSION_ID}');
   params.set('cancel_url', origin + '/?checkout=cancelled#configurator');
   params.set('client_reference_id', designId);
   params.set('metadata[design_id]', designId);
