@@ -794,7 +794,7 @@
   }
 
   function syncOptionPrices(s) {
-    $('#optSize > button').forEach((b, i) => {
+    $$('#optSize > button').forEach((b, i) => {
       const base = C.VARIANTS[C.SIZES[i].id] && C.VARIANTS[C.SIZES[i].id].price;
       const tag = $('.opt__p', b);
       if (tag) tag.textContent = base == null ? 'Price on request' : X.money(base) + ' base';
@@ -804,7 +804,7 @@
     const framedState = Object.assign({}, s, { framed: true });
     const canvasPrice = X.priceOf(canvasState);
     const framedPrice = X.priceOf(framedState);
-    const frameButtons = $('#optFrame > button');
+    const frameButtons = $$('#optFrame > button');
 
     if (frameButtons[0]) {
       const tag = $('.opt__p', frameButtons[0]);
