@@ -156,6 +156,7 @@ async function fulfillPaidSession(session) {
     variant: session.metadata && session.metadata.variant || design.variant,
     customer: session.customer_details || null,
     shipping,
+    phone: design.phone || (session.customer_details && session.customer_details.phone) || '',
     shippingCost: session.total_details && session.total_details.amount_shipping || null,
     size: design.size,
     framed: Boolean(design.framed),
