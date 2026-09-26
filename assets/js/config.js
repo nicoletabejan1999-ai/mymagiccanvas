@@ -166,7 +166,9 @@ window.MMC = (function () {
     { n: 15, name: 'Plum',        hex: '#67336F' }
   ];
 
-  const MAX_INKS = 4;
+  const INCLUDED_INKS = 4;
+  const EXTRA_INK_PRICE = 3.00;
+  const MAX_INKS = INKS.length;
 
   // Ready-made palettes taken from the colour-inspiration card.
   const PALETTES = [
@@ -289,6 +291,7 @@ window.MMC = (function () {
       a: 'Send us a photo the day it lands and we will put it right — a damaged, misprinted or wrong canvas gets replaced at our cost. That is your legal right and we would rather reprint one than argue about it. Check the names and the date on your order confirmation while there is still time to change them, because once it is printed it cannot be unprinted.' }
   ];
 
-  return { SHOP, LEGAL, META, CHECKOUT, PREVIEW, SIZES, VARIANTS, INKS, MAX_INKS, PALETTES, FONTS,
+  return { SHOP, LEGAL, META, CHECKOUT, PREVIEW, SIZES, VARIANTS, INKS,
+           INCLUDED_INKS, EXTRA_INK_PRICE, MAX_INKS, PALETTES, FONTS,
            DATE_FONT, CARD_LANGUAGES, GALLERY, PRODUCTION_FILM, DELIVERY, REVIEWS, FAQ };
 })();
