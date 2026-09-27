@@ -135,10 +135,7 @@ async function fulfillPaidSession(session) {
   const design = await readPrivateJson(designPath, auth);
   if (!design) throw new Error('Saved design not found: ' + designId);
 
-  const treePngBytes = await readPrivateBytes('tree-base.png', auth);
-  if (!treePngBytes) throw new Error('Print tree PNG not found in Blob: tree-base.png');
-
-  const pdfBytes = await generatePrintPdf(design, designId, session.id, treePngBytes);
+  const pdfBytes = await generatePrintPdf(design, designId, session.id);
 
   const shipping = session.shipping_details ||
     (session.collected_information && session.collected_information.shipping_details) ||

@@ -2,11 +2,9 @@
    Real-time canvas configurator.
 
    Layers inside .sheet, bottom to top:
-     1. paper            — the canvas ground
-     2. <canvas #prints> — the guests' fingerprints, drawn here
-     3. <img .sheet__tree> in mix-blend-mode:multiply — the printed branches
-        sit *over* the fingerprints, exactly as they do on a real canvas
-     4. the lettering
+     1. the exact S/M/L full-canvas tree artwork supplied by the owner
+     2. <canvas #prints> — preview fingerprints over that artwork
+     3. the personalised lettering
    ========================================================================== */
 
 window.MMCConfigurator = (function () {
@@ -39,15 +37,12 @@ window.MMCConfigurator = (function () {
   const emit = () => listeners.forEach(fn => fn(state));
 
   /* ------------------------------------------------------------ geometry */
-  // The tree artwork sits inside the sheet at this offset (see styles.css).
-  const TREE_TOP = 0.074, TREE_H = 0.769;
   const PRINT_CM = 1.6;   // how wide a thumbprint lands, in centimetres
   const SPACING  = 0.62;  // centres stay this many radii apart, so prints
                           // crowd together without stacking into mud
 
-  // Where a fingerprint may land, unpacked from the generated bitmap.
-  const MASK = (function () {
-    const src = window.MMC_CANOPY;
+  // Each exact canvas artwork has its own full-sheet canopy mask.
+  function unpackMask(src) {
     if (!src) return null;
     const bin = atob(src.bits);
     const on = new Uint8Array(src.w * src.h);
@@ -64,21 +59,32 @@ window.MMCConfigurator = (function () {
       }
     }
     return {
-      w: src.w, h: src.h, on: on,
+      w: src.w, h: src.h, on,
       coverage: count / (src.w * src.h),
-      // bounding box in sheet coordinates, so sampling does not waste tries
       bx: x0 / src.w, bw: (x1 - x0 + 1) / src.w,
-      by: TREE_TOP + (y0 / src.h) * TREE_H, bh: ((y1 - y0 + 1) / src.h) * TREE_H
+      by: y0 / src.h, bh: (y1 - y0 + 1) / src.h
+    };
+  }
+
+  const MASKS = (function () {
+    const source = window.MMC_CANOPIES || {};
+    return {
+      S: unpackMask(source.S),
+      M: unpackMask(source.M),
+      L: unpackMask(source.L)
     };
   })();
 
-  // Is this point (in sheet coordinates) inside the canopy?
-  function inCanopy(sx, sy) {
-    if (!MASK) return false;
-    const tv = (sy - TREE_TOP) / TREE_H;
-    if (tv < 0 || tv >= 1 || sx < 0 || sx >= 1) return false;
-    const gx = (sx * MASK.w) | 0, gy = (tv * MASK.h) | 0;
-    return MASK.on[gy * MASK.w + gx] === 1;
+  function maskFor(size) {
+    return MASKS[size] || MASKS.M || MASKS.S || MASKS.L || null;
+  }
+
+  function inCanopy(sx, sy, size) {
+    const mask = maskFor(size);
+    if (!mask || sx < 0 || sx >= 1 || sy < 0 || sy >= 1) return false;
+    const gx = Math.min(mask.w - 1, (sx * mask.w) | 0);
+    const gy = Math.min(mask.h - 1, (sy * mask.h) | 0);
+    return mask.on[gy * mask.w + gx] === 1;
   }
 
   /* ------------------------------------------------------------- helpers */
@@ -253,6 +259,9 @@ window.MMCConfigurator = (function () {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, w, h);
 
+    const mask = maskFor(state.size);
+    if (!mask) return;
+
     const colours = (state.inks.length ? state.inks : [4]).map(n => inkOf(n).hex);
     const rnd = mulberry32(state.seed);
 
@@ -295,8 +304,8 @@ window.MMCConfigurator = (function () {
 
     const budget = 14000;
     for (let tries = 0; tries < budget; tries++) {
-      const x = (MASK.bx + rnd() * MASK.bw) * w;
-      const y = (MASK.by + rnd() * MASK.bh) * h;
+      const x = (mask.bx + rnd() * mask.bw) * w;
+      const y = (mask.by + rnd() * mask.bh) * h;
       const pr = r0 * (0.84 + rnd() * 0.30);
       const rot = (rnd() - 0.5) * 1.0;
       const hex = colours[Math.floor(rnd() * colours.length)];
@@ -306,7 +315,7 @@ window.MMCConfigurator = (function () {
       const hw = pr * 0.72 * co + pr * 1.06 * si + EDGE;
       const hh = pr * 0.72 * si + pr * 1.06 * co + EDGE;
       if (x < hw || x > w - hw || y < hh || y > h - hh) continue;
-      if (!inCanopy(x / w, y / h) || !fits(x, y)) continue;
+      if (!inCanopy(x / w, y / h, state.size) || !fits(x, y)) continue;
       drawPrint(ctx, x, y, pr, rot, hex, alpha, rnd);
     }
     ctx.globalCompositeOperation = 'source-over';

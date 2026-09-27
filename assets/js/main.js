@@ -814,6 +814,11 @@
   function sync(s) {
     const size = X.sizeOf(s.size);
     const font = X.fontOf(s.font);
+    const treeArt = C.TREE_ART && C.TREE_ART[s.size];
+    const treeImg = $('#treeImg');
+    if (treeImg && treeArt && treeImg.getAttribute('src') !== treeArt.src) {
+      treeImg.setAttribute('src', treeArt.src);
+    }
 
     /* preview geometry */
     const sheet = $('#sheet');

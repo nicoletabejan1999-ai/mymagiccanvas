@@ -122,6 +122,14 @@ window.MMC = (function () {
       capacity: 120, capacityLabel: 'about 120+ fingerprints' }
   ];
 
+  // Exact owner-supplied full-canvas artwork. The tree position is already
+  // baked into each file, so preview and print must not crop or offset it.
+  const TREE_ART = Object.freeze({
+    S: { src: 'assets/img/tree-s.jpg', width: 1152, height: 1536 },
+    M: { src: 'assets/img/tree-m.jpg', width: 1229, height: 1536 },
+    L: { src: 'assets/img/tree-l.jpg', width: 1280, height: 1536 }
+  });
+
   /* ------------------------------------------------------------ variants */
   // Base product prices. Easel and extra ink pads are independent add-ons.
   const VARIANTS = {
@@ -281,7 +289,7 @@ window.MMC = (function () {
       a: 'Send us a photo the day it lands and we will put it right — a damaged, misprinted or wrong canvas gets replaced at our cost. That is your legal right and we would rather reprint one than argue about it. Check the names and the date on your order confirmation while there is still time to change them, because once it is printed it cannot be unprinted.' }
   ];
 
-  return { SHOP, LEGAL, META, CHECKOUT, PREVIEW, SIZES, VARIANTS, EASEL_PRICE, INKS,
+  return { SHOP, LEGAL, META, CHECKOUT, PREVIEW, SIZES, TREE_ART, VARIANTS, EASEL_PRICE, INKS,
            INCLUDED_INKS, EXTRA_INK_PRICE, MAX_INKS, PALETTES, FONTS,
            DATE_FONT, CARD_LANGUAGES, GALLERY, PRODUCTION_FILM, DELIVERY, REVIEWS, FAQ };
 })();
