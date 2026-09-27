@@ -351,14 +351,13 @@ p{margin:0}
 }
 .sheet__tree{
   position:absolute; inset:0; width:100%; height:100%;
-  object-fit:fill; pointer-events:none; z-index:2;
-  mix-blend-mode:multiply;
+  object-fit:fill; pointer-events:none; z-index:0;
 }
 /* The lettering hangs from the foot of the canvas: the date stays fixed
    one physical centimetre above the bottom edge. The names may be dragged
    independently without changing the date position. */
 .sheet__text{
-  position:absolute; left:6%; right:6%; z-index:3;
+  position:absolute; left:6%; right:6%; z-index:2;
   bottom:var(--date-bottom, 4%);
   text-align:center; line-height:1;
 }
