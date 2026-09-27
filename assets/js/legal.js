@@ -21,7 +21,6 @@
     ['companyName',  'registered company name'],
     ['legalForm',    'legal form'],
     ['address',      'registered address'],
-    ['registration', 'registration number'],
     ['director',     'person responsible for the site'],
     ['host.address', 'address of the hosting provider']
   ];
