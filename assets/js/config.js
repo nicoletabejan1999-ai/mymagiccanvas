@@ -18,7 +18,7 @@ window.MMC = (function () {
   const SHOP = {
     name: 'MyMagiCanvas',
     tagline: 'Fingerprint guest book canvases, made in Europe and posted worldwide',
-    email: 'hello@mymagicanvas.com',        // ← replace with your real address
+    email: 'contact@mymagicanvas.com',
     etsyUrl: '',                            // ← optional: your Etsy listing
     city: '',                               // left blank on purpose: we say Europe, not a country
     // Every rating on this page comes from the Etsy shop and is labelled
@@ -35,20 +35,20 @@ window.MMC = (function () {
   // pages print a visible warning while any of them is blank, and Stripe asks
   // for the same details when it verifies your account.
   const LEGAL = {
-    companyName:  '',            // ← registered name, exactly as filed
-    legalForm:    '',            // ← e.g. 'SASU', 'micro-entreprise', 'SRL'
-    address:      '',            // ← registered address, on one line
+    companyName:  'Dumitru Protopop',            // ← registered name, exactly as filed
+    legalForm:    'Micro-entreprise (France)',            // ← e.g. 'SASU', 'micro-entreprise', 'SRL'
+    address:      '10 clos Perrault, 91200 Athis-Mons, France',            // ← registered address, on one line
     registration: '',            // ← SIREN / SIRET / trade register number
     vat:          '',            // ← intra-community VAT number, or leave blank
-    director:     '',            // ← person legally responsible for the site
-    email:        '',            // ← falls back to SHOP.email when blank
+    director:     'Dumitru Protopop',            // ← person legally responsible for the site
+    email:        'contact@mymagicanvas.com',
     phone:        '',            // ← optional
     host: {
       name:    'Vercel Inc.',    // where this site is hosted
-      address: '',               // ← copy it from vercel.com/legal
+      address: '440 N Barranca Avenue #4133, Covina, CA 91723, United States', // https://vercel.com/legal/privacy-notice
       url:     'https://vercel.com'
     },
-    updated: '22 September 2026' // ← bump whenever you edit the legal pages
+    updated: '27 September 2026' // ← bump whenever you edit the legal pages
   };
 
   /* --------------------------------------------------------------- meta */
