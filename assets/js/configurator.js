@@ -46,15 +46,14 @@ window.MMCConfigurator = (function () {
   /* ------------------------------------------------------------ geometry */
   // The tree artwork sits inside the sheet at this offset (see styles.css).
   const TREE_TOP = 0.074, TREE_H = 0.769;
-  const PRINT_CM = 1.6;   // how wide a thumbprint lands, in centimetres
-  // The reference canopy is deliberately lush: neighbouring prints overlap
-  // slightly, like real guests filling gaps rather than forming a dot grid.
-  // Per-size spacing keeps the three physical canvases equally full while
-  // preserving the real-world thumbprint size.
+  const PRINT_CM = 1.3;   // how wide a thumbprint lands, in centimetres
+  // The reference canopy is lush but the individual prints read as leaves,
+  // not large stamps. We therefore keep the canopy dense while shrinking
+  // the prints and tuning each size separately.
   const CANOPY_DENSITY = {
-    S: { spacing: 0.48, scale: 0.94 },
-    M: { spacing: 0.45, scale: 0.98 },
-    L: { spacing: 0.42, scale: 1.02 }
+    S: { spacing: 0.46, scale: 0.80 },
+    M: { spacing: 0.44, scale: 0.84 },
+    L: { spacing: 0.42, scale: 0.88 }
   };
 
   // Where a fingerprint may land, unpacked from the generated bitmap.
