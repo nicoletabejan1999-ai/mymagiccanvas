@@ -89,12 +89,7 @@ window.MMC = (function () {
       { id: 'amex',       label: 'Amex',        bg: '#1F72CD', fg: '#ffffff' },
       { id: 'applepay',   label: 'Apple Pay',   bg: '#000000', fg: '#ffffff' },
       { id: 'googlepay',  label: 'Google Pay',  bg: '#ffffff', fg: '#3c4043' },
-      { id: 'paypal',     label: 'PayPal',      bg: '#003087', fg: '#ffffff' },
-      { id: 'klarna',     label: 'Klarna',      bg: '#FFB3C7', fg: '#0B051D' },
-      { id: 'ideal',      label: 'iDEAL',       bg: '#CC0066', fg: '#ffffff' },
-      { id: 'bancontact', label: 'Bancontact',  bg: '#ffffff', fg: '#1a1a1a' },
-      { id: 'sepa',       label: 'SEPA Debit',  bg: '#ffffff', fg: '#1a1a1a' },
-      { id: 'link',       label: 'Link',        bg: '#00D66F', fg: '#011E0F' }
+      { id: 'link',       label: 'Link',         bg: '#00D66F', fg: '#011E0F' }
     ]
   };
 
