@@ -302,8 +302,10 @@ window.MMCConfigurator = (function () {
     // reaches depends on how it was turned, so each one is measured.
     const EDGE = w * 0.030;
 
-    const budget = 14000;
-    for (let tries = 0; tries < budget; tries++) {
+    const targetPrints = Math.max(1, Math.min(200, Math.round(state.guests || 1)));
+    const budget = Math.max(14000, targetPrints * 180);
+    let placed = 0;
+    for (let tries = 0; tries < budget && placed < targetPrints; tries++) {
       const x = (mask.bx + rnd() * mask.bw) * w;
       const y = (mask.by + rnd() * mask.bh) * h;
       const pr = r0 * (0.84 + rnd() * 0.30);
@@ -317,6 +319,7 @@ window.MMCConfigurator = (function () {
       if (x < hw || x > w - hw || y < hh || y > h - hh) continue;
       if (!inCanopy(x / w, y / h, state.size) || !fits(x, y)) continue;
       drawPrint(ctx, x, y, pr, rot, hex, alpha, rnd);
+      placed++;
     }
     ctx.globalCompositeOperation = 'source-over';
   }
