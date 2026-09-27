@@ -47,8 +47,15 @@ window.MMCConfigurator = (function () {
   // The tree artwork sits inside the sheet at this offset (see styles.css).
   const TREE_TOP = 0.074, TREE_H = 0.769;
   const PRINT_CM = 1.6;   // how wide a thumbprint lands, in centimetres
-  const SPACING  = 0.62;  // centres stay this many radii apart, so prints
-                          // crowd together without stacking into mud
+  // The reference canopy is deliberately lush: neighbouring prints overlap
+  // slightly, like real guests filling gaps rather than forming a dot grid.
+  // Per-size spacing keeps the three physical canvases equally full while
+  // preserving the real-world thumbprint size.
+  const CANOPY_DENSITY = {
+    S: { spacing: 0.48, scale: 0.94 },
+    M: { spacing: 0.45, scale: 0.98 },
+    L: { spacing: 0.42, scale: 1.02 }
+  };
 
   // Where a fingerprint may land, unpacked from the generated bitmap.
   const MASK = (function () {
@@ -254,12 +261,12 @@ window.MMCConfigurator = (function () {
     // wider canvas the prints look smaller and more of them fit — which is
     // the whole point of choosing a size.
     const cm = parseFloat(sizeOf(state.size).cm);
-    const r0 = Math.max(2.2, (PRINT_CM / cm / 1.4) * w);
+    const density = CANOPY_DENSITY[state.size] || CANOPY_DENSITY.M;
+    const r0 = Math.max(2.2, (PRINT_CM / cm / 1.4) * w) * density.scale;
 
-    // Guests press side by side, not on top of each other. Keeping centres a
-    // minimum distance apart fills the canopy while every print stays its
-    // own leaf — a plain random scatter turns into mud where marks pile up.
-    const minD = r0 * 2 * SPACING;
+    // A modest overlap is intentional: it removes the artificial gaps and
+    // builds the soft, continuous crown seen in the product reference.
+    const minD = r0 * 2 * density.spacing;
     const cell = minD;
     const cols = Math.ceil(w / cell) + 1, rows = Math.ceil(h / cell) + 1;
     const grid = new Array(cols * rows);
@@ -287,12 +294,12 @@ window.MMCConfigurator = (function () {
     // reaches depends on how it was turned, so each one is measured.
     const EDGE = w * 0.030;
 
-    const budget = 14000;
+    const budget = 26000;
     for (let tries = 0; tries < budget; tries++) {
       const x = (MASK.bx + rnd() * MASK.bw) * w;
       const y = (MASK.by + rnd() * MASK.bh) * h;
-      const pr = r0 * (0.84 + rnd() * 0.30);
-      const rot = (rnd() - 0.5) * 1.0;
+      const pr = r0 * (0.78 + rnd() * 0.42);
+      const rot = (rnd() - 0.5) * 1.18;
       const hex = colours[Math.floor(rnd() * colours.length)];
       const alpha = 0.56 + rnd() * 0.26;
 
