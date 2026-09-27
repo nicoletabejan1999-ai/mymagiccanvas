@@ -863,8 +863,7 @@
       : widthCm / P.largestCm;                        // share of the preview box
     $('.rig').style.setProperty('--cw', (cw * 100).toFixed(2) + '%');
     scene.style.maxWidth = (s.easel ? 340 : 400) + 'px';
-    $('#stageScale').textContent = size.cm + '  ·  ' + size.inch +
-      (s.framed ? '  ·  plus the frame' : '');
+    $('#stageScale').textContent = size.cm + '  ·  ' + size.inch;
 
     /* pressed states */
     const press = (sel, test) => $$(sel + ' > button').forEach((b, i) =>
