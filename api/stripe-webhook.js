@@ -122,6 +122,60 @@ async function sendGoogleFulfillment(order, pdfBytes) {
   return body;
 }
 
+async function sendMetaPurchase(session, design) {
+  const meta = design && design.meta;
+  if (!meta || meta.consent !== true) return { skipped: 'no_consent' };
+
+  const pixelId = process.env.META_PIXEL_ID || '4206777262800081';
+  const token = process.env.META_CAPI_ACCESS_TOKEN;
+  if (!token) return { skipped: 'no_token' };
+
+  const isTest = session.livemode === false;
+  const testCode = process.env.META_TEST_EVENT_CODE || '';
+  if (isTest && !testCode) return { skipped: 'test_code_missing' };
+
+  const userData = {};
+  if (meta.fbp) userData.fbp = meta.fbp;
+  if (meta.fbc) userData.fbc = meta.fbc;
+  if (meta.clientIp) userData.client_ip_address = meta.clientIp;
+  if (meta.userAgent) userData.client_user_agent = meta.userAgent;
+
+  const event = {
+    event_name: 'Purchase',
+    event_time: Math.floor(Date.now() / 1000),
+    event_id: session.id,
+    action_source: 'website',
+    event_source_url: meta.eventSourceUrl || 'https://mymagicanvas.com/',
+    user_data: userData,
+    custom_data: {
+      currency: String(session.currency || 'eur').toUpperCase(),
+      value: Number(session.amount_total || 0) / 100,
+      content_ids: [session.metadata && session.metadata.variant || design.variant],
+      content_type: 'product',
+      num_items: 1
+    }
+  };
+
+  const body = { data: [event] };
+  if (isTest) body.test_event_code = testCode;
+
+  const response = await fetch(
+    'https://graph.facebook.com/v26.0/' + encodeURIComponent(pixelId) +
+      '/events?access_token=' + encodeURIComponent(token),
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    }
+  );
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error('Meta CAPI Purchase failed: ' +
+      (result && result.error && result.error.message || 'HTTP ' + response.status));
+  }
+  return result;
+}
+
 async function fulfillPaidSession(session) {
   const designId = session.metadata && session.metadata.design_id || session.client_reference_id;
   if (!designId || !/^mc_[a-f0-9]{32}$/i.test(designId)) {
@@ -168,6 +222,16 @@ async function fulfillPaidSession(session) {
   };
 
   const google = await sendGoogleFulfillment(order, pdfBytes);
+
+  try {
+    const metaResult = await sendMetaPurchase(session, design);
+    if (metaResult && metaResult.skipped) {
+      console.log('Meta Purchase skipped:', metaResult.skipped, session.id);
+    }
+  } catch (error) {
+    // Advertising measurement must never block paid-order fulfillment.
+    console.error('Meta Purchase tracking failed', session.id, error && error.message);
+  }
 
   return { designId, driveUrl: google.driveUrl || null };
 }
