@@ -211,7 +211,12 @@ async function fulfillPaidSession(session) {
   }
 
   console.log('PDF generation start', session.id, 'font=' + String(design.font || ''));
-  const pdfBytes = await generatePrintPdf(design, designId, session.id);
+  const pdfBytes = await generatePrintPdf(
+    design,
+    designId,
+    session.id,
+    session.livemode === false
+  );
   console.log('PDF generation complete', session.id, 'bytes=' + pdfBytes.length);
 
   const shipping = session.shipping_details ||
