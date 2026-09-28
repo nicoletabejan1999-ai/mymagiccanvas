@@ -313,7 +313,7 @@ window.MMCConfigurator = (function () {
 
     // The product mockup shows a finished, full crown rather than a literal
     // guest-count simulation. Keep that visual density stable for each size.
-    const PREVIEW_TARGET = { S: 145, M: 225, L: 315 };
+    const PREVIEW_TARGET = { S: 145, M: 225, L: 335 };
     const targetPrints = PREVIEW_TARGET[state.size] || 195;
 
     let drawn = 0;
