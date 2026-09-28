@@ -295,91 +295,6 @@
     mail.textContent = C.SHOP.email;
   }
 
-  /* ── Meta Pixel — loaded only after an explicit cookie choice ── */
-  const META_CONSENT_KEY = 'mmc-meta-consent-v1';
-  let metaPixelLoaded = false;
-
-  function loadMetaPixel() {
-    if (metaPixelLoaded || !C.META || !C.META.enabled || !C.META.pixelId) return;
-    metaPixelLoaded = true;
-
-    !function(f,b,e,v,n,t,s) {
-      if (f.fbq) return;
-      n=f.fbq=function(){ n.callMethod ?
-        n.callMethod.apply(n,arguments) : n.queue.push(arguments); };
-      if (!f._fbq) f._fbq=n;
-      n.push=n; n.loaded=!0; n.version='2.0'; n.queue=[];
-      t=b.createElement(e); t.async=!0; t.src=v;
-      s=b.getElementsByTagName(e)[0];
-      s.parentNode.insertBefore(t,s);
-    }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
-
-    fbq('consent', 'grant');
-    fbq('init', C.META.pixelId);
-    fbq('track', 'PageView');
-  }
-
-  function readMetaConsent() {
-    try { return localStorage.getItem(META_CONSENT_KEY); }
-    catch (_) { return null; }
-  }
-
-  function rememberMetaConsent(value) {
-    try { localStorage.setItem(META_CONSENT_KEY, value); }
-    catch (_) { /* private browsing may block storage; choice still works now */ }
-  }
-
-  function applyMetaConsent(value) {
-    const accepted = value === 'accepted';
-    X.set({ ads: accepted });
-    if (accepted) {
-      if (metaPixelLoaded && window.fbq) fbq('consent', 'grant');
-      else loadMetaPixel();
-    } else if (window.fbq) {
-      fbq('consent', 'revoke');
-    }
-  }
-
-  function closeMetaConsent() {
-    const bar = $('#cookieBar');
-    if (bar) bar.hidden = true;
-    document.body.classList.remove('cookie-open');
-  }
-
-  function showMetaConsent(force) {
-    const bar = $('#cookieBar');
-    if (!bar || !C.META || !C.META.enabled || !C.META.pixelId) return;
-
-    const saved = readMetaConsent();
-    if (saved && !force) {
-      applyMetaConsent(saved);
-      return;
-    }
-    bar.hidden = false;
-    document.body.classList.add('cookie-open');
-  }
-
-  function initMetaConsent() {
-    const accept = $('#metaAccept'), reject = $('#metaReject');
-    if (!accept || !reject) return;
-
-    accept.addEventListener('click', () => {
-      rememberMetaConsent('accepted');
-      applyMetaConsent('accepted');
-      closeMetaConsent();
-    });
-    reject.addEventListener('click', () => {
-      rememberMetaConsent('rejected');
-      applyMetaConsent('rejected');
-      closeMetaConsent();
-    });
-
-    const settings = $('#cookieSettings');
-    if (settings) settings.addEventListener('click', () => showMetaConsent(true));
-
-    showMetaConsent(false);
-  }
-
   /* ══════════════════════════════════════════════════ configurator UI */
 
   function optBtn(cls, html, pressed, onClick) {
@@ -881,7 +796,6 @@
     X.mount($('#prints'));
     X.onChange(sync);
     sync(X.state);
-    initMetaConsent();
 
     // the canopy is sized from the artwork box, so redraw once it lands
     const tree = $('#treeImg');
