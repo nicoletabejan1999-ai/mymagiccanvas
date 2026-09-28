@@ -189,7 +189,30 @@ async function fulfillPaidSession(session) {
   const design = await readPrivateJson(designPath, auth);
   if (!design) throw new Error('Saved design not found: ' + designId);
 
+  console.log(
+    'Stripe fulfillment start',
+    session.id,
+    'design=' + designId,
+    'font=' + String(design.font || ''),
+    'variant=' + String(design.variant || '')
+  );
+
+  // Payment is already confirmed. Advertising measurement must not depend on
+  // PDF generation or the downstream Google fulfillment step.
+  try {
+    const metaResult = await sendMetaPurchase(session, design);
+    if (metaResult && metaResult.skipped) {
+      console.log('Meta Purchase skipped:', metaResult.skipped, session.id);
+    } else {
+      console.log('Meta Purchase accepted', session.id);
+    }
+  } catch (error) {
+    console.error('Meta Purchase tracking failed', session.id, error && error.message);
+  }
+
+  console.log('PDF generation start', session.id, 'font=' + String(design.font || ''));
   const pdfBytes = await generatePrintPdf(design, designId, session.id);
+  console.log('PDF generation complete', session.id, 'bytes=' + pdfBytes.length);
 
   const shipping = session.shipping_details ||
     (session.collected_information && session.collected_information.shipping_details) ||
@@ -221,21 +244,9 @@ async function fulfillPaidSession(session) {
     pdfFileName: pdfFileName(design, designId)
   };
 
-  // Payment is already confirmed at this point. Report Purchase before
-  // downstream fulfillment so a PDF/Google delivery problem cannot suppress
-  // the conversion. Stripe may retry the webhook; session.id is the stable
-  // event_id Meta uses to deduplicate those retries.
-  try {
-    const metaResult = await sendMetaPurchase(session, design);
-    if (metaResult && metaResult.skipped) {
-      console.log('Meta Purchase skipped:', metaResult.skipped, session.id);
-    }
-  } catch (error) {
-    // Advertising measurement must never block paid-order fulfillment.
-    console.error('Meta Purchase tracking failed', session.id, error && error.message);
-  }
-
+  console.log('Google fulfillment start', session.id);
   const google = await sendGoogleFulfillment(order, pdfBytes);
+  console.log('Google fulfillment complete', session.id, google.driveUrl || '');
 
   return { designId, driveUrl: google.driveUrl || null };
 }
