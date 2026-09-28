@@ -295,7 +295,8 @@
     mail.textContent = C.SHOP.email;
   }
 
-  /* ── Meta Pixel (advertising consent required) ── */
+  /* ── Meta Pixel — loaded only after an explicit cookie choice ── */
+  const META_CONSENT_KEY = 'mmc-meta-consent-v1';
   let metaPixelLoaded = false;
 
   function loadMetaPixel() {
@@ -313,8 +314,70 @@
       s.parentNode.insertBefore(t,s);
     }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
 
+    fbq('consent', 'grant');
     fbq('init', C.META.pixelId);
     fbq('track', 'PageView');
+  }
+
+  function readMetaConsent() {
+    try { return localStorage.getItem(META_CONSENT_KEY); }
+    catch (_) { return null; }
+  }
+
+  function rememberMetaConsent(value) {
+    try { localStorage.setItem(META_CONSENT_KEY, value); }
+    catch (_) { /* private browsing may block storage; choice still works now */ }
+  }
+
+  function applyMetaConsent(value) {
+    const accepted = value === 'accepted';
+    X.set({ ads: accepted });
+    if (accepted) {
+      if (metaPixelLoaded && window.fbq) fbq('consent', 'grant');
+      else loadMetaPixel();
+    } else if (window.fbq) {
+      fbq('consent', 'revoke');
+    }
+  }
+
+  function closeMetaConsent() {
+    const bar = $('#cookieBar');
+    if (bar) bar.hidden = true;
+    document.body.classList.remove('cookie-open');
+  }
+
+  function showMetaConsent(force) {
+    const bar = $('#cookieBar');
+    if (!bar || !C.META || !C.META.enabled || !C.META.pixelId) return;
+
+    const saved = readMetaConsent();
+    if (saved && !force) {
+      applyMetaConsent(saved);
+      return;
+    }
+    bar.hidden = false;
+    document.body.classList.add('cookie-open');
+  }
+
+  function initMetaConsent() {
+    const accept = $('#metaAccept'), reject = $('#metaReject');
+    if (!accept || !reject) return;
+
+    accept.addEventListener('click', () => {
+      rememberMetaConsent('accepted');
+      applyMetaConsent('accepted');
+      closeMetaConsent();
+    });
+    reject.addEventListener('click', () => {
+      rememberMetaConsent('rejected');
+      applyMetaConsent('rejected');
+      closeMetaConsent();
+    });
+
+    const settings = $('#cookieSettings');
+    if (settings) settings.addEventListener('click', () => showMetaConsent(true));
+
+    showMetaConsent(false);
   }
 
   /* ══════════════════════════════════════════════════ configurator UI */
@@ -406,15 +469,12 @@
         X.state.lang === l, () => X.set({ lang: l })));
     });
 
-    /* consent — the terms box gates checkout, the advertising box never does */
-    const okTerms = $('#okTerms'), okAds = $('#okAds');
+    /* Terms acceptance gates checkout. Meta tracking is handled separately
+       by the optional cookie panel, so buying never depends on ad consent. */
+    const okTerms = $('#okTerms');
     okTerms.addEventListener('change', () => {
       if (okTerms.checked) $('#consentErr').hidden = true;
       sync(X.state);
-    });
-    okAds.addEventListener('change', () => {
-      X.set({ ads: okAds.checked });
-      if (okAds.checked) loadMetaPixel();
     });
 
     $('#buyBtn').addEventListener('click', e => {
@@ -821,6 +881,7 @@
     X.mount($('#prints'));
     X.onChange(sync);
     sync(X.state);
+    initMetaConsent();
 
     // the canopy is sized from the artwork box, so redraw once it lands
     const tree = $('#treeImg');
