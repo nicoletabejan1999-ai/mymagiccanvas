@@ -375,13 +375,6 @@ window.MMCConfigurator = (function () {
     ].join('_');
   }
 
-  function checkoutUrl(s = state) {
-    const raw = C.CHECKOUT.links[variantKey(s)];
-    if (!raw) return null;
-    const sep = raw.indexOf('?') === -1 ? '?' : '&';
-    return raw + sep + 'client_reference_id=' + encodeURIComponent(reference(s));
-  }
-
   /* -------------------------------------------------------------- setters */
   function set(patch, reseed) {
     Object.assign(state, patch);
@@ -411,7 +404,7 @@ window.MMCConfigurator = (function () {
 
   return {
     state, set, toggleInk, onChange, mount, render, recommendedSize,
-    recap, reference, checkoutUrl, baseVariantKey, variantKey, priceOf, extraInkCount, money,
+    recap, reference, baseVariantKey, variantKey, priceOf, extraInkCount, money,
     sizeOf, fontOf, inkOf
   };
 })();
