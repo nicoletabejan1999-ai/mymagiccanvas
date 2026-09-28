@@ -726,6 +726,7 @@ p{margin:0}
   border-radius:var(--r); box-shadow:var(--sh-3); backdrop-filter:blur(14px);
 }
 .cookiebar[hidden]{display:none}
+body.cookie-open{padding-bottom:150px}
 .cookiebar__copy{
   margin:0; color:var(--ink-2); font-size:.79rem; line-height:1.5;
 }
@@ -744,6 +745,7 @@ p{margin:0}
   .cookiebar__copy strong{font-size:.83rem}
   .cookiebar__actions{gap:7px; margin-top:9px}
   .cookiebar__actions .btn{min-height:38px; font-size:.78rem}
+  body.cookie-open{padding-bottom:170px}
 }
 
 /* ─────────────────────────────────────────────────────── mobile dock */
