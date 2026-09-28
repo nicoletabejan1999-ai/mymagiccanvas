@@ -42,6 +42,27 @@
     fbq('track', 'PageView');
   }
 
+  function hasConsent() {
+    return readChoice() === 'accepted';
+  }
+
+  function track(eventName, params) {
+    if (!eventName || !hasConsent()) return false;
+    if (!loaded) loadPixel();
+    if (!window.fbq) return false;
+    try {
+      if (params && Object.keys(params).length) fbq('track', eventName, params);
+      else fbq('track', eventName);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // Single public tracking surface for the rest of the site. It never sends
+  // anything before advertising consent has been granted.
+  window.MMCMeta = Object.freeze({ track, hasConsent });
+
   function closePanel() {
     const bar = $('#cookieBar');
     if (bar) bar.hidden = true;
