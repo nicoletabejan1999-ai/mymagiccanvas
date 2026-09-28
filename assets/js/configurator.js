@@ -37,8 +37,8 @@ window.MMCConfigurator = (function () {
   const emit = () => listeners.forEach(fn => fn(state));
 
   /* ------------------------------------------------------------ geometry */
-  const PRINT_CM = 1.52;  // fuller leaves, matching the reference mockup
-  const SPACING  = 0.72;  // dense crown without collapsing into a solid mass
+  const PRINT_CM = 1.50;  // fine enough to keep each fingerprint readable
+  const SPACING  = 0.66;  // denser, with slight natural overlap like the reference
 
   // Each exact canvas artwork has its own full-sheet canopy mask.
   function unpackMask(src) {
@@ -81,9 +81,19 @@ window.MMCConfigurator = (function () {
   function inCanopy(sx, sy, size) {
     const mask = maskFor(size);
     if (!mask || sx < 0 || sx >= 1 || sy < 0 || sy >= 1) return false;
-    const gx = Math.min(mask.w - 1, (sx * mask.w) | 0);
-    const gy = Math.min(mask.h - 1, (sy * mask.h) | 0);
-    return mask.on[gy * mask.w + gx] === 1;
+
+    // Use the measured canopy bounds from each S/M/L artwork, but give the
+    // fingerprint crown a true oval envelope. The old bitmap edge could read
+    // square at the corners once it was densely filled; the ellipse keeps the
+    // outside edge rounded like the owner reference while the individual
+    // fingerprints make the outline feel organic rather than geometric.
+    const cx = mask.bx + mask.bw * 0.5;
+    const cy = mask.by + mask.bh * 0.49;
+    const rx = mask.bw * 0.5;
+    const ry = mask.bh * 0.5;
+    const nx = (sx - cx) / rx;
+    const ny = (sy - cy) / ry;
+    return nx * nx + ny * ny <= 1;
   }
 
   /* ------------------------------------------------------------- helpers */
@@ -301,17 +311,13 @@ window.MMCConfigurator = (function () {
     // reaches depends on how it was turned, so each one is measured.
     const EDGE = w * 0.030;
 
-    // Keep the preview visually full like the product reference. Each canvas
-    // size has its own baseline density; the guest slider may add a little,
-    // but it can no longer make the crown look sparse.
-    const PREVIEW_BASE = { S: 115, M: 155, L: 195 };
-    const PREVIEW_MAX  = { S: 135, M: 180, L: 225 };
-    const base = PREVIEW_BASE[state.size] || 155;
-    const max = PREVIEW_MAX[state.size] || 180;
-    const targetPrints = Math.max(base, Math.min(state.guests || base, max));
+    // The product mockup shows a finished, full crown rather than a literal
+    // guest-count simulation. Keep that visual density stable for each size.
+    const PREVIEW_TARGET = { S: 145, M: 195, L: 245 };
+    const targetPrints = PREVIEW_TARGET[state.size] || 195;
 
     let drawn = 0;
-    const budget = 18000;
+    const budget = 26000;
     for (let tries = 0; tries < budget && drawn < targetPrints; tries++) {
       const x = (mask.bx + rnd() * mask.bw) * w;
       const y = (mask.by + rnd() * mask.bh) * h;
