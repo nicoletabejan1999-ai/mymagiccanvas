@@ -221,8 +221,10 @@ async function fulfillPaidSession(session) {
     pdfFileName: pdfFileName(design, designId)
   };
 
-  const google = await sendGoogleFulfillment(order, pdfBytes);
-
+  // Payment is already confirmed at this point. Report Purchase before
+  // downstream fulfillment so a PDF/Google delivery problem cannot suppress
+  // the conversion. Stripe may retry the webhook; session.id is the stable
+  // event_id Meta uses to deduplicate those retries.
   try {
     const metaResult = await sendMetaPurchase(session, design);
     if (metaResult && metaResult.skipped) {
@@ -232,6 +234,8 @@ async function fulfillPaidSession(session) {
     // Advertising measurement must never block paid-order fulfillment.
     console.error('Meta Purchase tracking failed', session.id, error && error.message);
   }
+
+  const google = await sendGoogleFulfillment(order, pdfBytes);
 
   return { designId, driveUrl: google.driveUrl || null };
 }
