@@ -37,9 +37,8 @@ window.MMCConfigurator = (function () {
   const emit = () => listeners.forEach(fn => fn(state));
 
   /* ------------------------------------------------------------ geometry */
-  const PRINT_CM = 1.6;   // how wide a thumbprint lands, in centimetres
-  const SPACING  = 0.62;  // centres stay this many radii apart, so prints
-                          // crowd together without stacking into mud
+  const PRINT_CM = 1.45;  // slightly finer than before, closer to a real thumbprint
+  const SPACING  = 0.90;  // keep visible breathing room between neighbouring prints
 
   // Each exact canvas artwork has its own full-sheet canopy mask.
   function unpackMask(src) {
@@ -302,8 +301,13 @@ window.MMCConfigurator = (function () {
     // reaches depends on how it was turned, so each one is measured.
     const EDGE = w * 0.030;
 
+    // The preview now represents the selected guest count instead of filling
+    // every possible gap in the mask. That keeps the tree readable and makes
+    // the size recommendation visually honest.
+    const targetPrints = Math.min(state.guests, sizeOf(state.size).capacity);
+    let drawn = 0;
     const budget = 14000;
-    for (let tries = 0; tries < budget; tries++) {
+    for (let tries = 0; tries < budget && drawn < targetPrints; tries++) {
       const x = (mask.bx + rnd() * mask.bw) * w;
       const y = (mask.by + rnd() * mask.bh) * h;
       const pr = r0 * (0.84 + rnd() * 0.30);
@@ -317,6 +321,7 @@ window.MMCConfigurator = (function () {
       if (x < hw || x > w - hw || y < hh || y > h - hh) continue;
       if (!inCanopy(x / w, y / h, state.size) || !fits(x, y)) continue;
       drawPrint(ctx, x, y, pr, rot, hex, alpha, rnd);
+      drawn++;
     }
     ctx.globalCompositeOperation = 'source-over';
   }
