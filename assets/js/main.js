@@ -8,6 +8,31 @@
 
   const C = window.MMC;
   const X = window.MMCConfigurator;
+  function trackMeta(eventName, params) {
+    const api = window.MMCMeta;
+    return !!(api && typeof api.track === 'function' && api.track(eventName, params));
+  }
+
+  function metaCheckoutContext() {
+    const api = window.MMCMeta;
+    return api && typeof api.checkoutContext === 'function'
+      ? api.checkoutContext()
+      : { consent: false };
+  }
+
+  function commerceMetaParams(s) {
+    const price = X.priceOf(s);
+    const params = {
+      content_name: 'Fingerprint Tree Guest Book Canvas',
+      content_ids: [X.variantKey(s)],
+      content_type: 'product',
+      currency: C.CHECKOUT.currency,
+      num_items: 1
+    };
+    if (price != null) params.value = +Number(price).toFixed(2);
+    return params;
+  }
+
   const $  = (s, r) => (r || document).querySelector(s);
   const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
   const el = (tag, cls, html) => {
@@ -485,6 +510,7 @@
         body: JSON.stringify({
           variant: X.variantKey(X.state),
           country: country.value,
+          meta: metaCheckoutContext(),
           design: {
             size: X.state.size,
             framed: X.state.framed,
@@ -505,6 +531,7 @@
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.url) throw new Error(data.error || 'Checkout could not be started.');
+      trackMeta('InitiateCheckout', commerceMetaParams(X.state));
       window.location.assign(data.url);
     } catch (error) {
       btn.textContent = oldText;
@@ -1042,8 +1069,27 @@
 
     buildControls();
     X.mount($('#prints'));
-    X.onChange(sync);
+
+    let customizeTracked = false;
+    X.onChange(s => {
+      sync(s);
+      if (!customizeTracked) {
+        customizeTracked = trackMeta('CustomizeProduct', commerceMetaParams(s));
+      }
+    });
     sync(X.state);
+
+    document.addEventListener('click', e => {
+      const a = e.target.closest && e.target.closest('a[href]');
+      if (!a) return;
+      const href = a.getAttribute('href') || '';
+      const isContact = /^mailto:/i.test(href) ||
+        /^tel:/i.test(href) ||
+        /^https?:\/\/(?:wa\.me|(?:api\.)?whatsapp\.com)\//i.test(href);
+      if (isContact) {
+        trackMeta('Contact', { content_name: 'Customer contact' });
+      }
+    });
 
     // the canopy is sized from the artwork box, so redraw once it lands
     const tree = $('#treeImg');
