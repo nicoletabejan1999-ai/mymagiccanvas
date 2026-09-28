@@ -37,8 +37,8 @@ window.MMCConfigurator = (function () {
   const emit = () => listeners.forEach(fn => fn(state));
 
   /* ------------------------------------------------------------ geometry */
-  const PRINT_CM = 1.45;  // slightly finer than before, closer to a real thumbprint
-  const SPACING  = 0.90;  // keep visible breathing room between neighbouring prints
+  const PRINT_CM = 1.52;  // fuller leaves, matching the reference mockup
+  const SPACING  = 0.72;  // dense crown without collapsing into a solid mass
 
   // Each exact canvas artwork has its own full-sheet canopy mask.
   function unpackMask(src) {
@@ -301,12 +301,17 @@ window.MMCConfigurator = (function () {
     // reaches depends on how it was turned, so each one is measured.
     const EDGE = w * 0.030;
 
-    // The preview now represents the selected guest count instead of filling
-    // every possible gap in the mask. That keeps the tree readable and makes
-    // the size recommendation visually honest.
-    const targetPrints = Math.min(state.guests, sizeOf(state.size).capacity);
+    // Keep the preview visually full like the product reference. Each canvas
+    // size has its own baseline density; the guest slider may add a little,
+    // but it can no longer make the crown look sparse.
+    const PREVIEW_BASE = { S: 115, M: 155, L: 195 };
+    const PREVIEW_MAX  = { S: 135, M: 180, L: 225 };
+    const base = PREVIEW_BASE[state.size] || 155;
+    const max = PREVIEW_MAX[state.size] || 180;
+    const targetPrints = Math.max(base, Math.min(state.guests || base, max));
+
     let drawn = 0;
-    const budget = 14000;
+    const budget = 18000;
     for (let tries = 0; tries < budget && drawn < targetPrints; tries++) {
       const x = (mask.bx + rnd() * mask.bw) * w;
       const y = (mask.by + rnd() * mask.bh) * h;
