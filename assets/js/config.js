@@ -47,15 +47,13 @@ window.MMC = (function () {
       address: '440 N Barranca Avenue #4133, Covina, CA 91723, United States', // https://vercel.com/legal/privacy-notice
       url:     'https://vercel.com'
     },
-    updated: '27 September 2026' // ← bump whenever you edit the legal pages
+    updated: '28 September 2026' // ← bump whenever you edit the legal pages
   };
 
   /* --------------------------------------------------------------- meta */
-  // No Meta pixel is installed yet. When you start running ads, set the id
-  // and flip `enabled` — and load it only for visitors who ticked the
-  // advertising box at checkout. See the privacy policy, which changes
-  // wording to match this flag.
-  const META = { enabled: false, pixelId: '' };
+  // Meta Pixel is enabled, but it is requested only after the visitor
+  // explicitly allows optional Meta cookies in the consent panel.
+  const META = { enabled: true, pixelId: '4206777262800081' };
 
   /* ------------------------------------------------------------ checkout */
   const CHECKOUT = {
