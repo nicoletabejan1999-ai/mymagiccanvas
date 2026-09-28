@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=Allura&family=Cormorant+Garamond:wght@400;500&family=Dancing+Script:wght@500&family=Mrs+Saint+Delafield&family=Mukta+Mahee:wght@200&family=Parisienne&family=Playfair+Display:wght@400;500&family=Prata&family=Sacramento&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/styles.css?v=25">
+<link rel="stylesheet" href="assets/css/styles.css?v=26">
 </head>
 <body>
 
@@ -455,11 +455,25 @@
       <a href="legal/terms.html">Terms</a>
       <a href="legal/privacy.html">Privacy</a>
       <a href="legal/legal-notice.html">Company details</a>
+      <button type="button" class="ftr__cookie" id="cookieSettings">Cookie settings</button>
       <a href="#contact">Contact</a><a id="ftrMail" href="#">Email</a>
     </nav>
     <p class="ftr__sm" id="ftrYear"></p>
   </div>
 </footer>
+
+<!-- Optional Meta tracking consent. Compact by design so it does not cover mobile content. -->
+<div class="cookiebar" id="cookieBar" role="dialog" aria-label="Optional cookie choices" hidden>
+  <p class="cookiebar__copy"><strong>Optional Meta cookies</strong>
+    We use Meta Pixel only if you allow it, to measure whether our Facebook and Instagram ads work.
+    You can use the site and order normally without accepting.
+    <a href="legal/privacy.html">Privacy details</a>.
+  </p>
+  <div class="cookiebar__actions">
+    <button type="button" class="btn btn--ghost btn--sm" id="metaReject">Only necessary</button>
+    <button type="button" class="btn btn--dark btn--sm" id="metaAccept">Allow Meta</button>
+  </div>
+</div>
 
 <!-- Sticky mobile buy bar -->
 <div class="dock" id="dock" hidden>
@@ -469,9 +483,10 @@
   </div>
 </div>
 
-<script src="assets/js/canopy-mask.js?v=25"></script>
-<script src="assets/js/config.js?v=25"></script>
-<script src="assets/js/configurator.js?v=25"></script>
-<script src="assets/js/main.js?v=25"></script>
+<script src="assets/js/canopy-mask.js?v=26"></script>
+<script src="assets/js/config.js?v=26"></script>
+<script src="assets/js/meta-consent.js?v=26"></script>
+<script src="assets/js/configurator.js?v=26"></script>
+<script src="assets/js/main.js?v=26"></script>
 </body>
 </html>
