@@ -3,7 +3,7 @@
    Everything a shop owner needs to change lives in this file.
 
    TO DO BEFORE GOING LIVE
-   1. STRIPE  — paste one Payment Link per variant in CHECKOUT.links below.
+   1. STRIPE  — checkout is created server-side by /api/create-checkout.
    2. PRICES  — base canvas and framed-canvas prices live in VARIANTS.
                 The display easel is a fixed add-on price for every size.
    3. LINKS   — SHOP.etsyUrl / SHOP.email are used by the help buttons.
@@ -60,23 +60,6 @@ window.MMC = (function () {
     currency: 'EUR',
     currencySymbol: '€',
     shipping: 15.9,
-
-    // Paste your Stripe Payment Links here — one per variant key.
-    // Key format: SIZE | FRAMED-SIZE | SIZE-EASEL | FRAMED-SIZE-EASEL
-    links: {
-      'S': '',
-      'M': '',
-      'L': '',
-      'FRAMED-S': '',
-      'FRAMED-M': '',
-      'FRAMED-L': '',
-      'S-EASEL': '',
-      'M-EASEL': '',
-      'L-EASEL': '',
-      'FRAMED-S-EASEL': '',
-      'FRAMED-M-EASEL': '',
-      'FRAMED-L-EASEL': ''
-    },
 
     // Payment methods shown as badges. They are enabled in your Stripe
     // dashboard (Settings → Payment methods), not here — this list only
