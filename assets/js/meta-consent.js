@@ -46,6 +46,42 @@
     }
   }
 
+  function hasConsent() {
+    return readChoice() === 'accepted';
+  }
+
+  function cookieValue(name) {
+    const prefix = name + '=';
+    const row = document.cookie.split('; ').find(v => v.indexOf(prefix) === 0);
+    if (!row) return '';
+    try { return decodeURIComponent(row.slice(prefix.length)); }
+    catch (_) { return row.slice(prefix.length); }
+  }
+
+  function track(eventName, params) {
+    if (!eventName || !hasConsent()) return false;
+    if (!loaded) loadPixel();
+    if (!window.fbq) return false;
+    try {
+      if (params && Object.keys(params).length) fbq('track', eventName, params);
+      else fbq('track', eventName);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function checkoutContext() {
+    if (!hasConsent()) return { consent: false };
+    return {
+      consent: true,
+      fbp: cookieValue('_fbp').slice(0, 255),
+      fbc: cookieValue('_fbc').slice(0, 255)
+    };
+  }
+
+  window.MMCMeta = Object.freeze({ track, hasConsent, checkoutContext });
+
   function closePanel() {
     const bar = $('#cookieBar');
     if (bar) bar.hidden = true;
