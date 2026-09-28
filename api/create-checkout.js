@@ -120,6 +120,23 @@ function cleanDesign(raw, variant, country) {
   };
 }
 
+function cleanMeta(raw, req, origin) {
+  raw = raw && typeof raw === 'object' ? raw : {};
+  if (raw.consent !== true) return { consent: false };
+
+  const forwarded = String(req.headers['x-forwarded-for'] || '')
+    .split(',')[0].trim();
+
+  return {
+    consent: true,
+    fbp: cleanText(raw.fbp, 255),
+    fbc: cleanText(raw.fbc, 255),
+    clientIp: cleanText(forwarded, 64),
+    userAgent: cleanText(req.headers['user-agent'], 512),
+    eventSourceUrl: origin + '/'
+  };
+}
+
 async function saveDesign(design) {
   const { put } = await import('@vercel/blob');
 
@@ -188,6 +205,8 @@ module.exports = async function handler(req, res) {
   const origin = (req.headers.origin && /^https?:\/\//.test(req.headers.origin))
     ? req.headers.origin
     : 'https://mymagicanvas.com';
+
+  design.meta = cleanMeta(body && body.meta, req, origin);
 
   let designId;
   try {
