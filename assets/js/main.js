@@ -1037,21 +1037,6 @@
     });
   }
 
-  /* Owner-facing reminder, shown only while no Stripe link is configured. */
-  function setupNotice() {
-    const missing = Object.keys(C.CHECKOUT.links).filter(k => !C.CHECKOUT.links[k]);
-    if (!missing.length || sessionStorage.getItem('mmc-setup') === 'off') return;
-    const n = el('aside', 'setup',
-      '<b>Setup — ' + missing.length + ' of ' + Object.keys(C.CHECKOUT.links).length +
-      ' checkout links missing</b>Paste your Stripe Payment Links into ' +
-      '<code>assets/js/config.js</code>. Until then those options fall back to email ordering.' +
-      '<button type="button" aria-label="Dismiss">×</button>');
-    $('button', n).addEventListener('click', () => {
-      sessionStorage.setItem('mmc-setup', 'off'); n.remove();
-    });
-    document.body.appendChild(n);
-  }
-
   /* ════════════════════════════════════════════════════════════ start */
 
   function init() {
@@ -1101,7 +1086,6 @@
     stickyHeader();
     mobileDock();
     reveal();
-    // Stripe checkout is created server-side; no static Payment Links are needed.
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
