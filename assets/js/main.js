@@ -8,6 +8,24 @@
 
   const C = window.MMC;
   const X = window.MMCConfigurator;
+
+  function trackMeta(eventName, params) {
+    const api = window.MMCMeta;
+    return !!(api && typeof api.track === 'function' && api.track(eventName, params));
+  }
+
+  function commerceMetaParams(s) {
+    const price = X.priceOf(s);
+    const p = {
+      content_name: 'Fingerprint Tree Guest Book Canvas',
+      content_ids: [X.variantKey(s)],
+      content_type: 'product',
+      currency: C.CHECKOUT.currency,
+      num_items: 1
+    };
+    if (price != null) p.value = +(price + C.CHECKOUT.shipping).toFixed(2);
+    return p;
+  }
   const $  = (s, r) => (r || document).querySelector(s);
   const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
   const el = (tag, cls, html) => {
@@ -393,11 +411,33 @@
     });
 
     $('#buyBtn').addEventListener('click', e => {
-      if (okTerms.checked) return;
-      e.preventDefault();
-      $('#consentErr').hidden = false;
-      okTerms.focus();
-      $('.consent').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (!okTerms.checked) {
+        e.preventDefault();
+        $('#consentErr').hidden = false;
+        okTerms.focus();
+        $('.consent').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+
+      const href = e.currentTarget.getAttribute('href') || '';
+      if (/^https?:/i.test(href)) {
+        trackMeta('InitiateCheckout', commerceMetaParams(X.state));
+      }
+    });
+
+    // Track direct customer-contact actions once they are actually clicked.
+    // This also covers future WhatsApp links without adding another rule in
+    // Events Manager.
+    document.addEventListener('click', e => {
+      const a = e.target.closest && e.target.closest('a[href]');
+      if (!a) return;
+      const href = a.getAttribute('href') || '';
+      const isContact = /^mailto:/i.test(href) ||
+        /^tel:/i.test(href) ||
+        /^https?:\/\/(?:wa\.me|(?:api\.)?whatsapp\.com)\//i.test(href);
+      if (isContact) {
+        trackMeta('Contact', { content_name: 'Customer contact' });
+      }
     });
 
     /* copy */
@@ -794,7 +834,15 @@
 
     buildControls();
     X.mount($('#prints'));
-    X.onChange(sync);
+
+    let customizeTracked = false;
+    X.onChange(s => {
+      sync(s);
+      if (!customizeTracked) {
+        customizeTracked = trackMeta('CustomizeProduct', commerceMetaParams(s));
+      }
+    });
+
     sync(X.state);
 
     // the canopy is sized from the artwork box, so redraw once it lands
