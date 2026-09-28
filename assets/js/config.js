@@ -52,11 +52,9 @@ window.MMC = (function () {
   };
 
   /* --------------------------------------------------------------- meta */
-  // No Meta pixel is installed yet. When you start running ads, set the id
-  // and flip `enabled` — and load it only for visitors who ticked the
-  // advertising box at checkout. See the privacy policy, which changes
-  // wording to match this flag.
-  const META = { enabled: false, pixelId: '' };
+  // Meta Pixel is enabled, but the browser library is loaded only after the
+  // visitor explicitly opts in to advertising use in the configurator.
+  const META = { enabled: true, pixelId: '4206777262800081' };
 
   /* ------------------------------------------------------------ checkout */
   const CHECKOUT = {
