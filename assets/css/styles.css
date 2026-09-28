@@ -778,8 +778,40 @@ p{margin:0}
 .ftr__brand em{font-style:italic; color:var(--sage-deep)}
 .ftr__sm{font-size:.8rem; color:var(--ink-3); margin-top:4px}
 .ftr__nav{display:flex; flex-wrap:wrap; gap:20px}
-.ftr__nav a{font-size:.87rem; color:var(--ink-2); text-decoration:none}
-.ftr__nav a:hover{color:var(--ink); text-decoration:underline; text-underline-offset:3px}
+.ftr__nav a,.ftr__cookie{font-size:.87rem; color:var(--ink-2); text-decoration:none}
+.ftr__nav a:hover,.ftr__cookie:hover{color:var(--ink); text-decoration:underline; text-underline-offset:3px}
+.ftr__cookie{
+  appearance:none; border:0; background:none; padding:0; font-family:inherit;
+  cursor:pointer;
+}
+
+/* ───────────────────────────────────────────────── cookie consent */
+.cookiebar{
+  position:fixed; left:16px; bottom:16px; z-index:140;
+  width:min(430px,calc(100vw - 32px)); padding:14px 15px;
+  background:rgba(255,255,255,.98); border:1px solid var(--line);
+  border-radius:var(--r); box-shadow:var(--sh-3); backdrop-filter:blur(14px);
+}
+.cookiebar[hidden]{display:none}
+.cookiebar__copy{margin:0; color:var(--ink-2); font-size:.79rem; line-height:1.5}
+.cookiebar__copy strong{display:block; color:var(--ink); font-size:.86rem; margin-bottom:3px}
+.cookiebar__copy a{color:var(--ink); font-weight:600; text-underline-offset:2px}
+.cookiebar__actions{display:flex; gap:8px; margin-top:11px}
+.cookiebar__actions .btn{flex:1; min-height:40px; padding-inline:12px}
+.cookie-open .dock,.cookie-open .setup{display:none!important}
+body.cookie-open{padding-bottom:150px}
+
+@media (max-width:560px){
+  .cookiebar{
+    left:8px; right:8px; bottom:calc(8px + env(safe-area-inset-bottom));
+    width:auto; padding:11px 12px; border-radius:12px;
+  }
+  .cookiebar__copy{font-size:.75rem; line-height:1.42}
+  .cookiebar__copy strong{font-size:.82rem}
+  .cookiebar__actions{gap:7px; margin-top:8px}
+  .cookiebar__actions .btn{min-height:38px; font-size:.77rem}
+  body.cookie-open{padding-bottom:165px}
+}
 
 /* ─────────────────────────────────────────────────────── mobile dock */
 .dock{
