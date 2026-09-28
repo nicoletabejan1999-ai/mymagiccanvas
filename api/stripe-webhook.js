@@ -159,21 +159,46 @@ async function sendMetaPurchase(session, design) {
   const body = { data: [event] };
   if (isTest) body.test_event_code = testCode;
 
-  const response = await fetch(
+  const url =
     'https://graph.facebook.com/v26.0/' + encodeURIComponent(pixelId) +
-      '/events?access_token=' + encodeURIComponent(token),
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
+    '/events?access_token=' + encodeURIComponent(token);
+
+  let lastError = null;
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const result = await response.json().catch(() => ({}));
+
+      if (response.ok) {
+        console.log(
+          'Meta CAPI Purchase accepted',
+          session.id,
+          'events_received=' + String(result.events_received ?? '')
+        );
+        return result;
+      }
+
+      const message =
+        result && result.error && result.error.message ||
+        'HTTP ' + response.status;
+      lastError = new Error('Meta CAPI Purchase failed: ' + message);
+
+      // Retry throttling and server-side failures only. A normal 4xx is a
+      // configuration/payload problem and retrying it would not help.
+      if (response.status !== 429 && response.status < 500) throw lastError;
+    } catch (error) {
+      lastError = error;
+      if (attempt === 3) break;
     }
-  );
-  const result = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error('Meta CAPI Purchase failed: ' +
-      (result && result.error && result.error.message || 'HTTP ' + response.status));
+
+    await new Promise(resolve => setTimeout(resolve, attempt * 500));
   }
-  return result;
+
+  throw lastError || new Error('Meta CAPI Purchase failed');
 }
 
 async function fulfillPaidSession(session) {
