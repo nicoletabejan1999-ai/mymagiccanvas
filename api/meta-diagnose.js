@@ -28,17 +28,25 @@ async function readDesign(designId, auth) {
 async function handler(req, res) {
   if (req.method !== 'GET') return json(res, 405, { error: 'Method not allowed' });
 
-  const sessionId = String(req.query && req.query.session_id || '');
-  if (!/^cs_test_[A-Za-z0-9]+$/.test(sessionId)) {
-    return json(res, 400, { error: 'A Stripe test session_id is required.' });
-  }
-
   if (!process.env.STRIPE_SECRET_KEY) {
     return json(res, 503, { error: 'Stripe secret is unavailable.' });
   }
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-  const session = await stripe.checkout.sessions.retrieve(sessionId);
+  const requestedSessionId = String(req.query && req.query.session_id || '');
+  let session;
+  if (requestedSessionId) {
+    if (!/^cs_test_[A-Za-z0-9]+$/.test(requestedSessionId)) {
+      return json(res, 400, { error: 'Invalid Stripe test session_id.' });
+    }
+    session = await stripe.checkout.sessions.retrieve(requestedSessionId);
+  } else {
+    const recent = await stripe.checkout.sessions.list({ limit: 10 });
+    session = recent.data.find(item =>
+      item && item.livemode === false && item.payment_status === 'paid'
+    );
+    if (!session) return json(res, 404, { error: 'No recent paid test session found.' });
+  }
 
   // This temporary diagnostic route is deliberately test-mode only.
   if (session.livemode !== false) return json(res, 403, { error: 'Live sessions are not allowed.' });
