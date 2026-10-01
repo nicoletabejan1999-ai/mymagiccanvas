@@ -1,19 +1,69 @@
-/* Meta Pixel consent: never loads Meta before explicit opt-in. */
+/* Advertising measurement consent. Meta Pixel never loads before explicit opt-in,
+   and Pinterest conversion matching data is sent only after the same opt-in. */
 (function () {
   'use strict';
 
   const C = window.MMC;
-  const KEY = 'mmc-meta-consent-v3';
+  const KEY = 'mmc-ads-consent-v1';
+  const LEGACY_KEY = 'mmc-meta-consent-v3';
+  const PINTEREST_CLICK_KEY = 'mmc-pinterest-click-v1';
   let loaded = false;
   const $ = s => document.querySelector(s);
 
   function readChoice() {
-    try { return localStorage.getItem(KEY); }
-    catch (_) { return null; }
+    try {
+      const current = localStorage.getItem(KEY);
+      if (current) return current;
+
+      // A previous rejection is safe to preserve. A previous Meta acceptance
+      // did not include Pinterest, so we deliberately ask again.
+      const legacy = localStorage.getItem(LEGACY_KEY);
+      if (legacy === 'rejected') {
+        localStorage.setItem(KEY, 'rejected');
+        return 'rejected';
+      }
+      return null;
+    } catch (_) {
+      return null;
+    }
   }
 
   function saveChoice(value) {
     try { localStorage.setItem(KEY, value); }
+    catch (_) {}
+  }
+
+  function cookieValue(name) {
+    const prefix = name + '=';
+    const row = document.cookie.split('; ').find(v => v.indexOf(prefix) === 0);
+    if (!row) return '';
+    try { return decodeURIComponent(row.slice(prefix.length)); }
+    catch (_) { return row.slice(prefix.length); }
+  }
+
+  function currentPinterestClickId() {
+    if (readChoice() !== 'accepted') return '';
+    let clickId = cookieValue('_epik');
+    if (!clickId) {
+      try { clickId = new URLSearchParams(location.search).get('epik') || ''; }
+      catch (_) {}
+    }
+    if (!clickId) {
+      try { clickId = localStorage.getItem(PINTEREST_CLICK_KEY) || ''; }
+      catch (_) {}
+    }
+    return String(clickId || '').trim().slice(0, 512);
+  }
+
+  function capturePinterestClickId() {
+    const clickId = currentPinterestClickId();
+    if (!clickId) return;
+    try { localStorage.setItem(PINTEREST_CLICK_KEY, clickId); }
+    catch (_) {}
+  }
+
+  function clearPinterestClickId() {
+    try { localStorage.removeItem(PINTEREST_CLICK_KEY); }
     catch (_) {}
   }
 
@@ -39,23 +89,17 @@
 
   function applyChoice(value) {
     if (value === 'accepted') {
+      capturePinterestClickId();
       if (window.fbq && loaded) fbq('consent', 'grant');
       else loadPixel();
-    } else if (window.fbq) {
-      fbq('consent', 'revoke');
+    } else {
+      clearPinterestClickId();
+      if (window.fbq) fbq('consent', 'revoke');
     }
   }
 
   function hasConsent() {
     return readChoice() === 'accepted';
-  }
-
-  function cookieValue(name) {
-    const prefix = name + '=';
-    const row = document.cookie.split('; ').find(v => v.indexOf(prefix) === 0);
-    if (!row) return '';
-    try { return decodeURIComponent(row.slice(prefix.length)); }
-    catch (_) { return row.slice(prefix.length); }
   }
 
   function track(eventName, params) {
@@ -73,10 +117,12 @@
 
   function checkoutContext() {
     if (!hasConsent()) return { consent: false };
+    capturePinterestClickId();
     return {
       consent: true,
       fbp: cookieValue('_fbp').slice(0, 255),
-      fbc: cookieValue('_fbc').slice(0, 255)
+      fbc: cookieValue('_fbc').slice(0, 255),
+      pinterestClickId: currentPinterestClickId()
     };
   }
 
@@ -90,7 +136,7 @@
 
   function showPanel(force) {
     const bar = $('#cookieBar');
-    if (!bar || !C || !C.META || !C.META.enabled || !C.META.pixelId) return;
+    if (!bar) return;
     const choice = readChoice();
     if (choice && !force) {
       applyChoice(choice);
