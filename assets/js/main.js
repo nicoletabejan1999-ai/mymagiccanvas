@@ -8,6 +8,51 @@
 
   const C = window.MMC;
   const X = window.MMCConfigurator;
+  const Pricing = window.MMCPricing;
+  let marketCountry = '';
+  let currencyChoice = 'AUTO';
+  try {
+    const requested = new URLSearchParams(location.search).get('currency');
+    const saved = localStorage.getItem('mmc-currency');
+    currencyChoice = ['EUR','USD'].includes(requested) ? requested :
+      ['EUR','USD'].includes(saved) ? saved : 'AUTO';
+  } catch (_) {}
+
+  function applyCatalog() {
+    const country = document.querySelector('#shipCountry');
+    const code = country && country.value || marketCountry;
+    const currency = currencyChoice === 'AUTO' ? Pricing.currencyFor(code) : currencyChoice;
+    const catalog = Pricing.catalogs[currency];
+    C.CHECKOUT.currency = currency;
+    C.CHECKOUT.currencySymbol = currency === 'USD' ? '$' : '€';
+    Object.keys(catalog.prices).forEach(key => {
+      C.VARIANTS[key] = { price: catalog.prices[key] / 100 };
+    });
+    C.EASEL_PRICE = catalog.easel / 100;
+    C.EXTRA_INK_PRICE = catalog.extraInk / 100;
+  }
+
+  function refreshCurrency() {
+    applyCatalog();
+    buildSizes();
+    buildProductLd();
+    sync(X.state);
+  }
+
+  async function detectMarket() {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 2500);
+    try {
+      const response = await fetch('/api/market', { signal: controller.signal, cache: 'no-store' });
+      if (response.ok) {
+        const data = await response.json();
+        if (/^[A-Z]{2}$/.test(data.country)) marketCountry = data.country;
+      }
+    } catch (_) { /* EUR and a manual selector remain available. */ }
+    finally { clearTimeout(timer); }
+    applyCatalog();
+  }
+
   function trackMeta(eventName, params) {
     const api = window.MMCMeta;
     return !!(api && typeof api.track === 'function' && api.track(eventName, params));
@@ -219,6 +264,7 @@
   /* ── size cards ── */
   function buildSizes() {
     const host = $('#sizeCards'); if (!host) return;
+    host.innerHTML = '';
     C.SIZES.forEach(s => {
       const from = C.VARIANTS[s.id] ? C.VARIANTS[s.id].price : null;
       const c = el('article', 'szc');
@@ -305,8 +351,11 @@
   }
 
   function buildProductLd() {
+    const old = $('#productLd');
+    if (old) old.remove();
     const prices = Object.values(C.VARIANTS).map(v => v.price).filter(p => p != null);
     const ld = el('script');
+    ld.id = 'productLd';
     ld.type = 'application/ld+json';
     ld.textContent = JSON.stringify({
       '@context': 'https://schema.org', '@type': 'Product',
@@ -434,7 +483,18 @@
       select.appendChild(o);
     });
 
-    select.addEventListener('change', syncPhonePrefix);
+    if (SHIPPING_COUNTRIES.includes(marketCountry)) select.value = marketCountry;
+    select.addEventListener('change', () => { syncPhonePrefix(); refreshCurrency(); });
+    const currencySelect = $('#shopCurrency');
+    currencySelect.value = currencyChoice;
+    currencySelect.addEventListener('change', () => {
+      currencyChoice = currencySelect.value;
+      try {
+        if (currencyChoice === 'AUTO') localStorage.removeItem('mmc-currency');
+        else localStorage.setItem('mmc-currency', currencyChoice);
+      } catch (_) {}
+      refreshCurrency();
+    });
     syncPhonePrefix();
   }
 
@@ -510,6 +570,9 @@
         body: JSON.stringify({
           variant: X.variantKey(X.state),
           country: country.value,
+          currency: C.CHECKOUT.currency,
+          pricingVersion: Pricing.version,
+          subtotal: Math.round(price * 100),
           meta: metaCheckoutContext(),
           design: {
             size: X.state.size,
@@ -956,7 +1019,13 @@
     const what = (s.framed ? 'Framed canvas ' : 'Canvas ') + size.label + ' · ' + size.cm +
       (s.easel ? ' · with easel' : '');
     $('#buyWhat').textContent = what;
-    $('#buyShip').textContent = 'based on destination';
+    const country = $('#shipCountry').value;
+    const shipping = Pricing.catalogs[C.CHECKOUT.currency].shipping[Pricing.zone(country)];
+    $('#buyShip').textContent = country
+      ? 'Standard ' + X.money(shipping.standard / 100) + ' · Express ' + X.money(shipping.express / 100)
+      : 'select delivery country';
+    $('#currencyNote').textContent = 'Prices and payment in ' + C.CHECKOUT.currency + '.';
+    $('#extraInkPrice').textContent = '+' + X.money(C.EXTRA_INK_PRICE);
     $('#buyScope').textContent = C.DELIVERY.scope.toLowerCase();
 
     const pEl = $('#buyPrice'), btn = $('#buyBtn'), err = $('#buyErr');
@@ -1039,8 +1108,9 @@
 
   /* ════════════════════════════════════════════════════════════ start */
 
-  function init() {
+  async function init() {
     serveFonts();
+    await detectMarket();
     buildTrust();
     buildPayments();
     buildGallery();
