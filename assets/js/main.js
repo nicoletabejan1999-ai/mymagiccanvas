@@ -58,6 +58,13 @@
     return !!(api && typeof api.track === 'function' && api.track(eventName, params));
   }
 
+  function trackPinterest(eventName, params) {
+    const api = window.MMCPinterest;
+    if (!api || typeof api.track !== 'function') return false;
+    api.track(eventName, params).catch(() => {});
+    return true;
+  }
+
   function metaCheckoutContext() {
     const api = window.MMCMeta;
     return api && typeof api.checkoutContext === 'function'
@@ -594,6 +601,23 @@
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.url) throw new Error(data.error || 'Checkout could not be started.');
+
+      const pinterestPrice = +Number(price).toFixed(2);
+      trackPinterest('initiatecheckout', {
+        value: pinterestPrice,
+        order_quantity: 1,
+        currency: C.CHECKOUT.currency,
+        event_id: String(data.designId || ''),
+        line_items: [{
+          product_name: 'Fingerprint Tree Guest Book Canvas',
+          product_id: X.variantKey(X.state),
+          product_price: pinterestPrice,
+          product_quantity: 1,
+          product_category: 'Wedding guest book canvas',
+          product_brand: 'MyMagiCanvas'
+        }]
+      });
+
       trackMeta('InitiateCheckout', commerceMetaParams(X.state));
       window.location.assign(data.url);
     } catch (error) {
