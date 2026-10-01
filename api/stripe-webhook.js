@@ -122,6 +122,143 @@ async function sendGoogleFulfillment(order, pdfBytes) {
   return body;
 }
 
+
+function sha256(value) {
+  return crypto.createHash('sha256').update(String(value), 'utf8').digest('hex');
+}
+
+function pinterestHashEmail(value) {
+  const normalized = String(value || '').trim().toLowerCase();
+  return normalized ? sha256(normalized) : '';
+}
+
+function pinterestHashPhone(value) {
+  const normalized = String(value || '').replace(/\D/g, '').replace(/^0+/, '');
+  return normalized ? sha256(normalized) : '';
+}
+
+function pinterestHashCountry(value) {
+  const normalized = String(value || '').trim().toLowerCase();
+  return /^[a-z]{2}$/.test(normalized) ? sha256(normalized) : '';
+}
+
+async function sendPinterestCheckout(session, design) {
+  const meta = design && design.meta;
+  if (!meta || meta.consent !== true) return { skipped: 'no_consent' };
+
+  const token = process.env.PINTEREST_CAPI_ACCESS_TOKEN;
+  if (!token) return { skipped: 'no_token' };
+
+  const adAccountId = process.env.PINTEREST_AD_ACCOUNT_ID || '549770849495';
+  const customer = session.customer_details || {};
+  const shipping = session.shipping_details ||
+    (session.collected_information && session.collected_information.shipping_details) ||
+    {};
+  const address = shipping.address || customer.address || {};
+
+  const userData = {};
+  const em = pinterestHashEmail(customer.email);
+  const ph = pinterestHashPhone(customer.phone || design.phone);
+  const country = pinterestHashCountry(address.country || design.deliveryCountry);
+
+  if (em) userData.em = [em];
+  if (ph) userData.ph = [ph];
+  if (country) userData.country = [country];
+  if (meta.pinterestClickId) userData.click_id = meta.pinterestClickId;
+  if (meta.clientIp) userData.client_ip_address = meta.clientIp;
+  if (meta.userAgent) userData.client_user_agent = meta.userAgent;
+
+  // Pinterest requires user_data to contain an email, a mobile ad ID, or
+  // the client IP + user agent pair. Checkout normally gives us both email
+  // and the browser pair, but skip safely if neither is available.
+  if (!userData.em &&
+      !(userData.client_ip_address && userData.client_user_agent)) {
+    return { skipped: 'no_match_data' };
+  }
+
+  const variant = session.metadata && session.metadata.variant || design.variant;
+  const subtotal = Number(session.amount_subtotal || session.amount_total || 0) / 100;
+  if (!(subtotal > 0)) return { skipped: 'invalid_value' };
+
+  const item = {
+    id: String(variant || 'fingerprint-tree-canvas'),
+    item_name: 'Fingerprint Tree Guest Book Canvas',
+    item_category: 'Wedding guest book canvas',
+    item_brand: 'MyMagiCanvas',
+    item_price: subtotal.toFixed(2),
+    quantity: 1
+  };
+
+  const event = {
+    event_name: 'checkout',
+    action_source: 'web',
+    event_time: Math.floor(Date.now() / 1000),
+    event_id: session.id,
+    event_source_url: meta.eventSourceUrl || 'https://mymagicanvas.com/',
+    opt_out: false,
+    partner_name: 'direct',
+    user_data: userData,
+    custom_data: {
+      currency: String(session.currency || 'eur').toUpperCase(),
+      value: subtotal.toFixed(2),
+      order_id: session.id,
+      num_items: 1,
+      content_ids: [item.id],
+      contents: [item]
+    }
+  };
+
+  const isTest =
+    session.livemode === false ||
+    String(process.env.PINTEREST_TEST_MODE || '').toLowerCase() === 'true';
+
+  const url =
+    'https://api.pinterest.com/v5/ad_accounts/' + encodeURIComponent(adAccountId) +
+    '/events' + (isTest ? '?test=true' : '');
+
+  let lastError = null;
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ data: [event] })
+      });
+      const result = await response.json().catch(() => ({}));
+
+      const processed = Number(result && result.num_events_processed || 0);
+      const eventStatus = result && Array.isArray(result.events) && result.events[0];
+      if (response.ok && processed >= 1 && (!eventStatus || eventStatus.status !== 'failed')) {
+        console.log(
+          'Pinterest CAPI checkout accepted',
+          session.id,
+          'processed=' + String(processed),
+          isTest ? 'test=true' : 'test=false'
+        );
+        return result;
+      }
+
+      const message =
+        eventStatus && eventStatus.error_message ||
+        result && result.message ||
+        'HTTP ' + response.status;
+      lastError = new Error('Pinterest CAPI checkout failed: ' + message);
+
+      if (response.status !== 429 && response.status < 500) throw lastError;
+    } catch (error) {
+      lastError = error;
+      if (attempt === 3) break;
+    }
+
+    await new Promise(resolve => setTimeout(resolve, attempt * 500));
+  }
+
+  throw lastError || new Error('Pinterest CAPI checkout failed');
+}
+
 async function sendMetaPurchase(session, design) {
   const meta = design && design.meta;
   if (!meta || meta.consent !== true) return { skipped: 'no_consent' };
@@ -233,6 +370,17 @@ async function fulfillPaidSession(session) {
     }
   } catch (error) {
     console.error('Meta Purchase tracking failed', session.id, error && error.message);
+  }
+
+  try {
+    const pinterestResult = await sendPinterestCheckout(session, design);
+    if (pinterestResult && pinterestResult.skipped) {
+      console.log('Pinterest checkout skipped:', pinterestResult.skipped, session.id);
+    } else {
+      console.log('Pinterest checkout accepted', session.id);
+    }
+  } catch (error) {
+    console.error('Pinterest checkout tracking failed', session.id, error && error.message);
   }
 
   console.log('PDF generation start', session.id, 'font=' + String(design.font || ''));
