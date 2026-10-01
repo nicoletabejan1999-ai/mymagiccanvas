@@ -47,7 +47,7 @@ window.MMC = (function () {
       address: '440 N Barranca Avenue #4133, Covina, CA 91723, United States', // https://vercel.com/legal/privacy-notice
       url:     'https://vercel.com'
     },
-    updated: '28 September 2026' // ← bump whenever you edit the legal pages
+    updated: '2 October 2026' // ← bump whenever you edit the legal pages
   };
 
   /* --------------------------------------------------------------- meta */
