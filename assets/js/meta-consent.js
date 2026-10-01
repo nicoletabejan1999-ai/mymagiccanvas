@@ -96,6 +96,10 @@
       clearPinterestClickId();
       if (window.fbq) fbq('consent', 'revoke');
     }
+
+    try {
+      window.dispatchEvent(new CustomEvent('mmc:ads-consent', { detail: value }));
+    } catch (_) {}
   }
 
   function hasConsent() {
