@@ -100,6 +100,7 @@ function cleanMeta(raw, req, origin) {
     consent: true,
     fbp: cleanText(raw.fbp, 255),
     fbc: cleanText(raw.fbc, 255),
+    pinterestClickId: cleanText(raw.pinterestClickId, 512),
     clientIp: cleanText(forwarded, 64),
     userAgent: cleanText(req.headers['user-agent'], 512),
     eventSourceUrl: origin + '/'
