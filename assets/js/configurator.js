@@ -136,7 +136,7 @@ window.MMCConfigurator = (function () {
   }
 
   function money(n) {
-    return C.CHECKOUT.currencySymbol + n.toFixed(2).replace('.', ',');
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: C.CHECKOUT.currency }).format(n);
   }
 
   /* ------------------------------------------------ draw one fingerprint */

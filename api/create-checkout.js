@@ -1,37 +1,6 @@
 // Private design storage is provisioned by Vercel Blob.
 // Redeploy after Blob connection refresh.
-const EU = new Set([
-  'AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE',
-  'IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE'
-]);
-
-const PRICES = Object.freeze({
-  'S': 3190,
-  'M': 4990,
-  'L': 6490,
-  'FRAMED-S': 7999,
-  'FRAMED-M': 10999,
-  'FRAMED-L': 14999
-});
-
-const EASEL_PRICE = 5300;
-const EXTRA_INK_PRICE = 300;
-
-const SHIPPING = Object.freeze({
-  EU:   { standard: 1890, express: 3490 },
-  US:   { standard: 2990, express: 3990 },
-  GB:   { standard: 1990, express: 2990 },
-  CA:   { standard: 3590, express: 4590 },
-  REST: { standard: 4990, express: 7990 }
-});
-
-function shippingZone(country) {
-  if (EU.has(country)) return 'EU';
-  if (country === 'US') return 'US';
-  if (country === 'GB') return 'GB';
-  if (country === 'CA') return 'CA';
-  return 'REST';
-}
+const Pricing = require('../assets/js/pricing');
 
 function json(res, status, body) {
   res.statusCode = status;
@@ -47,12 +16,12 @@ function productName(variant) {
     size + (easel ? ' + display easel' : '');
 }
 
-function addShipping(params, index, label, amount, minDays, maxDays) {
+function addShipping(params, index, label, amount, minDays, maxDays, currency) {
   const p = 'shipping_options[' + index + '][shipping_rate_data]';
   params.set(p + '[type]', 'fixed_amount');
   params.set(p + '[display_name]', label);
   params.set(p + '[fixed_amount][amount]', String(amount));
-  params.set(p + '[fixed_amount][currency]', 'eur');
+  params.set(p + '[fixed_amount][currency]', currency);
   params.set(p + '[delivery_estimate][minimum][unit]', 'business_day');
   params.set(p + '[delivery_estimate][minimum][value]', String(minDays));
   params.set(p + '[delivery_estimate][maximum][unit]', 'business_day');
@@ -177,7 +146,7 @@ module.exports = async function handler(req, res) {
   }
 
   if (!process.env.STRIPE_SECRET_KEY) {
-    return json(res, 503, { error: 'Stripe test checkout is not configured yet.' });
+    return json(res, 503, { error: 'Stripe checkout is not configured yet.' });
   }
 
   let body = req.body;
@@ -188,6 +157,14 @@ module.exports = async function handler(req, res) {
   const variant = String(body && body.variant || '').toUpperCase();
   const country = String(body && body.country || '').toUpperCase();
 
+  const currency = String(body && body.currency || 'EUR').toUpperCase();
+  if (!Object.prototype.hasOwnProperty.call(Pricing.catalogs, currency)) {
+    return json(res, 400, { error: 'Please choose EUR or USD.' });
+  }
+  const catalog = Pricing.catalogs[currency];
+  const PRICES = catalog.prices;
+  const EASEL_PRICE = catalog.easel;
+  const EXTRA_INK_PRICE = catalog.extraInk;
   const baseVariant = variant.replace(/-EASEL$/, '');
   if (!Object.prototype.hasOwnProperty.call(PRICES, baseVariant)) {
     return json(res, 400, { error: 'This product combination is not available for online checkout.' });
@@ -201,7 +178,15 @@ module.exports = async function handler(req, res) {
     return json(res, 400, { error: 'The canvas design could not be validated. Please review it and try again.' });
   }
 
-  const shipping = SHIPPING[shippingZone(country)];
+  const expectedSubtotal = Pricing.total(currency, baseVariant, design.easel, Math.max(0, design.inks.length - 4));
+  // Legacy EUR tabs remain valid; new tabs must match the displayed catalog.
+  if ((currency === 'USD' || body.pricingVersion != null) &&
+      (body.pricingVersion !== Pricing.version || body.subtotal !== expectedSubtotal)) {
+    return json(res, 409, { error: 'Prices have changed. Refresh the page before continuing.' });
+  }
+  const shipping = catalog.shipping[Pricing.zone(country)];
+  design.currency = currency;
+  design.pricingVersion = Pricing.version;
   const origin = (req.headers.origin && /^https?:\/\//.test(req.headers.origin))
     ? req.headers.origin
     : 'https://mymagicanvas.com';
@@ -221,6 +206,8 @@ module.exports = async function handler(req, res) {
 
   const params = new URLSearchParams();
   params.set('mode', 'payment');
+  params.set('adaptive_pricing[enabled]', 'false');
+  params.set('metadata[pricing_version]', Pricing.version);
   params.set('success_url', origin + '/success.html?session_id={CHECKOUT_SESSION_ID}');
   params.set('cancel_url', origin + '/?checkout=cancelled#configurator');
   params.set('client_reference_id', designId);
@@ -235,14 +222,14 @@ module.exports = async function handler(req, res) {
   let itemIndex = 0;
 
   params.set('line_items[' + itemIndex + '][quantity]', '1');
-  params.set('line_items[' + itemIndex + '][price_data][currency]', 'eur');
+  params.set('line_items[' + itemIndex + '][price_data][currency]', currency.toLowerCase());
   params.set('line_items[' + itemIndex + '][price_data][unit_amount]', String(PRICES[baseVariant]));
   params.set('line_items[' + itemIndex + '][price_data][product_data][name]', productName(baseVariant));
   itemIndex++;
 
   if (design.easel) {
     params.set('line_items[' + itemIndex + '][quantity]', '1');
-    params.set('line_items[' + itemIndex + '][price_data][currency]', 'eur');
+    params.set('line_items[' + itemIndex + '][price_data][currency]', currency.toLowerCase());
     params.set('line_items[' + itemIndex + '][price_data][unit_amount]', String(EASEL_PRICE));
     params.set('line_items[' + itemIndex + '][price_data][product_data][name]', 'Display easel');
     itemIndex++;
@@ -250,13 +237,13 @@ module.exports = async function handler(req, res) {
 
   if (extraInkCount > 0) {
     params.set('line_items[' + itemIndex + '][quantity]', String(extraInkCount));
-    params.set('line_items[' + itemIndex + '][price_data][currency]', 'eur');
+    params.set('line_items[' + itemIndex + '][price_data][currency]', currency.toLowerCase());
     params.set('line_items[' + itemIndex + '][price_data][unit_amount]', String(EXTRA_INK_PRICE));
     params.set('line_items[' + itemIndex + '][price_data][product_data][name]', 'Extra ink pad');
   }
 
-  addShipping(params, 0, 'Standard delivery · 3–7 days', shipping.standard, 3, 7);
-  addShipping(params, 1, 'Express delivery · 1–3 days', shipping.express, 1, 3);
+  addShipping(params, 0, 'Standard delivery · 3–7 days', shipping.standard, 3, 7, currency.toLowerCase());
+  addShipping(params, 1, 'Express delivery · 1–3 days', shipping.express, 1, 3, currency.toLowerCase());
 
   try {
     const stripe = await fetch('https://api.stripe.com/v1/checkout/sessions', {

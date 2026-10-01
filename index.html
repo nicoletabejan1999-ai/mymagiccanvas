@@ -190,7 +190,7 @@
 
         <fieldset class="fld">
           <legend>4 · Ink colours <small id="inkCount"></small></legend>
-          <p class="fld__lbl">Choose any colours you like. Up to four ink pads are included; every additional colour is <strong>+€3.00</strong>.</p>
+          <p class="fld__lbl">Choose any colours you like. Up to four ink pads are included; every additional colour is <strong id="extraInkPrice">+€3.00</strong>.</p>
           <div class="inks" id="optInks"></div>
           <p class="fld__lbl">Or start from a palette we like</p>
           <div class="pals" id="optPalettes"></div>
@@ -221,12 +221,21 @@
             <p class="buy__price" id="buyPrice"></p>
           </div>
 
+          <label class="inp buy__currency">
+            <span>Currency</span>
+            <select id="shopCurrency" aria-describedby="currencyNote">
+              <option value="AUTO">Automatic — based on country</option>
+              <option value="EUR">EUR — Euro</option>
+              <option value="USD">USD — US Dollar</option>
+            </select>
+            <small id="currencyNote" aria-live="polite"></small>
+          </label>
           <label class="inp buy__country">
             <span>Delivery country</span>
             <select id="shipCountry" required>
               <option value="">Select country</option>
             </select>
-            <small>We use the country only to calculate the correct Standard and Express delivery prices.</small>
+            <small>Choose your delivery country to see shipping prices. Automatic currency uses USD for the US and EUR elsewhere.</small>
           </label>
 
           <label class="inp buy__phone">
@@ -484,9 +493,10 @@
 </div>
 
 <script src="assets/js/canopy-mask.js?v=26"></script>
+<script src="assets/js/pricing.js?v=1"></script>
 <script src="assets/js/config.js?v=27"></script>
 <script src="assets/js/meta-consent.js?v=27"></script>
-<script src="assets/js/configurator.js?v=33"></script>
-<script src="assets/js/main.js?v=28"></script>
+<script src="assets/js/configurator.js?v=34"></script>
+<script src="assets/js/main.js?v=29"></script>
 </body>
 </html>
