@@ -194,7 +194,7 @@ async function sendPinterestCheckout(session, design) {
     action_source: 'web',
     event_time: Math.floor(Date.now() / 1000),
     event_id: session.id,
-    event_source_url: meta.eventSourceUrl || 'https://mymagicanvas.com/',
+    event_source_url: meta.eventSourceUrl || 'https://mymagiccanvas.vercel.app/',
     opt_out: false,
     partner_name: 'direct',
     user_data: userData,
@@ -271,7 +271,20 @@ async function sendMetaPurchase(session, design) {
   const testCode = process.env.META_TEST_EVENT_CODE || '';
   if (isTest && !testCode) return { skipped: 'test_code_missing' };
 
+  const customer = session.customer_details || {};
+  const shipping = session.shipping_details ||
+    (session.collected_information && session.collected_information.shipping_details) ||
+    {};
+  const address = shipping.address || customer.address || {};
+
   const userData = {};
+  const em = pinterestHashEmail(customer.email);
+  const ph = pinterestHashPhone(customer.phone || design.phone);
+  const country = pinterestHashCountry(address.country || design.deliveryCountry);
+
+  if (em) userData.em = [em];
+  if (ph) userData.ph = [ph];
+  if (country) userData.country = [country];
   if (meta.fbp) userData.fbp = meta.fbp;
   if (meta.fbc) userData.fbc = meta.fbc;
   if (meta.clientIp) userData.client_ip_address = meta.clientIp;
@@ -282,7 +295,7 @@ async function sendMetaPurchase(session, design) {
     event_time: Math.floor(Date.now() / 1000),
     event_id: session.id,
     action_source: 'website',
-    event_source_url: meta.eventSourceUrl || 'https://mymagicanvas.com/',
+    event_source_url: meta.eventSourceUrl || 'https://mymagiccanvas.vercel.app/',
     user_data: userData,
     custom_data: {
       currency: String(session.currency || 'eur').toUpperCase(),
