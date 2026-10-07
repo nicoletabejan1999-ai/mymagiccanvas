@@ -190,7 +190,7 @@ module.exports = async function handler(req, res) {
   design.pricingVersion = Pricing.version;
   const origin = (req.headers.origin && /^https?:\/\//.test(req.headers.origin))
     ? req.headers.origin
-    : 'https://mymagicanvas.com';
+    : 'https://mymagiccanvas.vercel.app';
 
   design.meta = cleanMeta(body && body.meta, req, origin);
 
