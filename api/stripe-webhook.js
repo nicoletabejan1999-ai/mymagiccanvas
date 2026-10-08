@@ -1,6 +1,7 @@
 const crypto = require('node:crypto');
 const Stripe = require('stripe');
 const { generatePrintPdf } = require('../lib/order-pdf');
+const { writeFunnelEvent } = require('../lib/first-party-analytics');
 
 function json(res, status, body) {
   res.statusCode = status;
@@ -363,6 +364,18 @@ async function fulfillPaidSession(session) {
   const designPath = 'orders/designs/' + designId + '.json';
   const design = await readPrivateJson(designPath, auth);
   if (!design) throw new Error('Saved design not found: ' + designId);
+
+  try {
+    await writeFunnelEvent('purchase', {
+      variant: session.metadata && session.metadata.variant || design.variant,
+      currency: String(session.currency || design.currency || '').toUpperCase(),
+      country: design.deliveryCountry || '',
+      value: Number(session.amount_total || 0) / 100,
+      source: 'stripe_webhook'
+    }, design.analytics);
+  } catch (measurementError) {
+    console.error('Purchase funnel measurement failed', session.id, measurementError && measurementError.message);
+  }
 
   console.log(
     'Stripe fulfillment start',
