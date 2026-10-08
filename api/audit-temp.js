@@ -1,6 +1,6 @@
 const crypto = require('node:crypto');
 
-const AUTH_HASH = '3848377b615433a5088223ebed44e8651a05c5755c33b0c3f32439c894ab40f5';
+const AUTH_HASH = '49e16394a90930b07efebc71939a74406a38fe73bc507a4a758d879469577e8f';
 
 function json(res,status,body){res.statusCode=status;res.setHeader('Content-Type','application/json; charset=utf-8');res.setHeader('Cache-Control','no-store');res.end(JSON.stringify(body));}
 function authorized(req){const key=String(req.headers['x-analytics-key']||'');const got=crypto.createHash('sha256').update(key).digest();const want=Buffer.from(AUTH_HASH,'hex');return got.length===want.length&&crypto.timingSafeEqual(got,want);}
