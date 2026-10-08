@@ -4,7 +4,9 @@
   'use strict';
 
   const C = window.MMC;
-  const KEY = 'mmc-ads-consent-v1';
+  // Adding Google Ads expands the set of vendors, so require fresh opt-in.
+  const KEY = 'mmc-ads-consent-v2';
+  const PREVIOUS_KEY = 'mmc-ads-consent-v1';
   const LEGACY_KEY = 'mmc-meta-consent-v3';
   const PINTEREST_CLICK_KEY = 'mmc-pinterest-click-v1';
   let loaded = false;
@@ -15,10 +17,10 @@
       const current = localStorage.getItem(KEY);
       if (current) return current;
 
-      // A previous rejection is safe to preserve. A previous Meta acceptance
-      // did not include Pinterest, so we deliberately ask again.
+      // Preserve an earlier refusal, but ask again after consent scope expands.
+      const previous = localStorage.getItem(PREVIOUS_KEY);
       const legacy = localStorage.getItem(LEGACY_KEY);
-      if (legacy === 'rejected') {
+      if (previous === 'rejected' || legacy === 'rejected') {
         localStorage.setItem(KEY, 'rejected');
         return 'rejected';
       }
