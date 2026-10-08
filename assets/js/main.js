@@ -72,6 +72,26 @@
       : { consent: false };
   }
 
+  function firstPartyContext() {
+    const api = window.MMCAnalytics;
+    return api && typeof api.context === 'function' ? api.context() : {};
+  }
+
+  function firstPartyTrack(eventName, details) {
+    const api = window.MMCAnalytics;
+    return !!(api && typeof api.track === 'function' && api.track(eventName, details));
+  }
+
+  function funnelDetails(s, extra) {
+    const price = X.priceOf(s);
+    const details = {
+      variant: X.variantKey(s),
+      currency: C.CHECKOUT.currency
+    };
+    if (price != null) details.value = +Number(price).toFixed(2);
+    return Object.assign(details, extra || {});
+  }
+
   function commerceMetaParams(s) {
     const price = X.priceOf(s);
     const params = {
@@ -541,6 +561,7 @@
 
   async function startCheckout(e) {
     e.preventDefault();
+    firstPartyTrack('checkout_click', funnelDetails(X.state));
 
     const terms = $('#okTerms');
     const country = $('#shipCountry');
@@ -548,6 +569,7 @@
     const btn = $('#buyBtn');
 
     if (!terms || !terms.checked) {
+      firstPartyTrack('checkout_validation_error', funnelDetails(X.state, { reason: 'terms' }));
       $('#consentErr').hidden = false;
       terms && terms.focus();
       $('.consent').scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -556,6 +578,7 @@
     $('#consentErr').hidden = true;
 
     if (!country || !country.value) {
+      firstPartyTrack('checkout_validation_error', funnelDetails(X.state, { reason: 'country' }));
       err.hidden = false;
       err.textContent = 'Please select the delivery country before continuing.';
       country && country.focus();
@@ -563,7 +586,12 @@
     }
 
     const price = X.priceOf(X.state);
-    if (price == null) return;
+    if (price == null) {
+      firstPartyTrack('checkout_validation_error', funnelDetails(X.state, { reason: 'product_unavailable' }));
+      return;
+    }
+
+    firstPartyTrack('checkout_attempt', funnelDetails(X.state, { country: country.value }));
 
     const oldText = btn.textContent;
     btn.textContent = 'Opening secure checkout…';
@@ -581,6 +609,7 @@
           pricingVersion: Pricing.version,
           subtotal: Math.round(price * 100),
           meta: metaCheckoutContext(),
+          analytics: firstPartyContext(),
           design: {
             size: X.state.size,
             framed: X.state.framed,
@@ -621,6 +650,7 @@
       trackMeta('InitiateCheckout', commerceMetaParams(X.state));
       window.location.assign(data.url);
     } catch (error) {
+      firstPartyTrack('checkout_failed', funnelDetails(X.state, { reason: 'create_checkout' }));
       btn.textContent = oldText;
       btn.removeAttribute('aria-disabled');
       err.hidden = false;
@@ -1150,8 +1180,12 @@
     X.mount($('#prints'));
 
     let customizeTracked = false;
+    let firstPartyCustomizeTracked = false;
     X.onChange(s => {
       sync(s);
+      if (!firstPartyCustomizeTracked) {
+        firstPartyCustomizeTracked = firstPartyTrack('customize_start', funnelDetails(s));
+      }
       if (!customizeTracked) {
         customizeTracked = trackMeta('CustomizeProduct', commerceMetaParams(s));
       }
