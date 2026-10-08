@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  const CONSENT_KEY = 'mmc-ads-consent-v1';
+  const CONSENT_KEY = 'mmc-ads-consent-v2';
   let started = false;
   let readyPromise = null;
 
