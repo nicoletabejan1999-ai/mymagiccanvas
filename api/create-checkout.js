@@ -1,6 +1,7 @@
 // Private design storage is provisioned by Vercel Blob.
 // Redeploy after Blob connection refresh.
 const Pricing = require('../assets/js/pricing');
+const { cleanAttribution, writeFunnelEvent } = require('../lib/first-party-analytics');
 
 function json(res, status, body) {
   res.statusCode = status;
@@ -193,6 +194,7 @@ module.exports = async function handler(req, res) {
     : 'https://mymagiccanvas.vercel.app';
 
   design.meta = cleanMeta(body && body.meta, req, origin);
+  design.analytics = cleanAttribution(body && body.analytics);
 
   let designId;
   try {
@@ -264,6 +266,18 @@ module.exports = async function handler(req, res) {
         ? 'Stripe: ' + stripeError.message
         : 'Stripe could not start checkout. Please try again.';
       return json(res, 502, { error: safePreviewMessage });
+    }
+
+    try {
+      await writeFunnelEvent('checkout_created', {
+        variant,
+        currency,
+        country,
+        value: expectedSubtotal / 100,
+        source: 'stripe_session'
+      }, design.analytics);
+    } catch (measurementError) {
+      console.error('Checkout funnel measurement failed', measurementError && measurementError.message);
     }
 
     return json(res, 200, { url: data.url, designId });
