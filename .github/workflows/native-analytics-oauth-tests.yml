@@ -1,0 +1,37 @@
+name: Native Analytics OAuth Tests
+on:
+  pull_request:
+    paths:
+      - 'lib/first-party-oauth.js'
+      - 'api/oauth-*.js'
+      - 'api/mcp*.js'
+      - 'test/first-party-oauth.test.js'
+      - 'vercel.json'
+      - 'package.json'
+      - '.github/workflows/native-analytics-oauth-tests.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'lib/first-party-oauth.js'
+      - 'api/oauth-*.js'
+      - 'api/mcp*.js'
+      - 'test/first-party-oauth.test.js'
+permissions:
+  contents: read
+jobs:
+  node-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b163ceea73d27597364c # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Validate source and run isolated OAuth security tests
+        run: |
+          node --version
+          node --check lib/first-party-oauth.js
+          node --check api/oauth-authorize.js
+          node --check api/oauth-token.js
+          node --check api/oauth-metadata.js
+          node --check api/mcp.js
+          node --test test/first-party-oauth.test.js test/analytics-report.test.js test/analytics-report-api.test.js
