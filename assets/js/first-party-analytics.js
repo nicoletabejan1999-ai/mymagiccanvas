@@ -116,14 +116,14 @@
   let engagedTimer = null;
 
   function scheduleEngagedTimer() {
-    if (sent['30s_engaged'] || document.visibilityState !== 'visible') return;
+    if (sent['engaged_30s'] || document.visibilityState !== 'visible') return;
     if (engagedTimer) clearTimeout(engagedTimer);
 
     const currentVisibleMs = visibleStartedAt == null ? 0 : performance.now() - visibleStartedAt;
     const remaining = Math.max(0, 30000 - visibleMs - currentVisibleMs);
 
     engagedTimer = setTimeout(function () {
-      trackOnce('30s_engaged', { visibleSeconds: 30 });
+      trackOnce('engaged_30s', { visibleSeconds: 30 });
     }, remaining);
   }
 
