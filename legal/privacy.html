@@ -84,13 +84,17 @@
       running a working, secure site.</p>
     <p>We also keep minimal first-party funnel measurement on our own
       server so we can understand whether advertising clicks lead to pages that
-      load, product customisation, checkout attempts, a checkout created by
-      Stripe and a completed purchase. It records the event time, requested path,
-      referring hostname, campaign labels present in the URL, whether a recognised
-      ad-click parameter was present and limited commerce details such as variant,
-      currency, country and value. It does not store a measurement cookie,
-      persistent visitor identifier, network address or browser user-agent, and
-      these first-party records are not sent to Meta, Google Ads or Pinterest.</p>
+      load, engagement with the page, the main configurator call-to-action,
+      viewing the configurator or pricing area, product customisation, checkout
+      attempts, a checkout created by Stripe and a completed purchase. Engagement
+      signals may include reaching approximately halfway down the page or keeping
+      the page visible for about thirty seconds. It records the event time,
+      requested path, referring hostname, campaign labels present in the URL,
+      whether a recognised ad-click parameter was present and limited commerce
+      details such as variant, currency, country and value. It does not store a
+      measurement cookie, persistent visitor identifier, network address or
+      browser user-agent, and these first-party records are not sent to Meta,
+      Google Ads or Pinterest.</p>
     <p>Google Ads' tag loads when a page opens using Consent Mode v2, with
       advertising storage, advertising user data and ad personalization denied
       unless you have explicitly allowed them. Before you consent, Google may
