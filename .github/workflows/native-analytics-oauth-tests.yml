@@ -3,8 +3,9 @@ on:
   pull_request:
     paths:
       - 'lib/first-party-oauth.js'
-      - 'api/oauth-*.js'
+      - 'lib/oauth-*.js'
       - 'api/mcp*.js'
+      - 'api/oauth.js'
       - 'test/first-party-oauth.test.js'
       - 'vercel.json'
       - 'package.json'
@@ -13,8 +14,9 @@ on:
     branches: [main]
     paths:
       - 'lib/first-party-oauth.js'
-      - 'api/oauth-*.js'
+      - 'lib/oauth-*.js'
       - 'api/mcp*.js'
+      - 'api/oauth.js'
       - 'test/first-party-oauth.test.js'
 permissions:
   contents: read
@@ -30,8 +32,10 @@ jobs:
         run: |
           node --version
           node --check lib/first-party-oauth.js
-          node --check api/oauth-authorize.js
-          node --check api/oauth-token.js
-          node --check api/oauth-metadata.js
+          node --check lib/oauth-authorize.js
+          node --check lib/oauth-token.js
+          node --check lib/oauth-metadata.js
+          node --check api/oauth.js
+          node --check lib/mcp-resource-meta.js
           node --check api/mcp.js
           node --test test/first-party-oauth.test.js test/analytics-report.test.js test/analytics-report-api.test.js
