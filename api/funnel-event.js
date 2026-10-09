@@ -12,6 +12,11 @@ function clean(value, max) {
 }
 
 const CLIENT_EVENTS = new Set([
+  'hero_cta_click',
+  'configurator_view',
+  '30s_engaged',
+  'scroll_50',
+  'pricing_view',
   'customize_start',
   'checkout_click',
   'checkout_attempt',
