@@ -42,5 +42,23 @@
     "api/stripe-webhook.js": {
       "includeFiles": "assets/**"
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/.well-known/oauth-authorization-server",
+      "destination": "/api/oauth?mode=authorization-metadata"
+    },
+    {
+      "source": "/.well-known/oauth-protected-resource",
+      "destination": "/api/oauth?mode=resource-metadata"
+    },
+    {
+      "source": "/oauth/authorize",
+      "destination": "/api/oauth?mode=authorize"
+    },
+    {
+      "source": "/oauth/token",
+      "destination": "/api/oauth?mode=token"
+    }
+  ]
 }

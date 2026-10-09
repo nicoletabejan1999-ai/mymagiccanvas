@@ -1,0 +1,46 @@
+name: Native Analytics OAuth Tests
+on:
+  pull_request:
+    paths:
+      - 'lib/first-party-oauth.js'
+      - 'lib/oauth-*.js'
+      - 'api/mcp*.js'
+      - 'api/oauth.js'
+      - 'test/first-party-oauth.test.js'
+      - 'test/mcp-runtime.test.js'
+      - 'vercel.json'
+      - 'package.json'
+      - '.github/workflows/native-analytics-oauth-tests.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'lib/first-party-oauth.js'
+      - 'lib/oauth-*.js'
+      - 'api/mcp*.js'
+      - 'api/oauth.js'
+      - 'test/first-party-oauth.test.js'
+permissions:
+  contents: read
+jobs:
+  node-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Validate source and run isolated OAuth security tests
+        run: |
+          node --version
+          node --check lib/first-party-oauth.js
+          node --check lib/oauth-authorize.js
+          node --check lib/oauth-token.js
+          node --check lib/oauth-metadata.js
+          node --check api/oauth.js
+          node --check lib/mcp-resource-meta.js
+          node --check api/mcp.js
+          node --test test/first-party-oauth.test.js test/analytics-report.test.js test/analytics-report-api.test.js
+      - name: Install MCP SDK and test actual protocol requests
+        run: |
+          npm install --ignore-scripts --no-audit --no-fund
+          node --test test/mcp-runtime.test.js
