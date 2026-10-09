@@ -7,6 +7,7 @@ on:
       - 'api/mcp*.js'
       - 'api/oauth.js'
       - 'test/first-party-oauth.test.js'
+      - 'test/mcp-runtime.test.js'
       - 'vercel.json'
       - 'package.json'
       - '.github/workflows/native-analytics-oauth-tests.yml'
@@ -39,3 +40,7 @@ jobs:
           node --check lib/mcp-resource-meta.js
           node --check api/mcp.js
           node --test test/first-party-oauth.test.js test/analytics-report.test.js test/analytics-report-api.test.js
+      - name: Install MCP SDK and test actual protocol requests
+        run: |
+          npm install --ignore-scripts --no-audit --no-fund
+          node --test test/mcp-runtime.test.js
