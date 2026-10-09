@@ -42,5 +42,11 @@
     "api/stripe-webhook.js": {
       "includeFiles": "assets/**"
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/.well-known/oauth-protected-resource",
+      "destination": "/api/mcp-resource-meta"
+    }
+  ]
 }
