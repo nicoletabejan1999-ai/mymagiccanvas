@@ -2,13 +2,13 @@
 
 This integration runs entirely on the **existing Vercel project** and uses **private Vercel Blob** as the event and OAuth replay store. ChatGPT is the OAuth client. There is no WorkOS, Auth0, Zapier, or other authentication service.
 
-## Files
+## Files (OAuth is served by a single Vercel Function, to stay within Hobby limits)
 
 - `GET /.well-known/oauth-protected-resource` — OAuth resource discovery.
 - `GET /.well-known/oauth-authorization-server` — OAuth authorization server discovery.
-- `GET /api/oauth-authorize` — owner sign-in form; enforces ChatGPT CIMD client identity and OAuth PKCE S256.
-- `POST /api/oauth-authorize` — checks the owner passphrase and issues a sealed, expiring authorization code.
-- `POST /api/oauth-token` — exchanges a one-time code and PKCE verifier for a 15-minute audience-bound access token and a rotating, one-time 30-day refresh token.
+- `GET /oauth/authorize` — owner sign-in form; enforces ChatGPT CIMD client identity and OAuth PKCE S256.
+- `POST /oauth/authorize` — checks the owner passphrase and issues a sealed, expiring authorization code.
+- `POST /oauth/token` — exchanges a one-time code and PKCE verifier for a 15-minute audience-bound access token and a rotating, one-time 30-day refresh token.
 - `GET/POST /api/mcp` — validates access tokens and exposes the read-only tool `first_party_analytics_report`.
 
 ## Owner-required configuration
