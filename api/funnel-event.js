@@ -14,7 +14,7 @@ function clean(value, max) {
 const CLIENT_EVENTS = new Set([
   'hero_cta_click',
   'configurator_view',
-  '30s_engaged',
+  'engaged_30s',
   'scroll_50',
   'pricing_view',
   'customize_start',
