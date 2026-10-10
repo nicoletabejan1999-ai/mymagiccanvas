@@ -133,6 +133,31 @@ async function readJson(pathname, auth) {
   }
 }
 
+function pathnameTimestamp(pathname) {
+  const name = String(pathname || '').split('/').pop() || '';
+  const match = /^(\d{13})-/.exec(name);
+  return match ? Number(match[1]) : null;
+}
+
+function blobsWithinRange(blobs, sinceMs, untilMs) {
+  return blobs.filter(blob => {
+    const timestamp = pathnameTimestamp(blob.pathname);
+    return timestamp == null || (timestamp >= sinceMs && timestamp <= untilMs);
+  });
+}
+
+async function readMany(blobs, auth) {
+  const out = [];
+  const batchSize = 40;
+  for (let i = 0; i < blobs.length; i += batchSize) {
+    const batch = await Promise.all(
+      blobs.slice(i, i + batchSize).map(blob => readJson(blob.pathname, auth))
+    );
+    out.push(...batch.filter(Boolean));
+  }
+  return out;
+}
+
 function utcDaysBetween(since, until) {
   const days = [];
   let cursor = new Date(Date.UTC(
@@ -271,12 +296,21 @@ module.exports = async function handler(req, res) {
 
   try {
     for (const day of days) {
-      const landingBlobs = await listAll('analytics/landing-views/' + day + '/', auth);
-      const funnelBlobs = await listAll('analytics/funnel/' + day + '/', auth);
+      const [landingBlobsAll, funnelBlobsAll] = await Promise.all([
+        listAll('analytics/landing-views/' + day + '/', auth),
+        listAll('analytics/funnel/' + day + '/', auth)
+      ]);
 
-      for (const blob of landingBlobs) {
-        const event = await readJson(blob.pathname, auth);
-        if (!event || !inRange(event, sinceMs, untilMs) || isExcluded(event)) continue;
+      const landingBlobs = blobsWithinRange(landingBlobsAll, sinceMs, untilMs);
+      const funnelBlobs = blobsWithinRange(funnelBlobsAll, sinceMs, untilMs);
+
+      const [landingEvents, funnelEvents] = await Promise.all([
+        readMany(landingBlobs, auth),
+        readMany(funnelBlobs, auth)
+      ]);
+
+      for (const event of landingEvents) {
+        if (!inRange(event, sinceMs, untilMs) || isExcluded(event)) continue;
         scanned += 1;
         eventCounts.landing_view += 1;
         const source = classify(event);
@@ -284,9 +318,8 @@ module.exports = async function handler(req, res) {
         if (!latestEventAt || event.occurredAt > latestEventAt) latestEventAt = event.occurredAt;
       }
 
-      for (const blob of funnelBlobs) {
-        const event = await readJson(blob.pathname, auth);
-        if (!event || !inRange(event, sinceMs, untilMs) || isExcluded(event)) continue;
+      for (const event of funnelEvents) {
+        if (!inRange(event, sinceMs, untilMs) || isExcluded(event)) continue;
         const name = safe(event.event, 64);
         if (!KNOWN_EVENTS.includes(name) || name === 'landing_view') continue;
         scanned += 1;
