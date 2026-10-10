@@ -344,7 +344,7 @@ module.exports = async function handler(req, res) {
     };
 
     return json(res, 200, {
-      version: 1,
+      version: 2,
       generatedAt: until.toISOString(),
       window: windowName,
       period: {
