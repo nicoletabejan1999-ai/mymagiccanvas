@@ -19,6 +19,8 @@ function blobAuth() {
   return null;
 }
 
+const REPORT_TIME_ZONE = 'Europe/Paris';
+
 const WINDOWS = Object.freeze({
   '1h': 60 * 60 * 1000,
   '6h': 6 * 60 * 60 * 1000,
@@ -26,6 +28,8 @@ const WINDOWS = Object.freeze({
   '72h': 72 * 60 * 60 * 1000,
   '7d': 7 * 24 * 60 * 60 * 1000
 });
+
+const ALLOWED_WINDOWS = ['today', ...Object.keys(WINDOWS)];
 
 const KNOWN_EVENTS = [
   'landing_view',
@@ -163,6 +167,57 @@ function ratio(numerator, denominator) {
   return Math.round((numerator / denominator) * 1000) / 10;
 }
 
+function zonedParts(date, timeZone) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23'
+  }).formatToParts(date);
+
+  const out = {};
+  for (const part of parts) {
+    if (part.type !== 'literal') out[part.type] = part.value;
+  }
+  return out;
+}
+
+function timeZoneOffsetMs(date, timeZone) {
+  const roundedMs = Math.floor(date.getTime() / 1000) * 1000;
+  const parts = zonedParts(new Date(roundedMs), timeZone);
+  const renderedAsUtc = Date.UTC(
+    Number(parts.year),
+    Number(parts.month) - 1,
+    Number(parts.day),
+    Number(parts.hour),
+    Number(parts.minute),
+    Number(parts.second)
+  );
+  return renderedAsUtc - roundedMs;
+}
+
+function startOfTodayInTimeZone(now, timeZone) {
+  const local = zonedParts(now, timeZone);
+  const localMidnightAsUtc = Date.UTC(
+    Number(local.year),
+    Number(local.month) - 1,
+    Number(local.day),
+    0, 0, 0
+  );
+
+  let candidate = localMidnightAsUtc -
+    timeZoneOffsetMs(new Date(localMidnightAsUtc), timeZone);
+
+  candidate = localMidnightAsUtc -
+    timeZoneOffsetMs(new Date(candidate), timeZone);
+
+  return new Date(candidate);
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
@@ -175,11 +230,10 @@ module.exports = async function handler(req, res) {
   }
 
   const windowName = safe(req.query && req.query.window, 8) || '1h';
-  const windowMs = WINDOWS[windowName];
-  if (!windowMs) {
+  if (!ALLOWED_WINDOWS.includes(windowName)) {
     return json(res, 400, {
       error: 'Unsupported window',
-      allowed: Object.keys(WINDOWS)
+      allowed: ALLOWED_WINDOWS
     });
   }
 
@@ -189,7 +243,9 @@ module.exports = async function handler(req, res) {
   }
 
   const until = new Date();
-  const since = new Date(until.getTime() - windowMs);
+  const since = windowName === 'today'
+    ? startOfTodayInTimeZone(until, REPORT_TIME_ZONE)
+    : new Date(until.getTime() - WINDOWS[windowName]);
   const sinceMs = since.getTime();
   const untilMs = until.getTime();
   const days = utcDaysBetween(since, until);
@@ -260,7 +316,8 @@ module.exports = async function handler(req, res) {
       window: windowName,
       period: {
         since: since.toISOString(),
-        until: until.toISOString()
+        until: until.toISOString(),
+        timeZone: windowName === 'today' ? REPORT_TIME_ZONE : 'UTC'
       },
       counts,
       rates,
