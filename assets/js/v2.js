@@ -24,7 +24,7 @@
   let wasCustomised = false;
   let galleryShow = () => {};
   const formats = {
-    canvas: { framed: false, easel: false, media: 0,
+    canvas: { framed: false, easel: false, media: 2,
       caption: 'Classic stretched canvas, ready to hang. The display easel is an optional accessory.' },
     framed: { framed: true, easel: false, media: 9,
       caption: 'Premium solid-wood frame around the printed canvas, shown in the selected photograph.' },
@@ -87,16 +87,58 @@
     return saleCents(catalog.prices[baseKey]) + (option.easel ? saleCents(catalog.easel) : 0);
   }
 
+  // The mobile browser renders this as a native pick-list like Etsy.
+  // Values are real Stripe SKU keys; labels are built from the shared catalog.
+  const variants = [
+    ['S', 'S', 'canvas'],
+    ['M', 'M', 'canvas'],
+    ['L', 'L', 'canvas'],
+    ['FRAMED-S', 'FRAMED S', 'framed'],
+    ['FRAMED-M', 'FRAMED M', 'framed'],
+    ['FRAMED-L', 'FRAMED L', 'framed'],
+    ['S-EASEL', 'S + EASEL', 'easel'],
+    ['M-EASEL', 'M + EASEL', 'easel'],
+    ['L-EASEL', 'L + EASEL', 'easel'],
+    ['FRAMED-S-EASEL', 'FRAMED S + EASEL', 'both'],
+    ['FRAMED-M-EASEL', 'FRAMED M + EASEL', 'both'],
+    ['FRAMED-L-EASEL', 'FRAMED L + EASEL', 'both']
+  ];
+
+  function refreshVariantOptions() {
+    const select = $('#v2Size');
+    variants.forEach(([sku, label, format], index) => {
+      let option = select.options[index];
+      if (!option || option.value !== sku) {
+        option = new Option('', sku);
+        select.add(option, index);
+      }
+      const size = sku.replace(/^FRAMED-/, '').replace(/-EASEL$/, '');
+      option.textContent = label + ' (' + money(amount(format, size)) + ')';
+    });
+    while (select.options.length > variants.length) select.remove(select.options.length - 1);
+  }
+
+  function selectVariant(sku, fromCustomer = true) {
+    const variant = variants.find(([key]) => key === sku);
+    if (!variant) return;
+    const [key, , format] = variant;
+    const size = key.replace(/^FRAMED-/, '').replace(/-EASEL$/, '');
+    const flags = formats[format];
+    const sizeData = C.SIZES.find(item => item.id === size);
+    X.set({ size, framed: flags.framed, easel: flags.easel, guests: sizeData.capacity });
+    galleryShow(flags.media);
+    $('#v2GalleryCaption').textContent = flags.caption;
+    updatePrices();
+    if (fromCustomer) trackCustomise();
+  }
+
   function updatePrices() {
     const s = X.state;
     const total = priceCents(s);
     const regularTotal = Pricing.total(currency, X.baseVariantKey(s), s.easel, X.extraInkCount(s));
     $('#v2RegularPrice').textContent = regularTotal == null ? '' : money(regularTotal);
     $('#v2Price').textContent = total == null ? 'Price on request' : money(total);
-    $('#v2CanvasAmount').textContent = money(amount('canvas', s.size));
-    $('#v2FramedAmount').textContent = money(amount('framed', s.size));
-    $('#v2EaselAmount').textContent = money(amount('easel', s.size));
-    $('#v2BothAmount').textContent = money(amount('both', s.size));
+    refreshVariantOptions();
     // Maximum real saving across the 12 purchasable format/size combinations.
     // Uses the same per-item cent rounding as our V2 Stripe checkout.
     const catalog = Pricing.catalogs[currency];
@@ -113,14 +155,7 @@
       heroSavings.closest('.v2-hero-savings')?.setAttribute(
         'aria-label', 'Save up to ' + money(largestSaving) + ' with 10% off');
     }
-    $('#v2Size').value = s.size;
-    const chosen = $('input[name="canvasFormat"]:checked');
-    if (chosen && chosen.value !== formatOfState()) {
-      const next = $('input[name="canvasFormat"][value="' + formatOfState() + '"]');
-      if (next) next.checked = true;
-    }
-    $$('.v2-type').forEach(label =>
-      label.classList.toggle('is-selected', label.querySelector('input').checked));
+    $('#v2Size').value = X.variantKey(s);
     const country = $('#v2Country').value;
     const shipping = Pricing.catalogs[currency].shipping[Pricing.zone(country || marketCountry)];
     $('#v2Shipping').textContent = country
@@ -150,16 +185,6 @@
     C.EXTRA_INK_PRICE = catalog.extraInk / 100;
     updatePrices();
     productStructuredData();
-  }
-
-  function changeFormat(format) {
-    const f = formats[format];
-    if (!f) return;
-    X.set({ framed: f.framed, easel: f.easel });
-    galleryShow(f.media);
-    $('#v2GalleryCaption').textContent = f.caption;
-    updatePrices();
-    trackCustomise();
   }
 
   function gallery() {
@@ -238,7 +263,7 @@
       galleryShow(active + (event.key === 'ArrowRight' || event.key === 'ArrowDown' ? 1 : -1));
       $$('.gal__t')[active]?.focus();
     });
-    galleryShow(0);
+    galleryShow(2);
   }
 
   function swatchButton(ink) {
@@ -517,18 +542,14 @@
   }
 
   function chooseSize(size) {
-    const item = C.SIZES.find(s => s.id === size);
-    if (!item) return;
-    X.set({ size, guests: item.capacity });
-    updatePrices();
-    trackCustomise();
+    if (!C.SIZES.some(item => item.id === size)) return;
+    const key = (X.state.framed ? 'FRAMED-' : '') + size +
+      (X.state.easel ? '-EASEL' : '');
+    selectVariant(key);
   }
 
   function syncInputs() {
-    $('#v2Size').addEventListener('change', e => chooseSize(e.target.value));
-    $$('#v2Formats input').forEach(input => input.addEventListener('change', () => {
-      if (input.checked) changeFormat(input.value);
-    }));
+    $('#v2Size').addEventListener('change', event => selectVariant(event.target.value));
     $('#v2Names').addEventListener('input', e => {
       X.set({ names: e.target.value }); trackCustomise();
     });
