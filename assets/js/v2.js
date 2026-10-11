@@ -40,7 +40,7 @@
     analytics.track(event, Object.assign({
       variant: X.variantKey(X.state),
       currency: C.CHECKOUT.currency,
-      value: Number((X.priceOf(X.state) || 0).toFixed(2)),
+      value: Number((priceCents() / 100).toFixed(2)),
       pageVersion: 'v2'
     }, extra || {}));
   }
@@ -52,7 +52,7 @@
       content_type: 'product',
       num_items: 1,
       currency: C.CHECKOUT.currency,
-      value: Number((X.priceOf(X.state) || 0).toFixed(2))
+      value: Number((priceCents() / 100).toFixed(2))
     };
   }
 
@@ -61,6 +61,14 @@
     wasCustomised = true;
     trackFirstParty('customize_start');
     window.MMCMeta?.track?.('CustomizeProduct', commerceParams());
+  }
+
+  const saleCents = cents => Math.round(cents * 0.90);
+  function priceCents(state = X.state) {
+    const catalog = Pricing.catalogs[currency];
+    return saleCents(catalog.prices[X.baseVariantKey(state)]) +
+      (state.easel ? saleCents(catalog.easel) : 0) +
+      X.extraInkCount(state) * saleCents(catalog.extraInk);
   }
 
   function money(cents) {
@@ -76,12 +84,14 @@
     const option = formats[format];
     const baseKey = (option.framed ? 'FRAMED-' : '') + size;
     const catalog = Pricing.catalogs[currency];
-    return catalog.prices[baseKey] + (option.easel ? catalog.easel : 0);
+    return saleCents(catalog.prices[baseKey]) + (option.easel ? saleCents(catalog.easel) : 0);
   }
 
   function updatePrices() {
     const s = X.state;
-    const total = Pricing.total(currency, X.baseVariantKey(s), s.easel, X.extraInkCount(s));
+    const total = priceCents(s);
+    const regularTotal = Pricing.total(currency, X.baseVariantKey(s), s.easel, X.extraInkCount(s));
+    $('#v2RegularPrice').textContent = regularTotal == null ? '' : money(regularTotal);
     $('#v2Price').textContent = total == null ? 'Price on request' : money(total);
     $('#v2CanvasAmount').textContent = money(amount('canvas', s.size));
     $('#v2FramedAmount').textContent = money(amount('framed', s.size));
@@ -109,7 +119,7 @@
     const basePrices = C.SIZES.map(v => Pricing.catalogs[currency].prices[v.id]);
     $$('#sizeCards .szc').forEach((el, i) => {
       const price = el.querySelector('.szc__p');
-      if (price) price.textContent = 'from ' + money(basePrices[i]);
+      if (price) price.textContent = 'from ' + money(saleCents(basePrices[i])) + ' · −10%';
     });
   }
 
@@ -383,7 +393,7 @@
 
   function productStructuredData() {
     $('#productLd')?.remove();
-    const values = Object.values(Pricing.catalogs[currency].prices);
+    const values = Object.values(Pricing.catalogs[currency].prices).map(saleCents);
     const ld = element('script');
     ld.id = 'productLd';
     ld.type = 'application/ld+json';
@@ -394,7 +404,7 @@
       brand: { '@type':'Brand', name:'MyMagiCanvas' },
       image:['assets/media/01-olive-tree-wedding-easel.jpg','assets/media/10-premium-wooden-framing.jpg'],
       offers: { '@type':'AggregateOffer', priceCurrency:currency,
-        lowPrice: Math.min(...values)/100, highPrice:(Math.max(...values) + Pricing.catalogs[currency].easel)/100,
+        lowPrice: Math.min(...values)/100, highPrice:(Math.max(...values) + saleCents(Pricing.catalogs[currency].easel))/100,
         offerCount:values.length * 2,
         availability:'https://schema.org/InStock' }
     });
@@ -549,8 +559,8 @@
     if (!country.value) return showError('Select a delivery country before checkout.', country);
     if (!terms.checked) return showError('Please accept the Terms of Sale and Privacy Policy.',terms);
 
-    const priceCents = Pricing.total(currency, X.baseVariantKey(state), state.easel, X.extraInkCount(state));
-    if (priceCents == null) return showError('This product combination is not available.', null);
+    const totalCents = priceCents(state);
+    if (totalCents == null) return showError('This product combination is not available.', null);
 
     checkoutBusy = true;
     const button = $('#v2CheckoutBtn');
@@ -563,7 +573,7 @@
     try {
       const api = window.MMCMeta;
       const analytics = window.MMCAnalytics;
-      const response = await fetch('/api/create-checkout', {
+      const response = await fetch('/api/v2-create-checkout', {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({
@@ -571,7 +581,7 @@
           country: country.value,
           currency,
           pricingVersion: Pricing.version,
-          subtotal: priceCents,
+          subtotal: totalCents,
           returnPath: '/v2.html',
           meta: api?.checkoutContext?.() || {consent:false},
           analytics: analytics?.context?.() || {},
@@ -589,7 +599,7 @@
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.url) throw new Error(data.error || 'Checkout could not be started.');
 
-      const unitPrice = priceCents/100;
+      const unitPrice = totalCents/100;
       window.MMCPinterest?.track?.('initiatecheckout', {
         value:unitPrice, currency, order_quantity:1,
         event_id:String(data.designId || ''),
@@ -621,6 +631,39 @@
     io.observe(listing);
   }
 
+  function startPromoTimer() {
+    // Ongoing evergreen 10%-off promotion; the 10-hour counter is a
+    // transparent *renewing cycle*, not a false claim of a final deadline.
+    const storageKey = 'mmc-v2-sale-cycle-until';
+    const cycle = 10 * 60 * 60 * 1000;
+    const save = value => {
+      try { sessionStorage.setItem(storageKey, String(value)); } catch (_) {}
+    };
+    let endsAt = 0;
+    try { endsAt = Number(sessionStorage.getItem(storageKey)); } catch (_) {}
+    const now = Date.now();
+    if (!Number.isFinite(endsAt) || endsAt <= now || endsAt > now + cycle) {
+      endsAt = now + cycle;
+      save(endsAt);
+    }
+    const output = $('#v2PromoTimer');
+    if (!output) return;
+    const tick = () => {
+      const time = Date.now();
+      if (time >= endsAt) {
+        endsAt = time + cycle;
+        save(endsAt);
+      }
+      const seconds = Math.max(0, Math.ceil((endsAt - time) / 1000));
+      const hh = String(Math.floor(seconds / 3600)).padStart(2, '0');
+      const mm = String(Math.floor(seconds % 3600 / 60)).padStart(2, '0');
+      const ss = String(seconds % 60).padStart(2, '0');
+      output.textContent = hh + ':' + mm + ':' + ss;
+    };
+    tick();
+    setInterval(tick, 1000);
+  }
+
   function boot() {
     // This variant deliberately starts with the lowest-priced SKU, not a
     // remembered/previously selected format or a more expensive upsell.
@@ -636,6 +679,12 @@
     applyCurrency();
     detectMarket();
     mobileDock();
+    startPromoTimer();
+    const whatsapp = $('#v2WhatsApp');
+    if (whatsapp && C.SHOP.whatsapp) {
+      whatsapp.href = 'https://wa.me/' + C.SHOP.whatsapp + '?text=' +
+        encodeURIComponent('Hello MyMagiCanvas, I have a question about a personalised fingerprint tree canvas.');
+    }
     const hash = new URLSearchParams(location.search);
     if (hash.get('checkout') === 'cancelled') {
       $('#v2Error').hidden = false;
