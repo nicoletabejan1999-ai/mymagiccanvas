@@ -97,6 +97,22 @@
     $('#v2FramedAmount').textContent = money(amount('framed', s.size));
     $('#v2EaselAmount').textContent = money(amount('easel', s.size));
     $('#v2BothAmount').textContent = money(amount('both', s.size));
+    // Maximum real saving across the 12 purchasable format/size combinations.
+    // Uses the same per-item cent rounding as our V2 Stripe checkout.
+    const catalog = Pricing.catalogs[currency];
+    const largestSaving = Math.max(...C.SIZES.flatMap(size =>
+      Object.entries(formats).map(([format, option]) => {
+        const key = (option.framed ? 'FRAMED-' : '') + size.id;
+        const regular = catalog.prices[key] + (option.easel ? catalog.easel : 0);
+        return regular - amount(format, size.id);
+      })
+    ));
+    const heroSavings = $('#v2HeroSavingsAmount');
+    if (heroSavings) {
+      heroSavings.textContent = money(largestSaving);
+      heroSavings.closest('.v2-hero-savings')?.setAttribute(
+        'aria-label', 'Save up to ' + money(largestSaving) + ' with 10% off');
+    }
     $('#v2Size').value = s.size;
     const chosen = $('input[name="canvasFormat"]:checked');
     if (chosen && chosen.value !== formatOfState()) {
