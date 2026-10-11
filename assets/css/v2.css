@@ -172,27 +172,20 @@
  .v2-page .v2-designer-invite .btn{width:100%}
 }
 
-/* V2 only: four sellable product combinations in the existing catalog. */
+/* Etsy-style single native variant selector, not a multi-control configurator. */
 .v2-page .v2-product__options{margin:17px 0 0}
-.v2-page .v2-product__formats{margin:0 0 18px;padding:0;border:0;min-width:0}
-.v2-page .v2-product__formats legend{font-size:.94rem;font-weight:700;margin-bottom:11px}
-.v2-page .v2-product__type-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.v2-page .v2-type{
- position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:4px;
- padding:15px 14px;border:1.5px solid #d4d2c9;border-radius:13px;
- min-width:0;cursor:pointer;background:#fff;transition:border-color .15s,background .15s
+.v2-page .v2-product__variant{margin:0 0 17px}
+.v2-page .v2-product__variant #v2Size{
+  display:block;width:100%;min-height:55px;padding:13px 14px;
+  border:1.5px solid #aaa99e;border-radius:12px;
+  color:var(--ink);background:#fff;
+  font-size:1rem;font-weight:500;line-height:1.4;
+  -webkit-appearance:menulist;appearance:menulist;
+  cursor:pointer;
 }
-.v2-page .v2-type input{
- position:absolute;top:12px;right:11px;appearance:none;-webkit-appearance:none;
- width:17px;height:17px;border:1.5px solid #acaca3;border-radius:50%;margin:0;background:#fff
+.v2-page .v2-product__variant #v2Size:focus-visible{
+  outline:2px solid var(--sage-deep);outline-offset:2px;
 }
-.v2-page .v2-type input:checked{border:5px solid var(--sage-ink)}
-.v2-page .v2-type:focus-within{outline:2px solid var(--sage-deep);outline-offset:2px}
-.v2-page .v2-type.is-selected,
-.v2-page .v2-type:has(input:checked){border-color:var(--sage-deep);background:#f4f7f0;box-shadow:0 0 0 1px var(--sage-deep)}
-.v2-page .v2-type__name{font-size:.9rem;font-weight:700;line-height:1.3;padding-right:17px;color:var(--ink)}
-.v2-page .v2-type small{font-size:.73rem;color:var(--ink-3);line-height:1.4}
-.v2-page .v2-type strong{font-size:1.05rem;letter-spacing:-.025em;margin-top:4px}
 .v2-page .v2-product__field{margin:0 0 18px}
 .v2-page .v2-product__field>label,
 .v2-page .v2-personalise__fields>label{
