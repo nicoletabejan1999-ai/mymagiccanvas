@@ -166,8 +166,6 @@
     const heroSavings = $('#v2HeroSavingsAmount');
     if (heroSavings) {
       heroSavings.textContent = money(largestSaving);
-      heroSavings.closest('.v2-hero-savings')?.setAttribute(
-        'aria-label', 'Save up to ' + money(largestSaving) + ' with 10% off');
     }
     $('#v2Size').value = X.variantKey(s);
     const country = $('#v2Country').value;
