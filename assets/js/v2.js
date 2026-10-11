@@ -24,7 +24,7 @@
   let wasCustomised = false;
   let galleryShow = () => {};
   const formats = {
-    canvas: { framed: false, easel: false, media: 2,
+    canvas: { framed: false, easel: false, media: 0,
       caption: 'Classic stretched canvas, ready to hang. The display easel is an optional accessory.' },
     framed: { framed: true, easel: false, media: 9,
       caption: 'Premium solid-wood frame around the printed canvas, shown in the selected photograph.' },
@@ -129,7 +129,21 @@
     galleryShow(flags.media);
     $('#v2GalleryCaption').textContent = flags.caption;
     updatePrices();
-    if (fromCustomer) trackCustomise();
+    if (fromCustomer) {
+      trackCustomise();
+      // The native iOS picker needs to finish closing before we move the
+      // viewport. Scroll only for a deliberate selection, never on load.
+      setTimeout(() => {
+        const photos = $('#gallery');
+        if (!photos) return;
+        const reducedMotion = window.matchMedia &&
+          window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        photos.scrollIntoView({
+          behavior: reducedMotion ? 'instant' : 'smooth',
+          block: 'start'
+        });
+      }, 160);
+    }
   }
 
   function updatePrices() {
@@ -263,7 +277,7 @@
       galleryShow(active + (event.key === 'ArrowRight' || event.key === 'ArrowDown' ? 1 : -1));
       $$('.gal__t')[active]?.focus();
     });
-    galleryShow(2);
+    galleryShow(0);
   }
 
   function swatchButton(ink) {
