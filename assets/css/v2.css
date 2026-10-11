@@ -171,3 +171,119 @@
  .v2-page .v2-designer-invite__in{align-items:stretch;flex-direction:column}
  .v2-page .v2-designer-invite .btn{width:100%}
 }
+
+/* V2 only: four sellable product combinations in the existing catalog. */
+.v2-page .v2-product__options{margin:17px 0 0}
+.v2-page .v2-product__formats{margin:0 0 18px;padding:0;border:0;min-width:0}
+.v2-page .v2-product__formats legend{font-size:.94rem;font-weight:700;margin-bottom:11px}
+.v2-page .v2-product__type-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.v2-page .v2-type{
+ position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:4px;
+ padding:15px 14px;border:1.5px solid #d4d2c9;border-radius:13px;
+ min-width:0;cursor:pointer;background:#fff;transition:border-color .15s,background .15s
+}
+.v2-page .v2-type input{
+ position:absolute;top:12px;right:11px;appearance:none;-webkit-appearance:none;
+ width:17px;height:17px;border:1.5px solid #acaca3;border-radius:50%;margin:0;background:#fff
+}
+.v2-page .v2-type input:checked{border:5px solid var(--sage-ink)}
+.v2-page .v2-type:focus-within{outline:2px solid var(--sage-deep);outline-offset:2px}
+.v2-page .v2-type.is-selected,
+.v2-page .v2-type:has(input:checked){border-color:var(--sage-deep);background:#f4f7f0;box-shadow:0 0 0 1px var(--sage-deep)}
+.v2-page .v2-type__name{font-size:.9rem;font-weight:700;line-height:1.3;padding-right:17px;color:var(--ink)}
+.v2-page .v2-type small{font-size:.73rem;color:var(--ink-3);line-height:1.4}
+.v2-page .v2-type strong{font-size:1.05rem;letter-spacing:-.025em;margin-top:4px}
+.v2-page .v2-product__field{margin:0 0 18px}
+.v2-page .v2-product__field>label,
+.v2-page .v2-personalise__fields>label{
+ display:block;font-size:.89rem;font-weight:700;line-height:1.4;margin-bottom:8px
+}
+.v2-page .v2-personalise__fields>label small,
+.v2-page .v2-product__field>label small{font-weight:400;color:var(--ink-3);font-size:.76rem}
+.v2-page .v2-product__field select,
+.v2-page .v2-personalise__fields select{
+ display:block;width:100%;min-height:52px;padding:10px 14px;
+ border:1px solid #aaa99e;border-radius:10px;background:#fff;font-size:.92rem
+}
+.v2-page .v2-personalise[open]{border-color:var(--line)}
+.v2-page .v2-personalise__fields{display:block;padding:1px 16px 19px}
+.v2-page .v2-personalise__fields>input{margin:0 0 15px}
+.v2-page .v2-palette-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0 0 12px}
+.v2-page .v2-palette{
+ min-width:0;display:flex;align-items:center;gap:9px;padding:10px 9px;background:#fff;
+ border:1px solid #d7d7cf;border-radius:9px;cursor:pointer;text-align:left;
+ color:var(--ink-2);font-size:.77rem;font-weight:600;line-height:1.3
+}
+.v2-page .v2-palette[aria-pressed="true"]{border-color:var(--sage-deep);background:#eaf0e2;box-shadow:0 0 0 1px var(--sage-deep)}
+.v2-page .v2-palette__dots{display:inline-flex;flex-shrink:0}
+.v2-page .v2-palette__dots i{display:block;width:12px;height:12px;border-radius:50%;border:1px solid #ffffffa0;margin-left:-3px}
+.v2-page .v2-palette__dots i:first-child{margin-left:0}
+.v2-page .v2-custom-inks{margin:8px 0 14px;background:#fff;border:1px solid var(--line);border-radius:10px}
+.v2-page .v2-custom-inks>summary{
+ padding:12px;display:flex;justify-content:space-between;cursor:pointer;
+ font-size:.82rem;font-weight:600;list-style:none
+}
+.v2-page .v2-custom-inks>summary::-webkit-details-marker{display:none}
+.v2-page .v2-ink-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;padding:0 11px 12px}
+.v2-page .v2-ink{min-width:0;display:flex;align-items:center;gap:6px;
+ padding:7px;border:1px solid var(--line);background:#fff;border-radius:8px;cursor:pointer;
+ font-size:.7rem;line-height:1.3;text-align:left
+}
+.v2-page .v2-ink[aria-pressed="true"]{border-color:var(--sage-deep);box-shadow:inset 0 0 0 1px var(--sage-deep)}
+.v2-page .v2-ink__colour{width:19px;height:19px;border-radius:50%;flex-shrink:0;border:1px solid #00000012}
+.v2-page .v2-ink__name{overflow-wrap:anywhere}
+.v2-page .v2-ink-status{font-size:.77rem;color:var(--sage-ink);margin:0 0 15px}
+.v2-page .v2-product__delivery{padding:17px 0 8px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.v2-page .v2-shipping-info{margin:-7px 0 17px;font-size:.8rem;color:var(--ink-2);line-height:1.5}
+.v2-page .v2-phone-row{display:flex;align-items:center;border:1px solid #aaa99e;border-radius:10px;background:#fff;overflow:hidden}
+.v2-page .v2-phone-row span{display:block;padding:13px 12px;font-weight:600;font-size:.88rem;background:var(--sand-soft);border-right:1px solid var(--line)}
+.v2-page .v2-phone-row input{border:0!important;border-radius:0!important;min-height:50px;min-width:0;flex:1;padding:10px 12px;background:#fff}
+.v2-page .v2-product__terms{display:flex;align-items:start;gap:11px;margin:19px 0;font-size:.78rem;line-height:1.5;color:var(--ink-2)}
+.v2-page .v2-product__terms input{width:18px;height:18px;flex-shrink:0;margin-top:2px;accent-color:var(--sage-ink)}
+.v2-page .v2-product__terms a{color:var(--ink);text-underline-offset:2px}
+.v2-page .v2-product__error{margin:12px 0 0;padding:12px;background:#fff0eb;color:#9e3721;border-radius:9px;font-size:.82rem}
+.v2-page .v2-product__error[hidden]{display:none}
+.v2-page .v2-product__cta:disabled{cursor:wait;opacity:.65}
+.v2-page .v2-gallery-duo{
+ width:100%;height:100%;display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:10px;background:var(--sand-soft)
+}
+.v2-page .v2-gallery-duo figure{margin:0;display:flex;flex-direction:column;min-width:0}
+.v2-page .v2-gallery-duo img{display:block;flex:1;min-height:0;width:100%;object-fit:cover;border-radius:11px}
+.v2-page .v2-gallery-duo figcaption{font-weight:600;color:var(--ink-2);font-size:.74rem;padding:7px 0;text-align:center}
+.v2-page .v2-sale-ribbon{
+ position:sticky;top:70px;z-index:85;display:flex;align-items:center;justify-content:center;
+ flex-wrap:wrap;gap:5px 20px;min-height:46px;padding:8px 18px;
+ background:#e8f0e1;border-bottom:1px solid #c9d8bd;color:#304626;
+ font-size:.77rem;line-height:1.4;text-align:center
+}
+.v2-page .v2-sale-ribbon__deal{font-weight:600}
+.v2-page .v2-sale-ribbon__deal strong{font-weight:800;background:#31452a;color:#fff;padding:5px 8px;border-radius:5px;margin-right:5px;white-space:nowrap}
+.v2-page .v2-sale-ribbon__timer{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.v2-page .v2-sale-ribbon__timer output{font-variant-numeric:tabular-nums;font-size:.95rem;font-weight:800;letter-spacing:.045em}
+.v2-page .v2-sale-ribbon__timer small{font-size:.7rem;color:#557047}
+.v2-page .v2-product__sale-line{display:flex;align-items:center;gap:10px;margin:0 0 10px}
+.v2-page .v2-sale-sticker{display:inline-flex;padding:4px 9px;color:#fff;background:#a1392b;border-radius:6px;font-size:.73rem;font-weight:750}
+.v2-page .v2-product__sale-line s{font-size:1.03rem;color:var(--ink-3)}
+.v2-page .v2-product__price{color:#7a2f24}
+.v2-page .v2-whatsapp-float{
+ position:fixed;right:max(16px,env(safe-area-inset-right));bottom:max(16px,env(safe-area-inset-bottom));
+ z-index:150;display:flex;align-items:center;justify-content:center;gap:8px;
+ min-height:55px;padding:10px 16px 10px 13px;
+ color:#fff!important;text-decoration:none!important;background:#128c52;
+ border:2px solid #fff;border-radius:999px;
+ font-weight:700;font-size:.86rem;box-shadow:0 5px 22px #00000030;transition:transform .16s,background .16s
+}
+.v2-page .v2-whatsapp-float:hover{transform:translateY(-2px);background:#0b7644}
+.v2-page .v2-whatsapp-float svg{width:25px;height:25px;flex:none}
+.v2-page .dock{display:none!important}
+@media(max-width:520px){
+ .v2-page .v2-sale-ribbon{gap:3px 8px;min-height:52px;padding:7px 8px;font-size:.71rem}
+ .v2-page .v2-sale-ribbon__timer output{font-size:.84rem}
+ .v2-page .v2-sale-ribbon__timer small{font-size:.66rem}
+ .v2-page .v2-whatsapp-float{width:56px;height:56px;min-height:0;padding:12px;bottom:max(12px,env(safe-area-inset-bottom));right:12px}
+ .v2-page .v2-whatsapp-float span{display:none}
+ .v2-page .v2-whatsapp-float svg{width:28px;height:28px}
+ .v2-page .v2-type{padding:13px 10px}
+ .v2-page .v2-type__name{font-size:.82rem}
+ .v2-page .v2-ink-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
