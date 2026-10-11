@@ -314,3 +314,62 @@
   .v2-page .v2-hero-savings{margin-bottom:19px;padding:9px 12px 9px 9px;gap:10px}
   .v2-page .v2-hero-savings__spark{width:31px;height:31px}
 }
+
+/* V2 conversion-first sequence: text hero -> product media -> Shop -> social proof. */
+.v2-page .hero{
+  padding-block:clamp(28px,4vw,55px) clamp(18px,2.4vw,30px);
+}
+.v2-page .hero__in{display:block}
+.v2-page .hero__copy{width:100%;max-width:860px}
+.v2-page .hero__copy h1{max-width:19ch;margin-bottom:18px}
+.v2-page .hero__copy .lede{max-width:66ch}
+.v2-page .v2-listing{
+  padding-top:clamp(12px,2vw,22px);
+  padding-bottom:clamp(22px,3vw,40px);
+  border-top:0;
+}
+.v2-page .v2-assurances{
+  background:var(--sand-soft);
+  padding:clamp(22px,3.2vw,38px) 0 clamp(35px,5vw,70px);
+  border-top:1px solid var(--sand-deep);
+}
+.v2-page .v2-assurances__in{
+  display:grid;
+  grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);
+  gap:clamp(24px,3vw,46px);
+  align-items:start;
+}
+.v2-page .v2-assurances__trust{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  align-content:start;
+  gap:16px 20px;
+  margin:0;
+}
+.v2-page .v2-assurances__trust li{
+  display:flex;align-items:flex-start;
+  gap:9px;font-size:.85rem;line-height:1.5;
+}
+.v2-page .v2-assurances__trust li>span[aria-hidden]{
+  flex:none;color:var(--sage-ink);font-weight:700;font-size:1.05rem;
+  line-height:1.2;
+}
+.v2-page .v2-assurances__pay{
+  display:flex;align-items:center;align-content:flex-start;
+  flex-wrap:wrap;gap:8px;
+  margin:0;padding:0;
+}
+.v2-page .v2-assurances__pay .pay__lbl{
+  flex-basis:100%;font-size:.82rem;font-weight:600;color:var(--ink-2);
+  margin:0 0 3px;
+}
+@media(max-width:950px){
+ .v2-page .v2-assurances__in{grid-template-columns:1fr;gap:25px}
+}
+@media(max-width:620px){
+ .v2-page .hero{padding-top:29px;padding-bottom:17px}
+ .v2-page .hero__copy h1{margin-bottom:18px}
+ .v2-page .v2-listing{padding-top:9px}
+ .v2-page .v2-assurances__trust{grid-template-columns:1fr;gap:14px}
+ .v2-page .v2-assurances__trust li{font-size:.9rem}
+}
