@@ -379,3 +379,85 @@
 @media(max-width:620px){
   .v2-page #gallery{scroll-margin-top:80px}
 }
+
+/* Quick contact area below buyer reassurance, above How it works. */
+.v2-page .v2-social-contact{
+  padding:clamp(27px,4vw,48px) 0 clamp(30px,4vw,50px);
+  background:#fff;
+}
+.v2-page .v2-social-contact__inner{
+  display:grid;
+  grid-template-columns:minmax(0,.86fr) minmax(0,1.14fr);
+  align-items:center;
+  gap:clamp(20px,4vw,58px);
+}
+.v2-page .v2-social-contact__copy .eyebrow{
+  margin:0 0 9px;
+  color:var(--sage-ink);
+}
+.v2-page .v2-social-contact__copy h2{
+  font-family:var(--f-head);
+  font-size:clamp(1.6rem,2.9vw,2.15rem);
+  line-height:1.17;
+  letter-spacing:-.023em;
+}
+.v2-page .v2-social-contact__copy p:not(.eyebrow){
+  margin-top:10px;
+  color:var(--ink-2);
+  font-size:.88rem;
+  line-height:1.55;
+}
+.v2-page .v2-social-contact__actions{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+}
+.v2-page .v2-social-contact__button{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  gap:8px;
+  min-width:0;
+  min-height:86px;
+  padding:12px 6px;
+  border:1px solid #d9ddd5;
+  border-radius:14px;
+  background:#fafbf9;
+  text-decoration:none;
+  color:var(--ink);
+  font-size:.8rem;
+  font-weight:700;
+  line-height:1.2;
+  box-shadow:0 2px 10px rgba(0,0,0,.025);
+  transition:transform .16s,border-color .16s,background .16s;
+}
+.v2-page .v2-social-contact__button:hover{
+  transform:translateY(-2px);
+  border-color:#9fba92;
+  background:#f3f7ef;
+}
+.v2-page .v2-social-contact__button:focus-visible{
+  outline:2px solid var(--sage-deep);
+  outline-offset:3px;
+}
+.v2-page .v2-social-contact__button svg{width:27px;height:27px;flex:none}
+.v2-page .v2-social-contact__button--whatsapp svg{color:#168a51}
+.v2-page .v2-social-contact__button--messenger svg{color:#168aff}
+.v2-page .v2-social-contact__button--instagram svg{color:#b64186}
+@media(max-width:860px){
+  .v2-page .v2-social-contact__inner{grid-template-columns:1fr;gap:19px}
+  .v2-page .v2-social-contact__copy p:not(.eyebrow){max-width:36rem}
+}
+@media(max-width:520px){
+  .v2-page .v2-social-contact{padding:24px 0 29px}
+  .v2-page .v2-social-contact__copy h2{font-size:1.55rem}
+  .v2-page .v2-social-contact__actions{gap:8px}
+  .v2-page .v2-social-contact__button{
+    min-height:78px;
+    border-radius:12px;
+    padding:10px 4px;
+    font-size:.72rem;
+  }
+  .v2-page .v2-social-contact__button svg{width:25px;height:25px}
+}
