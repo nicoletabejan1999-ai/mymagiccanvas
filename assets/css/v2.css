@@ -287,3 +287,30 @@
  .v2-page .v2-type__name{font-size:.82rem}
  .v2-page .v2-ink-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+/* Promotional savings sticker beneath the V2 hero headline only. */
+.v2-page .v2-hero-savings{
+  display:inline-flex;align-items:center;gap:12px;max-width:100%;
+  margin:0 0 21px;padding:10px 16px 10px 11px;
+  border:1px solid #b8ceaa;border-radius:12px;
+  background:linear-gradient(110deg,#eef5e7,#fff9e8);
+  color:#304b29;box-shadow:0 4px 16px rgba(55,80,44,.07);
+  font-size:clamp(.87rem,1.45vw,.99rem);font-weight:650;
+  line-height:1.3;
+}
+.v2-page .v2-hero-savings__spark{
+  display:grid;place-items:center;flex:none;
+  width:34px;height:34px;background:#486b3b;border-radius:9px;
+  color:#fff;font-size:1.13rem;line-height:1;
+}
+.v2-page .v2-hero-savings strong{
+  font-size:1.18em;font-weight:800;
+  font-variant-numeric:tabular-nums;letter-spacing:-.025em;
+}
+.v2-page .v2-hero-savings__secondary{
+  display:block;font-weight:500;color:#56724a;font-size:.75rem;margin-top:3px;
+}
+@media(max-width:520px){
+  .v2-page .v2-hero-savings{margin-bottom:19px;padding:9px 12px 9px 9px;gap:10px}
+  .v2-page .v2-hero-savings__spark{width:31px;height:31px}
+}
