@@ -21,7 +21,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=Allura&family=Cormorant+Garamond:wght@400;500&family=Dancing+Script:wght@500&family=Mrs+Saint+Delafield&family=Mukta+Mahee:wght@200&family=Parisienne&family=Playfair+Display:wght@400;500&family=Prata&family=Sacramento&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/styles.css?v=26">
-<link rel="stylesheet" href="assets/css/v2.css?v=7">
+<link rel="stylesheet" href="assets/css/v2.css?v=8">
 </head>
 <body class="v2-page">
 
@@ -51,11 +51,6 @@
   </div>
 </header>
 
-<div class="v2-sale-ribbon" role="region" aria-label="MyMagiCanvas ten percent discount">
-  <span class="v2-sale-ribbon__deal"><strong>10% OFF</strong> every canvas, frame and easel</span>
-  <span class="v2-sale-ribbon__timer"><span>Next 10-hour offer cycle in</span> <output id="v2PromoTimer" aria-live="off">10:00:00</output></span>
-</div>
-
 <main>
 
 <!-- ─────────────────────────────────────────────────────────────── hero -->
@@ -63,9 +58,16 @@
   <div class="wrap hero__in">
     <div class="hero__copy">
       <h1>The guest book<br>everyone actually<br><em>queues up for</em>.</h1>
-      <p class="v2-hero-savings" aria-label="Save up to 20 euros and 30 cents with the 10 percent promotion">
+      <p class="v2-hero-savings">
         <span class="v2-hero-savings__spark" aria-hidden="true">✦</span>
-        <span>Save up to <strong id="v2HeroSavingsAmount">€20.30</strong> <span class="v2-hero-savings__secondary">with 10% off</span></span>
+        <span class="v2-hero-savings__content">
+          <span class="v2-hero-savings__headline">Save up to <strong id="v2HeroSavingsAmount">€20.30</strong></span>
+          <span class="v2-hero-savings__discount">−10% on all products</span>
+          <span class="v2-hero-savings__timer">
+            <span>Current offer window ends in</span>
+            <output id="v2PromoTimer" aria-label="Time remaining in current ten-hour offer window" aria-live="off">10:00:00</output>
+          </span>
+        </span>
       </p>
       <p class="lede">A fingerprint tree, printed on canvas with your names on it. Your guests press a thumb into an ink pad and leave a leaf behind. By the end of the party you have a piece of art with every person you love inside it.</p>
 
@@ -426,6 +428,6 @@
 <script src="assets/js/meta-consent.js?v=30"></script>
 <script src="assets/js/pinterest-tag.js?v=2"></script>
 <script src="assets/js/configurator.js?v=34"></script>
-<script src="assets/js/v2.js?v=6"></script>
+<script src="assets/js/v2.js?v=7"></script>
 </body>
 </html>
