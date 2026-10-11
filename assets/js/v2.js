@@ -742,6 +742,10 @@
       if (whatsapp) whatsapp.href = link;
       if (shopWhatsapp) shopWhatsapp.href = link;
     }
+    const emailButton = $('#v2ContactEmail');
+    if (emailButton && C.SHOP.email) {
+      emailButton.href = 'mailto:' + C.SHOP.email;
+    }
     const hash = new URLSearchParams(location.search);
     if (hash.get('checkout') === 'cancelled') {
       $('#v2Error').hidden = false;
