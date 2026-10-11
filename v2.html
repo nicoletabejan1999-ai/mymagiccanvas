@@ -21,7 +21,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=Allura&family=Cormorant+Garamond:wght@400;500&family=Dancing+Script:wght@500&family=Mrs+Saint+Delafield&family=Mukta+Mahee:wght@200&family=Parisienne&family=Playfair+Display:wght@400;500&family=Prata&family=Sacramento&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/styles.css?v=26">
-<link rel="stylesheet" href="assets/css/v2.css?v=1">
+<link rel="stylesheet" href="assets/css/v2.css?v=2">
 </head>
 <body class="v2-page">
 
@@ -41,13 +41,13 @@
     </a>
     <nav class="nav" aria-label="Sections">
       <a href="#how">How it works</a>
-      <a href="#configurator">Configurator</a>
+      <a href="#product-details">Shop canvas</a>
       <a href="#kit">In the box</a>
       <a href="#sizes">Sizes</a>
       <a href="#reviews">Reviews</a>
       <a href="#faq">FAQ</a>
     </nav>
-    <a class="btn btn--sm btn--dark hdr__cta" href="#configurator">Buy now</a>
+    <a class="btn btn--sm btn--dark hdr__cta" href="#product-details">Buy now</a>
   </div>
 </header>
 
@@ -62,7 +62,7 @@
       <p class="lede">A fingerprint tree, printed on canvas with your names on it. Your guests press a thumb into an ink pad and leave a leaf behind. By the end of the party you have a piece of art with every person you love inside it.</p>
 
       <div class="hero__cta">
-        <a class="btn btn--dark btn--lg" href="#configurator">Create your canvas</a>
+        <a class="btn btn--dark btn--lg" href="#product-details">Shop & personalise</a>
         <a class="btn btn--ghost btn--lg" href="#gallery">See more photos</a>
       </div>
 
@@ -92,7 +92,7 @@
         <div class="gal__stage" id="galStage"></div>
         <div class="gal__strip" id="galStrip" role="tablist" aria-label="Product media"></div>
       </div>
-      <p class="v2-listing__media-caption">Printed on canvas, finished by hand and ready for your guests' fingerprints.</p>
+      <p class="v2-listing__media-caption" id="v2GalleryCaption" aria-live="polite">Stretched canvas, ready to hang. Display easel is optional.</p>
     </div>
     <div class="v2-product">
       <p class="v2-product__shop">Made by <strong>MyMagiCanvas</strong> <span aria-hidden="true">✦</span> Made in Europe</p>
@@ -102,32 +102,92 @@
       <h2>Wedding Fingerprint Tree Canvas</h2>
       <p class="v2-product__subtitle">A personalised guest book alternative — your friends and family make the leaves with their fingerprints.</p>
       <div class="v2-product__pricebox">
-        <strong class="v2-product__price" id="v2Price" aria-live="polite"> </strong>
+        <strong class="v2-product__price" id="v2Price" aria-live="polite">From €31.90</strong>
         <p>Taxes included where applicable · Shipping calculated for your country</p>
       </div>
       <div class="v2-product__check"><span aria-hidden="true">✓</span> Personalised for your event <span aria-hidden="true">·</span> 4 washable ink pads included</div>
 
-      <div class="v2-product__options">
-        <label for="v2Size">Canvas size</label>
-        <select id="v2Size" name="v2Size" aria-describedby="v2SizeHelp">
-          <option value="S">S · 30 × 40 cm</option>
-          <option value="M" selected>M · 40 × 50 cm</option>
-          <option value="L">L · 50 × 60 cm</option>
-        </select>
-        <p class="v2-product__help" id="v2SizeHelp">Choose the size that fits your guest list.</p>
-        <details class="v2-personalise">
-          <summary><span>+ Add personalisation <small>Optional here — you can edit it in the designer</small></span><span class="v2-chevron" aria-hidden="true"></span></summary>
+      <form class="v2-product__options" id="v2OrderForm" novalidate>
+        <fieldset class="v2-product__formats">
+          <legend>Choose your canvas</legend>
+          <div class="v2-product__type-grid" id="v2Formats">
+            <label class="v2-type">
+              <input type="radio" name="canvasFormat" value="canvas" checked>
+              <span class="v2-type__name">Canvas only</span>
+              <small>Ready to hang</small>
+              <strong id="v2CanvasAmount"></strong>
+            </label>
+            <label class="v2-type">
+              <input type="radio" name="canvasFormat" value="framed">
+              <span class="v2-type__name">With wood frame</span>
+              <small>Premium finish</small>
+              <strong id="v2FramedAmount"></strong>
+            </label>
+            <label class="v2-type">
+              <input type="radio" name="canvasFormat" value="easel">
+              <span class="v2-type__name">With display easel</span>
+              <small>For your event</small>
+              <strong id="v2EaselAmount"></strong>
+            </label>
+            <label class="v2-type">
+              <input type="radio" name="canvasFormat" value="both">
+              <span class="v2-type__name">Frame + easel</span>
+              <small>Complete display</small>
+              <strong id="v2BothAmount"></strong>
+            </label>
+          </div>
+        </fieldset>
+        <div class="v2-product__field">
+          <label for="v2Size">Canvas size</label>
+          <select id="v2Size" name="canvasSize">
+            <option value="S" selected>S · 30 × 40 cm · up to 40 fingerprints</option>
+            <option value="M">M · 40 × 50 cm · up to 80 fingerprints</option>
+            <option value="L">L · 50 × 60 cm · 120+ fingerprints</option>
+          </select>
+        </div>
+        <details class="v2-personalise" id="v2Personalise" open>
+          <summary><span>Personalisation <small>Names, event date and ink colours</small></span><span class="v2-chevron" aria-hidden="true"></span></summary>
           <div class="v2-personalise__fields">
-            <label for="v2Names">Names or your text</label>
-            <input id="v2Names" type="text" maxlength="40" autocomplete="off" value="Noah &amp; Rose">
-            <label for="v2Date">Event date (optional)</label>
-            <input id="v2Date" type="text" maxlength="24" autocomplete="off" value="25.06.2025">
+            <label for="v2Names">Your names or text <span aria-hidden="true">*</span></label>
+            <input id="v2Names" name="names" type="text" maxlength="40" autocomplete="off"
+              placeholder="e.g. Emma &amp; Leo" required>
+            <label for="v2Date">Event date <small>(optional)</small></label>
+            <input id="v2Date" name="eventDate" type="text" maxlength="24" autocomplete="off"
+              placeholder="e.g. 25.06.2027">
+            <label>Ink pad colours <small>Choose up to 4 · included</small></label>
+            <div class="v2-palette-options" id="v2Palettes" aria-label="Suggested colour palettes"></div>
+            <details class="v2-custom-inks">
+              <summary>Choose individual ink colours <span aria-hidden="true">⌄</span></summary>
+              <div class="v2-ink-grid" id="v2Inks" aria-label="Individual ink colours"></div>
+            </details>
+            <p class="v2-ink-status" id="v2InkStatus" aria-live="polite"></p>
+            <label for="v2Lang">Instruction card language</label>
+            <select id="v2Lang" name="cardLanguage"></select>
           </div>
         </details>
-      </div>
-      <button type="button" class="btn btn--dark btn--lg btn--block v2-product__cta" data-open-configurator aria-controls="configurator" aria-expanded="false">Personalise &amp; see your canvas</button>
-      <p class="v2-product__cta-note">Choose your lettering, finish, ink colours and delivery before secure checkout.</p>
-      <div class="v2-product__pay pay pay--sm" data-pay-badges data-pay-label="Secure payment"></div>
+        <div class="v2-product__delivery">
+          <div class="v2-product__field">
+            <label for="v2Country">Delivery country <span aria-hidden="true">*</span></label>
+            <select id="v2Country" name="country" required><option value="">Select your country</option></select>
+          </div>
+          <p class="v2-shipping-info" id="v2Shipping" aria-live="polite">Choose your country to see shipping cost.</p>
+          <div class="v2-product__field">
+            <label for="v2Phone">Phone number <small>Optional, recommended for delivery</small></label>
+            <div class="v2-phone-row"><span id="v2PhonePrefix" aria-hidden="true">+</span><input
+              type="tel" inputmode="tel" autocomplete="tel" id="v2Phone" name="phone"
+              maxlength="32" placeholder="Phone number"></div>
+          </div>
+        </div>
+        <label class="v2-product__terms"><input type="checkbox" id="v2Terms" required>
+          <span>I accept the <a href="legal/terms.html" target="_blank" rel="noopener">Terms of Sale</a> and
+          <a href="legal/privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.
+          I understand that personalised items cannot be returned for a change of mind once production starts.</span>
+        </label>
+        <button type="submit" id="v2CheckoutBtn" class="btn btn--dark btn--lg btn--block v2-product__cta">Continue to secure checkout</button>
+        <p class="v2-product__error" id="v2Error" role="alert" hidden></p>
+        <p class="v2-product__cta-note">Secure Stripe checkout · Your selections are saved with the order</p>
+        <div class="v2-product__pay pay pay--sm" data-pay-badges data-pay-label="Secure payment"></div>
+      </form>
 
       <div class="v2-product__accordions">
         <details open>
@@ -167,187 +227,11 @@
       <h2>Four steps, one keepsake</h2>
     </header>
     <ol class="steps">
-      <li><span class="steps__n">1</span><h3>Design it here</h3><p>Pick your size, your colours and your lettering in the configurator below. What you see is what we print.</p></li>
+      <li><span class="steps__n">1</span><h3>Design it here</h3><p>Choose the canvas, size, your names and ink colours above. We print your selections.</p></li>
       <li><span class="steps__n">2</span><h3>We make it</h3><p>Printed, stretched over a wooden frame and packed in two business days, in our own studio.</p></li>
       <li><span class="steps__n">3</span><h3>Your guests sign it</h3><p>Set it on an easel by the entrance with the instruction card. Thumb in the ink, thumb on the branch, done.</p></li>
       <li><span class="steps__n">4</span><h3>You hang it up</h3><p>The hardware is already on the back. It goes on the wall the week you get home from honeymoon.</p></li>
     </ol>
-  </div>
-</section>
-
-<!-- The original full designer is optional in V2; the original LP remains untouched. -->
-<section class="v2-designer-invite" aria-label="Customise your canvas">
-  <div class="wrap v2-designer-invite__in">
-    <div><p class="eyebrow">Make it yours</p><h2>Your design, your guests, your story</h2>
-    <p>Choose a few details above, then open the live preview whenever you're ready.</p></div>
-    <button class="btn btn--dark btn--lg" type="button" data-open-configurator aria-controls="configurator" aria-expanded="false">Open the live designer →</button>
-  </div>
-</section>
-
-<!-- ────────────────────────────────────────────────────── CONFIGURATOR -->
-<section class="sec sec--cfg" id="configurator" hidden aria-label="Expanded canvas designer">
-  <div class="wrap">
-    <header class="sh sh--center">
-      <div class="v2-designer-toolbar"><p class="eyebrow">Live configurator</p><button type="button" class="v2-designer-close" id="v2DesignerClose">Close designer <span aria-hidden="true">×</span></button></div>
-      <h2>Build your canvas and watch it fill up</h2>
-      <p class="sh__sub">Every choice below redraws the canvas in real time — size, frame, lettering and the exact ink colours your guests will press into it.</p>
-    </header>
-
-    <div class="cfg">
-
-      <!-- ── preview ─────────────────────────────────────────────── -->
-      <div class="cfg__viewport">
-        <div class="cfg__stick">
-          <div class="stage" id="stage">
-            <div class="stage__scene" id="scene">
-              <div class="easel" id="easel" hidden aria-hidden="true">
-                <picture>
-                  <source srcset="assets/img/easel.webp" type="image/webp">
-                  <img src="assets/img/easel.png" alt="" width="660" height="1224" decoding="async">
-                </picture>
-              </div>
-
-              <div class="rig">
-              <div class="frame" id="frame">
-                <div class="sheet" id="sheet">
-                  <img class="sheet__tree" id="treeImg" src="assets/img/tree-m.jpg" alt="" aria-hidden="true" decoding="async" draggable="false">
-                  <canvas class="sheet__prints" id="prints"></canvas>
-                  <div class="sheet__text" id="pvText">
-                    <div class="sheet__names" id="pvNames">Noah &amp; Rose</div>
-                    <div class="sheet__date"  id="pvDate">25.06.2025</div>
-                  </div>
-                  <div class="sheet__grain" aria-hidden="true"></div>
-                </div>
-              </div>
-              </div>
-            </div>
-
-            <p class="stage__scale" id="stageScale"></p>
-          </div>
-
-          <div class="stage__bar">
-            <p class="stage__note" id="fillNote"></p>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── controls ────────────────────────────────────────────── -->
-      <div class="cfg__panel">
-
-        <fieldset class="fld">
-          <legend>1 · Canvas size</legend>
-          <div class="opts opts--3" id="optSize"></div>
-        </fieldset>
-
-        <fieldset class="fld">
-          <legend>2 · Finish</legend>
-          <div class="opts opts--2" id="optFrame"></div>
-          <label class="swtch">
-            <input type="checkbox" id="optEasel">
-            <span class="swtch__ui" aria-hidden="true"></span>
-            <span class="swtch__txt">
-              <strong>Add the display easel <span class="price-tag" id="easelPriceBadge"></span></strong>
-              <small>Tall wooden easel, fits all three sizes. A small easel for the instruction card is always included.</small>
-            </span>
-          </label>
-        </fieldset>
-
-        <fieldset class="fld">
-          <legend>3 · Your lettering</legend>
-          <div class="grid2">
-            <label class="inp"><span>Names or your own text</span>
-              <input type="text" id="inNames" value="Noah &amp; Rose" maxlength="40" autocomplete="off"></label>
-            <label class="inp"><span>Date <small>(optional)</small></span>
-              <input type="text" id="inDate" value="25.06.2025" maxlength="24" autocomplete="off"></label>
-          </div>
-          <p class="fld__lbl">Font <small>— order by number, the way the chart shows it</small></p>
-          <div class="fonts" id="optFont"></div>
-          <p class="hint">The preview uses the closest web equivalent of each font. We print the real numbered one.</p>
-
-        </fieldset>
-
-        <fieldset class="fld">
-          <legend>4 · Ink colours <small id="inkCount"></small></legend>
-          <p class="fld__lbl">Choose any colours you like. Up to four ink pads are included; every additional colour is <strong id="extraInkPrice">+€3.00</strong>.</p>
-          <div class="inks" id="optInks"></div>
-          <p class="fld__lbl">Or start from a palette we like</p>
-          <div class="pals" id="optPalettes"></div>
-        </fieldset>
-
-        <fieldset class="fld">
-          <legend>5 · Your guest list</legend>
-          <p class="fld__lbl">Tell us roughly how many people will sign and we will point you at the size that fits.</p>
-          <label class="rng">
-            <span class="rng__top">How many guests? <output id="guestOut">80</output></span>
-            <input type="range" id="inGuests" min="10" max="200" step="5" value="80">
-          </label>
-          <p class="reco" id="reco"></p>
-        </fieldset>
-
-        <fieldset class="fld">
-          <legend>6 · Instruction card language</legend>
-          <div class="opts opts--5" id="optLang"></div>
-        </fieldset>
-
-        <!-- ── summary + buy ─────────────────────────────────────── -->
-        <div class="buy" id="buy">
-          <div class="buy__row">
-            <div>
-              <p class="buy__what" id="buyWhat">Canvas S · 30 × 40 cm</p>
-              <p class="buy__ship">Shipping <span id="buyShip"></span> · <span id="buyScope"></span> · taxes included where applicable</p>
-            </div>
-            <p class="buy__price" id="buyPrice"></p>
-          </div>
-
-          <label class="inp buy__currency">
-            <span>Currency</span>
-            <select id="shopCurrency" aria-describedby="currencyNote">
-              <option value="AUTO">Automatic — based on country</option>
-              <option value="EUR">EUR — Euro</option>
-              <option value="USD">USD — US Dollar</option>
-            </select>
-            <small id="currencyNote" aria-live="polite"></small>
-          </label>
-          <label class="inp buy__country">
-            <span>Delivery country</span>
-            <select id="shipCountry" required>
-              <option value="">Select country</option>
-            </select>
-            <small>Choose your delivery country to see shipping prices. Automatic currency uses USD for the US and EUR elsewhere.</small>
-          </label>
-
-          <label class="inp buy__phone">
-            <span>Phone number <b class="consent__opt">Optional, but strongly recommended</b></span>
-            <div class="phone-field">
-              <span class="phone-field__prefix" id="shipPhonePrefix" aria-hidden="true">+</span>
-              <input id="shipPhone" type="tel" inputmode="tel" autocomplete="tel"
-                     maxlength="32" placeholder="Select delivery country first">
-            </div>
-            <small>The international code follows the delivery country automatically. A courier may need your number to arrange delivery or contact you about the address.</small>
-          </label>
-
-          <div class="consent">
-            <label class="consent__row">
-              <input type="checkbox" id="okTerms">
-              <span>I have read and accept the
-                <a href="legal/terms.html" target="_blank" rel="noopener">Terms of Sale</a> and the
-                <a href="legal/privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.
-                My details are used to make and deliver this order. I understand the canvas is
-                made to my specification, so the fourteen-day right of withdrawal does not apply
-                once production starts.</span>
-            </label>
-          </div>
-
-          <a class="btn btn--dark btn--lg btn--block" id="buyBtn" href="#">Continue to secure checkout</a>
-          <p class="buy__err" id="buyErr" hidden></p>
-          <p class="buy__err buy__err--soft" id="consentErr" hidden>Please accept the terms above to continue.</p>
-
-          <div class="pay pay--sm" data-pay-badges data-pay-label="Pay with"></div>
-
-        </div>
-
-      </div>
-    </div>
   </div>
 </section>
 
@@ -368,7 +252,7 @@
         <li><strong>An instruction card</strong> for your guests, in English, French, German, Italian or Spanish.</li>
         <li><strong>A small easel</strong> to stand that card on, so nobody has to be told what to do.</li>
       </ul>
-      <a class="btn btn--dark" href="#configurator">Pick your ink colours</a>
+      <a class="btn btn--dark" href="#product-details">Choose your colours</a>
     </div>
   </div>
 </section>
@@ -499,7 +383,7 @@
     <div class="end">
       <h2>Your people, on one branch</h2>
       <p>Design it in a couple of minutes. Change your mind as often as you like — nothing is printed until you order.</p>
-      <a class="btn btn--dark btn--lg" href="#configurator">Build your canvas</a>
+      <a class="btn btn--dark btn--lg" href="#product-details">Choose your canvas</a>
       <div class="pay pay--center" data-pay-badges data-pay-label="Secure checkout with"></div>
     </div>
   </div>
@@ -534,7 +418,7 @@
       <p class="ftr__sm" id="ftrShop"></p>
     </div>
     <nav class="ftr__nav" aria-label="Footer">
-      <a href="#configurator">Configurator</a>
+      <a href="#product-details">Shop canvas</a>
       <a href="#kit">In the box</a>
       <a href="#sizes">Sizes</a>
       <a href="#delivery">Delivery</a>
@@ -566,18 +450,16 @@
 <div class="dock" id="dock" hidden>
   <div class="dock__in">
     <div><p class="dock__what" id="dockWhat"></p><p class="dock__price" id="dockPrice"></p></div>
-    <a class="btn btn--dark" id="dockBtn" href="#configurator">Checkout</a>
+    <a class="btn btn--dark" id="dockBtn" href="#product-details">Checkout</a>
   </div>
 </div>
 
-<script src="assets/js/canopy-mask.js?v=26"></script>
 <script src="assets/js/pricing.js?v=1"></script>
 <script src="assets/js/config.js?v=27"></script>
 <script src="assets/js/first-party-analytics.js?v=4"></script>
 <script src="assets/js/meta-consent.js?v=30"></script>
 <script src="assets/js/pinterest-tag.js?v=2"></script>
 <script src="assets/js/configurator.js?v=34"></script>
-<script src="assets/js/main.js?v=31"></script>
-<script src="assets/js/v2.js?v=1"></script>
+<script src="assets/js/v2.js?v=2"></script>
 </body>
 </html>
