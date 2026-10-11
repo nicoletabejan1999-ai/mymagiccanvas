@@ -366,3 +366,9 @@
  .v2-page .v2-assurances__trust{grid-template-columns:1fr;gap:14px}
  .v2-page .v2-assurances__trust li{font-size:.9rem}
 }
+
+/* Make automatic selection jumps reveal the actual photo below both sticky bars. */
+.v2-page #gallery{scroll-margin-top:142px}
+@media(max-width:620px){
+  .v2-page #gallery{scroll-margin-top:138px}
+}
