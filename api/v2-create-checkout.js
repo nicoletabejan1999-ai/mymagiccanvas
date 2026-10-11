@@ -1,0 +1,294 @@
+// Private design storage is provisioned by Vercel Blob.
+// Redeploy after Blob connection refresh.
+const Pricing = require('../assets/js/pricing');
+// Genuine V2-only 10% promotion. Original /api/create-checkout stays intact.
+const saleCents = amount => Math.round(amount * 0.9);
+const { cleanAttribution, writeFunnelEvent } = require('../lib/first-party-analytics');
+
+function json(res, status, body) {
+  res.statusCode = status;
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.end(JSON.stringify(body));
+}
+
+function productName(variant) {
+  const framed = variant.startsWith('FRAMED-');
+  const easel = variant.endsWith('-EASEL');
+  const size = variant.replace('FRAMED-', '').replace('-EASEL', '');
+  return (framed ? 'Framed fingerprint tree canvas ' : 'Fingerprint tree canvas ') +
+    size + (easel ? ' + display easel' : '');
+}
+
+function addShipping(params, index, label, amount, minDays, maxDays, currency) {
+  const p = 'shipping_options[' + index + '][shipping_rate_data]';
+  params.set(p + '[type]', 'fixed_amount');
+  params.set(p + '[display_name]', label);
+  params.set(p + '[fixed_amount][amount]', String(amount));
+  params.set(p + '[fixed_amount][currency]', currency);
+  params.set(p + '[delivery_estimate][minimum][unit]', 'business_day');
+  params.set(p + '[delivery_estimate][minimum][value]', String(minDays));
+  params.set(p + '[delivery_estimate][maximum][unit]', 'business_day');
+  params.set(p + '[delivery_estimate][maximum][value]', String(maxDays));
+}
+
+function cleanText(value, max) {
+  return String(value == null ? '' : value).trim().slice(0, max);
+}
+
+function cleanNumber(value, min, max, fallback) {
+  const n = Number(value);
+  return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;
+}
+
+function cleanDesign(raw, variant, country) {
+  raw = raw && typeof raw === 'object' ? raw : {};
+  const size = ['S','M','L'].includes(raw.size) ? raw.size : null;
+  const font = Number(raw.font);
+  const inks = Array.isArray(raw.inks)
+    ? Array.from(new Set(raw.inks.map(Number)
+        .filter(n => Number.isInteger(n) && n >= 1 && n <= 15))).slice(0, 15)
+    : [];
+  const lang = ['English','French','German','Italian','Spanish'].includes(raw.lang)
+    ? raw.lang : 'English';
+
+  if (!size || !Number.isInteger(font) || font < 1 || font > 8) return null;
+
+  const expectedVariant = [
+    raw.framed ? 'FRAMED-' : '',
+    size,
+    raw.easel ? '-EASEL' : ''
+  ].join('');
+  if (expectedVariant !== variant) return null;
+
+  const rawLayout = raw.layout && typeof raw.layout === 'object' ? raw.layout : null;
+  const layout = rawLayout ? {
+    nameCenterX: cleanNumber(rawLayout.nameCenterX, 0, 1, 0.5),
+    nameBaselineY: cleanNumber(rawLayout.nameBaselineY, 0, 1, 0.9),
+    nameFontSize: cleanNumber(rawLayout.nameFontSize, 0.001, 0.5, 0.09),
+    dateCenterX: cleanNumber(rawLayout.dateCenterX, 0, 1, 0.5),
+    dateBaselineY: cleanNumber(rawLayout.dateBaselineY, 0, 1, 0.97),
+    dateFontSize: cleanNumber(rawLayout.dateFontSize, 0.001, 0.25, 0.025)
+  } : null;
+
+  return {
+    version: 3,
+    createdAt: new Date().toISOString(),
+    variant,
+    deliveryCountry: country,
+    size,
+    framed: Boolean(raw.framed),
+    easel: Boolean(raw.easel),
+    names: cleanText(raw.names, 40),
+    date: cleanText(raw.date, 24),
+    font,
+    nameX: cleanNumber(raw.nameX, -1, 1, 0),
+    nameY: cleanNumber(raw.nameY, -1, 1, 0),
+    nameScale: cleanNumber(raw.nameScale, 0.6, 2.2, 1),
+    layout,
+    phone: cleanText(raw.phone, 32),
+    inks,
+    guests: Math.round(cleanNumber(raw.guests, 10, 200, 80)),
+    lang
+  };
+}
+
+function cleanMeta(raw, req, origin) {
+  raw = raw && typeof raw === 'object' ? raw : {};
+  if (raw.consent !== true) return { consent: false };
+
+  const forwarded = String(req.headers['x-forwarded-for'] || '')
+    .split(',')[0].trim();
+
+  return {
+    consent: true,
+    fbp: cleanText(raw.fbp, 255),
+    fbc: cleanText(raw.fbc, 255),
+    pinterestClickId: cleanText(raw.pinterestClickId, 512),
+    clientIp: cleanText(forwarded, 64),
+    userAgent: cleanText(req.headers['user-agent'], 512),
+    eventSourceUrl: origin + '/'
+  };
+}
+
+async function saveDesign(design) {
+  const { put } = await import('@vercel/blob');
+
+  const auth = process.env.BLOB_READ_WRITE_TOKEN
+    ? { token: process.env.BLOB_READ_WRITE_TOKEN }
+    : (process.env.VERCEL_OIDC_TOKEN && process.env.BLOB_STORE_ID
+      ? { oidcToken: process.env.VERCEL_OIDC_TOKEN, storeId: process.env.BLOB_STORE_ID }
+      : null);
+
+  if (!auth) {
+    const visibleNames = process.env.VERCEL_ENV !== 'production'
+      ? Object.keys(process.env)
+          .filter(k => /BLOB|STORE|STORAGE|OIDC/i.test(k))
+          .sort()
+      : [];
+    const suffix = visibleNames.length
+      ? ' Detected env names: ' + visibleNames.join(', ')
+      : ' No Blob/OIDC environment variables are visible to this Function.';
+    const error = new Error('Design storage is not configured yet.' + suffix);
+    error.code = 'STORAGE_NOT_CONFIGURED';
+    throw error;
+  }
+
+  const designId = 'mc_' + crypto.randomUUID().replace(/-/g, '');
+  await put('orders/designs/' + designId + '.json', JSON.stringify(design), {
+    access: 'private',
+    addRandomSuffix: false,
+    contentType: 'application/json',
+    ...auth
+  });
+  return designId;
+}
+
+module.exports = async function handler(req, res) {
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', 'POST');
+    return json(res, 405, { error: 'Method not allowed' });
+  }
+
+  if (!process.env.STRIPE_SECRET_KEY) {
+    return json(res, 503, { error: 'Stripe checkout is not configured yet.' });
+  }
+
+  let body = req.body;
+  if (typeof body === 'string') {
+    try { body = JSON.parse(body); } catch (_) { body = null; }
+  }
+
+  const variant = String(body && body.variant || '').toUpperCase();
+  const country = String(body && body.country || '').toUpperCase();
+
+  const currency = String(body && body.currency || 'EUR').toUpperCase();
+  if (!Object.prototype.hasOwnProperty.call(Pricing.catalogs, currency)) {
+    return json(res, 400, { error: 'Please choose EUR or USD.' });
+  }
+  const catalog = Pricing.catalogs[currency];
+  const PRICES = catalog.prices;
+  const EASEL_PRICE = catalog.easel;
+  const EXTRA_INK_PRICE = catalog.extraInk;
+  const baseVariant = variant.replace(/-EASEL$/, '');
+  if (!Object.prototype.hasOwnProperty.call(PRICES, baseVariant)) {
+    return json(res, 400, { error: 'This product combination is not available for online checkout.' });
+  }
+  if (!/^[A-Z]{2}$/.test(country)) {
+    return json(res, 400, { error: 'Please select a valid delivery country.' });
+  }
+
+  const design = cleanDesign(body && body.design, variant, country);
+  if (!design) {
+    return json(res, 400, { error: 'The canvas design could not be validated. Please review it and try again.' });
+  }
+
+  const expectedSubtotal = saleCents(PRICES[baseVariant]) +
+    (design.easel ? saleCents(EASEL_PRICE) : 0) +
+    Math.max(0, design.inks.length - 4) * saleCents(EXTRA_INK_PRICE);
+  // Legacy EUR tabs remain valid; new tabs must match the displayed catalog.
+  if ((currency === 'USD' || body.pricingVersion != null) &&
+      (body.pricingVersion !== Pricing.version || body.subtotal !== expectedSubtotal)) {
+    return json(res, 409, { error: 'Prices have changed. Refresh the page before continuing.' });
+  }
+  const shipping = catalog.shipping[Pricing.zone(country)];
+  design.currency = currency;
+  design.pricingVersion = Pricing.version;
+  const origin = (req.headers.origin && /^https?:\/\//.test(req.headers.origin))
+    ? req.headers.origin
+    : 'https://mymagiccanvas.vercel.app';
+
+  design.meta = cleanMeta(body && body.meta, req, origin);
+  design.analytics = cleanAttribution(body && body.analytics);
+
+  let designId;
+  try {
+    designId = await saveDesign(design);
+  } catch (error) {
+    console.error('Design save failed', error && error.code, error && error.message);
+    const message = process.env.VERCEL_ENV !== 'production' && error && error.message
+      ? error.message
+      : 'We could not save your design. Please try again.';
+    return json(res, 503, { error: message });
+  }
+
+  const params = new URLSearchParams();
+  params.set('mode', 'payment');
+  params.set('adaptive_pricing[enabled]', 'false');
+  params.set('metadata[pricing_version]', Pricing.version);
+  params.set('metadata[landing_version]', 'v2');
+  params.set('metadata[promotion]', 'EVERGREEN_10_PERCENT');
+  params.set('success_url', origin + '/success.html?session_id={CHECKOUT_SESSION_ID}');
+  params.set('cancel_url', origin + '/v2.html?checkout=cancelled#product-details');
+  params.set('client_reference_id', designId);
+  params.set('metadata[design_id]', designId);
+  params.set('metadata[variant]', variant);
+  const extraInkCount = Math.max(0, design.inks.length - 4);
+  params.set('metadata[extra_ink_count]', String(extraInkCount));
+  params.set('billing_address_collection', 'auto');
+  params.set('customer_creation', 'always');
+  params.set('shipping_address_collection[allowed_countries][0]', country);
+
+  let itemIndex = 0;
+
+  params.set('line_items[' + itemIndex + '][quantity]', '1');
+  params.set('line_items[' + itemIndex + '][price_data][currency]', currency.toLowerCase());
+  params.set('line_items[' + itemIndex + '][price_data][unit_amount]', String(saleCents(PRICES[baseVariant])));
+  params.set('line_items[' + itemIndex + '][price_data][product_data][name]', productName(baseVariant));
+  itemIndex++;
+
+  if (design.easel) {
+    params.set('line_items[' + itemIndex + '][quantity]', '1');
+    params.set('line_items[' + itemIndex + '][price_data][currency]', currency.toLowerCase());
+    params.set('line_items[' + itemIndex + '][price_data][unit_amount]', String(saleCents(EASEL_PRICE)));
+    params.set('line_items[' + itemIndex + '][price_data][product_data][name]', 'Display easel');
+    itemIndex++;
+  }
+
+  if (extraInkCount > 0) {
+    params.set('line_items[' + itemIndex + '][quantity]', String(extraInkCount));
+    params.set('line_items[' + itemIndex + '][price_data][currency]', currency.toLowerCase());
+    params.set('line_items[' + itemIndex + '][price_data][unit_amount]', String(saleCents(EXTRA_INK_PRICE)));
+    params.set('line_items[' + itemIndex + '][price_data][product_data][name]', 'Extra ink pad');
+  }
+
+  addShipping(params, 0, 'Standard delivery · 3–7 days', shipping.standard, 3, 7, currency.toLowerCase());
+  addShipping(params, 1, 'Express delivery · 1–3 days', shipping.express, 1, 3, currency.toLowerCase());
+
+  try {
+    const stripe = await fetch('https://api.stripe.com/v1/checkout/sessions', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + process.env.STRIPE_SECRET_KEY,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: params.toString()
+    });
+
+    const data = await stripe.json();
+    if (!stripe.ok || !data.url) {
+      const stripeError = data && data.error || {};
+      console.error('Stripe checkout session error', stripeError.type, stripeError.code, stripeError.param);
+      const safePreviewMessage = process.env.VERCEL_ENV !== 'production' && stripeError.message
+        ? 'Stripe: ' + stripeError.message
+        : 'Stripe could not start checkout. Please try again.';
+      return json(res, 502, { error: safePreviewMessage });
+    }
+
+    try {
+      await writeFunnelEvent('checkout_created', {
+        variant,
+        currency,
+        country,
+        value: expectedSubtotal / 100,
+        source: 'stripe_session'
+      }, design.analytics);
+    } catch (measurementError) {
+      console.error('Checkout funnel measurement failed', measurementError && measurementError.message);
+    }
+
+    return json(res, 200, { url: data.url, designId });
+  } catch (error) {
+    console.error('Checkout request failed', error && error.message);
+    return json(res, 500, { error: 'Checkout is temporarily unavailable.' });
+  }
+};
