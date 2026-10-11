@@ -21,7 +21,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=Allura&family=Cormorant+Garamond:wght@400;500&family=Dancing+Script:wght@500&family=Mrs+Saint+Delafield&family=Mukta+Mahee:wght@200&family=Parisienne&family=Playfair+Display:wght@400;500&family=Prata&family=Sacramento&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/styles.css?v=26">
-<link rel="stylesheet" href="assets/css/v2.css?v=4">
+<link rel="stylesheet" href="assets/css/v2.css?v=5">
 </head>
 <body class="v2-page">
 
@@ -70,25 +70,7 @@
       </p>
       <p class="lede">A fingerprint tree, printed on canvas with your names on it. Your guests press a thumb into an ink pad and leave a leaf behind. By the end of the party you have a piece of art with every person you love inside it.</p>
 
-      <div class="hero__cta">
-        <a class="btn btn--dark btn--lg" href="#product-details">Shop & personalise</a>
-        <a class="btn btn--ghost btn--lg" href="#gallery">See more photos</a>
-      </div>
-
-      <ul class="trust" id="trustRow"></ul>
-      <div class="pay" data-pay-badges data-pay-label="Secure checkout with"></div>
     </div>
-
-    <figure class="hero__art">
-      <picture>
-        <source srcset="assets/media/01-olive-tree-wedding-easel.webp" type="image/webp">
-        <img src="assets/media/01-olive-tree-wedding-easel.jpg" width="1400" height="1400"
-             alt="A couple pressing their fingerprints onto an olive-green tree canvas standing on an easel at their wedding" fetchpriority="high">
-      </picture>
-      <figcaption class="hero__tag">
-        <strong>4 ink pads</strong> in the box — water washable
-      </figcaption>
-    </figure>
   </div>
 </section>
 
@@ -96,7 +78,6 @@
 <section class="v2-listing" id="product-details" aria-label="Canvas product details">
   <div class="wrap v2-listing__grid">
     <div class="v2-listing__media">
-      <p class="v2-listing__kicker">A closer look at your canvas</p>
       <div class="gal" id="gallery">
         <div class="gal__stage" id="galStage"></div>
         <div class="gal__strip" id="galStrip" role="tablist" aria-label="Product media"></div>
@@ -196,7 +177,6 @@
         <button type="submit" id="v2CheckoutBtn" class="btn btn--dark btn--lg btn--block v2-product__cta">Continue to secure checkout</button>
         <p class="v2-product__error" id="v2Error" role="alert" hidden></p>
         <p class="v2-product__cta-note">10% off products, including frame &amp; easel · Shipping charged separately</p>
-        <div class="v2-product__pay pay pay--sm" data-pay-badges data-pay-label="Secure payment"></div>
       </form>
 
       <div class="v2-product__accordions">
@@ -226,6 +206,14 @@
         </details>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- Buyer reassurance and secure payment methods below the Shop section. -->
+<section class="v2-assurances" aria-label="Reviews, delivery and secure payment information">
+  <div class="wrap v2-assurances__in">
+    <ul class="trust v2-assurances__trust" id="trustRow"></ul>
+    <div class="pay v2-assurances__pay" data-pay-badges data-pay-label="Secure checkout with"></div>
   </div>
 </section>
 
