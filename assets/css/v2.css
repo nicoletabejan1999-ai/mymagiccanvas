@@ -409,7 +409,7 @@
 }
 .v2-page .v2-social-contact__actions{
   display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
+  grid-template-columns:repeat(2,minmax(0,1fr));
   gap:10px;
 }
 .v2-page .v2-social-contact__button{
@@ -445,6 +445,7 @@
 .v2-page .v2-social-contact__button--whatsapp svg{color:#168a51}
 .v2-page .v2-social-contact__button--messenger svg{color:#168aff}
 .v2-page .v2-social-contact__button--instagram svg{color:#b64186}
+.v2-page .v2-social-contact__button--email svg{color:#627455}
 @media(max-width:860px){
   .v2-page .v2-social-contact__inner{grid-template-columns:1fr;gap:19px}
   .v2-page .v2-social-contact__copy p:not(.eyebrow){max-width:36rem}
