@@ -577,9 +577,14 @@
     document.addEventListener('click', event => {
       const anchor = event.target.closest?.('a[href]');
       if (!anchor) return;
-      if (/^(mailto:|tel:|https:\/\/(?:wa\.me|(?:api\.)?whatsapp\.com)\/)/i
-          .test(anchor.getAttribute('href') || '')) {
-        window.MMCMeta?.track?.('Contact', { content_name:'Customer contact' });
+      const channel = anchor.dataset.contactChannel || '';
+      const isExistingContact = /^(mailto:|tel:|https:\/\/(?:wa\.me|(?:api\.)?whatsapp\.com)\/)/i
+        .test(anchor.getAttribute('href') || '');
+      if (channel || isExistingContact) {
+        window.MMCMeta?.track?.('Contact', {
+          content_name: 'Customer contact',
+          contact_channel: channel || 'other'
+        });
       }
     });
   }
@@ -730,9 +735,12 @@
     mobileDock();
     startPromoTimer();
     const whatsapp = $('#v2WhatsApp');
-    if (whatsapp && C.SHOP.whatsapp) {
-      whatsapp.href = 'https://wa.me/' + C.SHOP.whatsapp + '?text=' +
+    const shopWhatsapp = $('#v2ContactWhatsApp');
+    if (C.SHOP.whatsapp) {
+      const link = 'https://wa.me/' + C.SHOP.whatsapp + '?text=' +
         encodeURIComponent('Hello MyMagiCanvas, I have a question about a personalised fingerprint tree canvas.');
+      if (whatsapp) whatsapp.href = link;
+      if (shopWhatsapp) shopWhatsapp.href = link;
     }
     const hash = new URLSearchParams(location.search);
     if (hash.get('checkout') === 'cancelled') {
