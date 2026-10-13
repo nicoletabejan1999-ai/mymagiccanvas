@@ -179,7 +179,7 @@
             content_ids: [purchaseItem.item_id],
             content_name: purchaseItem.item_name,
             content_type: 'product',
-            value: Number(p.value),
+            value: Number(p.amountTotal || p.value),
             currency: p.currency,
             num_items: 1
           }, { eventID: p.sessionId });
