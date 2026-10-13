@@ -1,56 +1,49 @@
-/* GTM container GTM-TF75WXX8 for V2 only.
- * Load only after optional analytics/advertising consent.
- * Non-JavaScript iframe deliberately omitted: it cannot read consent state.
- * Custom event names avoid accidentally duplicating V1 and Google Ads tags.
+/* V2 GTM event bridge. GTM-TF75WXX8 loads immediately from the canonical
+ * <head> snippet, so Tag Assistant can identify it before cookie consent.
+ * Events are only sent after optional analytics/advertising consent.
+ * Configure consent checks for each tag within the GTM container as well.
  */
 (function () {
   'use strict';
 
-  const CONTAINER_ID = 'GTM-TF75WXX8';
   const CONSENT_KEY = 'mmc-ads-consent-v2';
-  let started = false;
 
   function hasConsent() {
     try { return localStorage.getItem(CONSENT_KEY) === 'accepted'; }
     catch (_) { return false; }
   }
 
-  function start() {
-    if (started || !hasConsent()) return false;
-    started = true;
-    const w = window;
-    const d = document;
-    const l = 'dataLayer';
-    w[l] = w[l] || [];
-    w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
-    const script = d.createElement('script');
-    const first = d.getElementsByTagName('script')[0];
-    script.async = true;
-    script.src = 'https://www.googletagmanager.com/gtm.js?id=' + CONTAINER_ID;
-    if (first && first.parentNode) first.parentNode.insertBefore(script, first);
-    else d.head.appendChild(script);
-    return true;
+  function applyAnalyticsConsent(granted) {
+    if (typeof window.gtag === 'function') {
+      window.gtag('consent', 'update', {
+        analytics_storage: granted ? 'granted' : 'denied'
+      });
+    }
   }
 
-  function track(ga4Event, values) {
-    if (!hasConsent() || !/^[a-z][a-z0-9_]{0,50}$/.test(String(ga4Event))) return false;
-    if (!start() && !started) return false;
+  // Google Ads' existing shared tag has already set default consent in <head>.
+  // Update V2 analytics permission before the container handles page events.
+  applyAnalyticsConsent(hasConsent());
+
+  function track(eventName, values) {
+    if (!hasConsent() || !/^[a-z][a-z0-9_]{0,50}$/.test(String(eventName))) return false;
+    window.dataLayer = window.dataLayer || [];
     window.dataLayer.push({ ecommerce: null });
-    const payload = Object.assign({}, values || {});
     window.dataLayer.push({
-      event: 'mmc_v2_' + ga4Event,
+      event: 'mmc_v2_' + eventName,
       landing_version: 'v2',
-      ecommerce: payload
+      ecommerce: Object.assign({}, values || {})
     });
     return true;
   }
 
-  window.MMCV2GTM = Object.freeze({ track, start, hasConsent });
-  window.addEventListener('mmc:ads-consent', function (e) {
-    if (e && e.detail === 'accepted') start();
+  window.MMCV2GTM = Object.freeze({
+    track,
+    start: () => { applyAnalyticsConsent(hasConsent()); return true; },
+    hasConsent
   });
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', start);
-  } else start();
+  window.addEventListener('mmc:ads-consent', function (event) {
+    applyAnalyticsConsent(Boolean(event && event.detail === 'accepted'));
+  });
 })();
