@@ -231,7 +231,7 @@ module.exports = async function handler(req, res) {
   params.set('metadata[pricing_version]', Pricing.version);
   params.set('metadata[landing_version]', 'v2');
   params.set('metadata[promotion]', 'EVERGREEN_10_PERCENT');
-  params.set('success_url', origin + '/success.html?session_id={CHECKOUT_SESSION_ID}');
+  params.set('success_url', origin + '/v2-success.html?session_id={CHECKOUT_SESSION_ID}');
   params.set('cancel_url', origin + '/v2.html?checkout=cancelled#product-details');
   params.set('client_reference_id', designId);
   params.set('metadata[design_id]', designId);
