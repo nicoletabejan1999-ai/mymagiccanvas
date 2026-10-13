@@ -106,7 +106,7 @@ function cleanMeta(raw, req, origin) {
     pinterestClickId: cleanText(raw.pinterestClickId, 512),
     clientIp: cleanText(forwarded, 64),
     userAgent: cleanText(req.headers['user-agent'], 512),
-    eventSourceUrl: origin + '/'
+    eventSourceUrl: origin + '/v2.html'
   };
 }
 
@@ -178,8 +178,8 @@ module.exports = async function handler(req, res) {
   }
 
   const design = cleanDesign(body && body.design, variant, country);
-  if (!design) {
-    return json(res, 400, { error: 'The canvas design could not be validated. Please review it and try again.' });
+  if (!design || !design.names || !design.inks.length) {
+    return json(res, 400, { error: 'Please provide the canvas names and at least one ink colour.' });
   }
 
   const expectedSubtotal = saleCents(PRICES[baseVariant]) +
@@ -193,9 +193,23 @@ module.exports = async function handler(req, res) {
   const shipping = catalog.shipping[Pricing.zone(country)];
   design.currency = currency;
   design.pricingVersion = Pricing.version;
-  const origin = (req.headers.origin && /^https?:\/\//.test(req.headers.origin))
-    ? req.headers.origin
-    : 'https://mymagiccanvas.vercel.app';
+  // Redirect only to the hostname serving this checkout, never an arbitrary
+  // caller-provided Origin. The Vercel host is authoritative for this request.
+  const requestHost = String(req.headers.host || '').trim().toLowerCase();
+  let origin = 'https://mymagiccanvas.vercel.app';
+  if (requestHost && /^[a-z0-9.-]+(?::[0-9]{1,5})?$/.test(requestHost)) {
+    const protocol = requestHost.startsWith('localhost') || requestHost.startsWith('127.0.0.1')
+      ? 'http://' : 'https://';
+    origin = protocol + requestHost;
+  }
+  if (req.headers.origin) {
+    let suppliedOrigin;
+    try { suppliedOrigin = new URL(String(req.headers.origin)).origin; }
+    catch (_) { return json(res, 403, { error: 'Invalid checkout origin.' }); }
+    if (suppliedOrigin !== origin) {
+      return json(res, 403, { error: 'Checkout must be started from this website.' });
+    }
+  }
 
   design.meta = cleanMeta(body && body.meta, req, origin);
   design.analytics = cleanAttribution(body && body.analytics);
