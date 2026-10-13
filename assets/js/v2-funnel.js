@@ -1,12 +1,13 @@
-/* V2-only, consent-gated GA4 ecommerce events and Meta product/purchase events.
-   No personal information is sent in these events. V1 tracking is unchanged. */
+/* V2-only GA4 ecommerce funnel. Public Measurement ID is configured locally
+   so analytics does not depend on a serverless config fetch.
+   Meta and Pinterest remain separately consent-gated. V1 is unchanged. */
 (function () {
   'use strict';
 
   const CONSENT_KEY = 'mmc-ads-consent-v2';
+  const GA4_ID = 'G-XZ1QWMF1DJ'; // Public measurement ID, not a secret.
   let measurementId = '';
   let configured = false;
-  let setupPromise = null;
   let pageSent = false;
   let viewSent = false;
   let metaViewSent = false;
@@ -59,7 +60,8 @@
     if (!allowed()) return false;
     const event = { name, params: Object.assign({
       landing_version: 'v2',
-      analytics_test_mode: Boolean(window.MMCV2GTM?.isTemporaryBypassActive?.())
+      analytics_test_mode: Boolean(window.MMCV2GTM?.isTemporaryBypassActive?.()),
+      debug_mode: Boolean(window.MMCV2GTM?.isTemporaryBypassActive?.())
     }, params || {}) };
     // One GTM dataLayer event per action. Do not re-push on async GA4 flush.
     window.MMCV2GTM?.track?.(name, event.params);
@@ -75,26 +77,24 @@
     queue.splice(0).forEach(emitGA4);
   }
 
-  async function setup() {
-    if (!allowed() || configured || setupPromise) return setupPromise;
-    setupPromise = (async () => {
-      try {
-        const response = await fetch('/api/v2-analytics-config', {
-          credentials: 'same-origin', cache: 'no-store'
-        });
-        if (!response.ok) return;
-        const config = await response.json();
-        const id = String(config.measurementId || '');
-        if (!/^G-[A-Z0-9]{6,16}$/.test(id) || !allowed() ||
-            typeof window.gtag !== 'function') return;
-        measurementId = id;
-        window.gtag('consent', 'update', { analytics_storage: 'granted' });
-        window.gtag('config', id, { send_page_view: false });
-        configured = true;
-        flush();
-      } catch (_) { /* Failure must never block checkout. */ }
-    })().finally(() => { setupPromise = null; });
-    return setupPromise;
+  function setup() {
+    if (!allowed() || configured || typeof window.gtag !== 'function') return false;
+    try {
+      // The site already loads the Google tag in <head>, so configure this
+      // GA4 property locally before draining funnel events.
+      measurementId = GA4_ID;
+      window.gtag('consent', 'update', { analytics_storage: 'granted' });
+      window.gtag('config', GA4_ID, {
+        send_page_view: false,
+        debug_mode: Boolean(window.MMCV2GTM?.isTemporaryBypassActive?.())
+      });
+      configured = true;
+      flush();
+      return true;
+    } catch (_) {
+      measurementId = '';
+      return false;
+    }
   }
 
   // Preserve marketing attribution without forwarding arbitrary URL values
