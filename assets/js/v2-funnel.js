@@ -1,0 +1,212 @@
+/* V2-only, consent-gated GA4 ecommerce events and Meta product/purchase events.
+   No personal information is sent in these events. V1 tracking is unchanged. */
+(function () {
+  'use strict';
+
+  const CONSENT_KEY = 'mmc-ads-consent-v2';
+  let measurementId = '';
+  let configured = false;
+  let setupPromise = null;
+  let pageSent = false;
+  let viewSent = false;
+  let metaViewSent = false;
+  let product = null;
+  let purchase = null;
+  const queue = [];
+
+  function allowed() {
+    try { return localStorage.getItem(CONSENT_KEY) === 'accepted'; }
+    catch (_) { return false; }
+  }
+  const item = p => ({
+    item_id: String(p.sku),
+    item_name: 'Fingerprint Tree Guest Book Canvas',
+    item_brand: 'MyMagiCanvas',
+    item_category: 'Wedding guest book',
+    price: Number(p.price),
+    quantity: 1
+  });
+  const commerce = p => ({
+    currency: p.currency,
+    value: Number(p.price),
+    items: [item(p)]
+  });
+  const sentKey = id => 'mmc-v2-ga4-purchase:' + id;
+
+  function ga4(name, params) {
+    if (!allowed()) return;
+    const event = { name, params: Object.assign({ landing_version: 'v2' }, params || {}) };
+    if (!configured) {
+      if (queue.length < 35) queue.push(event);
+      setup();
+      return;
+    }
+    try {
+      window.gtag('event', name, Object.assign({ send_to: measurementId }, event.params));
+      if (name === 'purchase' && event.params.transaction_id) {
+        try { sessionStorage.setItem(sentKey(event.params.transaction_id), 'sent'); }
+        catch (_) {}
+      }
+    } catch (_) {}
+  }
+
+  function flush() {
+    const events = queue.splice(0);
+    events.forEach(e => ga4(e.name, e.params));
+  }
+
+  async function setup() {
+    if (!allowed() || configured || setupPromise) return setupPromise;
+    setupPromise = (async () => {
+      try {
+        const response = await fetch('/api/v2-analytics-config', {
+          credentials: 'same-origin', cache: 'no-store'
+        });
+        if (!response.ok) return;
+        const config = await response.json();
+        const id = String(config.measurementId || '');
+        if (!/^G-[A-Z0-9]{6,16}$/.test(id) || !allowed() ||
+            typeof window.gtag !== 'function') return;
+        measurementId = id;
+        window.gtag('consent', 'update', { analytics_storage: 'granted' });
+        window.gtag('config', id, { send_page_view: false });
+        configured = true;
+        flush();
+      } catch (_) { /* Failure must never block checkout. */ }
+    })().finally(() => { setupPromise = null; });
+    return setupPromise;
+  }
+
+  function pageViewAndProduct() {
+    if (!allowed()) return;
+    if (!pageSent) {
+      pageSent = true;
+      ga4('page_view', {
+        page_title: document.title,
+        page_location: location.origin + location.pathname,
+        page_path: location.pathname
+      });
+    }
+    if (product && !viewSent) {
+      viewSent = true;
+      ga4('view_item', commerce(product));
+    }
+    if (product && !metaViewSent) {
+      metaViewSent = Boolean(window.MMCMeta?.track?.('ViewContent', {
+        content_name: 'Fingerprint Tree Guest Book Canvas',
+        content_ids: [product.sku],
+        content_type: 'product',
+        currency: product.currency,
+        value: product.price
+      }));
+    }
+    sendPurchase();
+  }
+
+  function setProduct(sku, currency, price) {
+    if (!sku || !/^(EUR|USD)$/.test(currency) ||
+        !Number.isFinite(Number(price)) || Number(price) <= 0) return;
+    product = { sku: String(sku), currency, price: Number(price) };
+    pageViewAndProduct();
+  }
+
+  function selectItem() {
+    if (!product) return;
+    ga4('select_item', {
+      item_list_name: 'Canvas variants',
+      item_list_id: 'v2-canvas-variants',
+      ...commerce(product)
+    });
+  }
+
+  function customise() {
+    if (!product) return;
+    ga4('customize_product', commerce(product));
+  }
+
+  function beginCheckout() {
+    if (!product) return;
+    ga4('begin_checkout', commerce(product));
+  }
+
+  function recordPurchase(order) {
+    if (!order || !order.live || !/^cs_live_[A-Za-z0-9]+$/.test(order.sessionId) ||
+        !/^(EUR|USD)$/.test(order.currency) || !(Number(order.value) > 0)) return;
+    purchase = order;
+    sendPurchase();
+  }
+
+  function sendPurchase() {
+    if (!purchase || !allowed()) return;
+    const p = purchase;
+    const purchaseItem = {
+      item_id: String(p.itemId || ''),
+      item_name: String(p.itemName || 'Fingerprint Tree Guest Book Canvas'),
+      item_brand: 'MyMagiCanvas',
+      price: Number(p.value),
+      quantity: 1
+    };
+    try {
+      if (sessionStorage.getItem(sentKey(p.sessionId)) !== 'sent') {
+        ga4('purchase', {
+          transaction_id: p.sessionId,
+          currency: p.currency,
+          value: Number(p.value),
+          shipping: Number(p.shipping || 0),
+          coupon: p.coupon || undefined,
+          items: [purchaseItem]
+        });
+      }
+    } catch (_) {
+      ga4('purchase', {
+        transaction_id: p.sessionId,
+        currency: p.currency,
+        value: Number(p.value),
+        shipping: Number(p.shipping || 0),
+        items: [purchaseItem]
+      });
+    }
+
+    const pixelKey = 'mmc-v2-meta-purchase:' + p.sessionId;
+    let alreadySent = false;
+    try { alreadySent = sessionStorage.getItem(pixelKey) === 'sent'; } catch (_) {}
+    if (!alreadySent && window.MMCMeta?.hasConsent?.()) {
+      // loadPixel is also called by the cookie consent module when consent is
+      // granted on the success page. Use a matching eventID for CAPI dedup.
+      if (typeof window.fbq === 'function') {
+        try {
+          window.fbq('track', 'Purchase', {
+            content_ids: [purchaseItem.item_id],
+            content_name: purchaseItem.item_name,
+            content_type: 'product',
+            value: Number(p.value),
+            currency: p.currency,
+            num_items: 1
+          }, { eventID: p.sessionId });
+          try { sessionStorage.setItem(pixelKey, 'sent'); } catch (_) {}
+        } catch (_) {}
+      }
+    }
+  }
+
+  function applyConsent(event) {
+    if (event.detail === 'accepted') {
+      setup();
+      pageViewAndProduct();
+    } else {
+      queue.length = 0;
+      if (typeof window.gtag === 'function') {
+        window.gtag('consent', 'update', { analytics_storage: 'denied' });
+      }
+    }
+  }
+  window.addEventListener('mmc:ads-consent', applyConsent);
+
+  function init() { pageViewAndProduct(); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+
+  window.MMCV2Funnel = Object.freeze({
+    setProduct, selectItem, customise, beginCheckout, recordPurchase
+  });
+})();
