@@ -545,7 +545,7 @@
     $('#v2Country').addEventListener('change', () => {
       setPhonePrefix();
       applyCurrency();
-      window.MMCV2GTM?.track?.('select_delivery_country', {
+      window.MMCV2Funnel?.signal?.('select_delivery_country', {
         country_code: $('#v2Country').value || '',
         currency
       });
@@ -603,10 +603,7 @@
       if (!['whatsapp','messenger','instagram','email'].includes(channel) ||
           !['contact_grid','contact_section','footer','floating'].includes(placement)) return;
       trackFirstParty('contact_click', { source: channel, section: placement });
-      window.MMCV2GTM?.track?.('contact_click', {
-        contact_channel: channel,
-        contact_placement: placement
-      });
+      window.MMCV2Funnel?.contactClick?.(channel, placement);
       window.MMCMeta?.track?.('Contact', {
         content_name: 'Customer contact',
         contact_channel: channel,
@@ -624,7 +621,7 @@
       field.focus({ preventScroll:false });
     }
     trackFirstParty('checkout_validation_error', { reason:message.slice(0,60) });
-    window.MMCV2GTM?.track?.('checkout_validation_error', {
+    window.MMCV2Funnel?.signal?.('checkout_validation_error', {
       error_category: 'form_validation'
     });
   }
@@ -702,7 +699,7 @@
       $('#v2Error').hidden = false;
       $('#v2Error').textContent = error.message || 'Checkout is temporarily unavailable.';
       trackFirstParty('checkout_failed', {reason:'create_checkout'});
-      window.MMCV2GTM?.track?.('checkout_failed', {
+      window.MMCV2Funnel?.signal?.('checkout_failed', {
         failure_stage: 'create_checkout'
       });
     }
@@ -782,7 +779,7 @@
     const hash = new URLSearchParams(location.search);
     if (hash.get('checkout') === 'cancelled') {
       trackFirstParty('checkout_cancelled', { reason: 'stripe_cancel' });
-      window.MMCV2GTM?.track?.('checkout_cancelled', {
+      window.MMCV2Funnel?.signal?.('checkout_cancelled', {
         cancellation_stage: 'stripe_hosted_checkout'
       });
       $('#v2Error').hidden = false;
