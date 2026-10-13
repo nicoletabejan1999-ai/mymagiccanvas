@@ -61,6 +61,7 @@
     wasCustomised = true;
     trackFirstParty('customize_start');
     window.MMCMeta?.track?.('CustomizeProduct', commerceParams());
+    window.MMCV2Funnel?.customise?.();
   }
 
   const saleCents = cents => Math.round(cents * 0.90);
@@ -130,6 +131,8 @@
     $('#v2GalleryCaption').textContent = flags.caption;
     updatePrices();
     if (fromCustomer) {
+      trackFirstParty('variant_select', { selectedVariant: sku });
+      window.MMCV2Funnel?.selectItem?.();
       trackCustomise();
       // The native iOS picker needs to finish closing before we move the
       // viewport. Scroll only for a deliberate selection, never on load.
@@ -152,6 +155,9 @@
     const regularTotal = Pricing.total(currency, X.baseVariantKey(s), s.easel, X.extraInkCount(s));
     $('#v2RegularPrice').textContent = regularTotal == null ? '' : money(regularTotal);
     $('#v2Price').textContent = total == null ? 'Price on request' : money(total);
+    if (total != null) {
+      window.MMCV2Funnel?.setProduct?.(X.variantKey(s), currency, total / 100);
+    }
     refreshVariantOptions();
     // Maximum real saving across the 12 purchasable format/size combinations.
     // Uses the same per-item cent rounding as our V2 Stripe checkout.
@@ -581,6 +587,7 @@
       const isExistingContact = /^(mailto:|tel:|https:\/\/(?:wa\.me|(?:api\.)?whatsapp\.com)\/)/i
         .test(anchor.getAttribute('href') || '');
       if (channel || isExistingContact) {
+        trackFirstParty('contact_click', { channel: channel || 'other' });
         window.MMCMeta?.track?.('Contact', {
           content_name: 'Customer contact',
           contact_channel: channel || 'other'
@@ -664,6 +671,7 @@
         }]
       })?.catch?.(() => {});
       window.MMCMeta?.track?.('InitiateCheckout', commerceParams());
+      window.MMCV2Funnel?.beginCheckout?.();
       window.location.assign(data.url);
     } catch (error) {
       checkoutBusy = false;
@@ -748,6 +756,7 @@
     }
     const hash = new URLSearchParams(location.search);
     if (hash.get('checkout') === 'cancelled') {
+      trackFirstParty('checkout_cancelled', { reason: 'stripe_cancel' });
       $('#v2Error').hidden = false;
       $('#v2Error').textContent = 'Checkout was cancelled. Your choices can be entered again below.';
     }
