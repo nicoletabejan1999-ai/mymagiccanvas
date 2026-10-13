@@ -42,7 +42,7 @@
       value: Number((priceCents() / 100).toFixed(2))
     }, extra || {});
     try {
-      fetch('/api/v2-funnel-event', {
+      fetch('/api/v2-analytics-config', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin',
