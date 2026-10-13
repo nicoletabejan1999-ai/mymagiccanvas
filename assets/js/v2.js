@@ -35,14 +35,23 @@
   };
 
   function trackFirstParty(event, extra) {
-    const analytics = window.MMCAnalytics;
-    if (!analytics || typeof analytics.track !== 'function') return;
-    analytics.track(event, Object.assign({
+    const context = window.MMCAnalytics?.context?.() || { path: '/v2.html' };
+    const details = Object.assign({
       variant: X.variantKey(X.state),
-      currency: C.CHECKOUT.currency,
-      value: Number((priceCents() / 100).toFixed(2)),
-      pageVersion: 'v2'
-    }, extra || {}));
+      currency,
+      value: Number((priceCents() / 100).toFixed(2))
+    }, extra || {});
+    try {
+      fetch('/api/v2-funnel-event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        keepalive: true,
+        body: JSON.stringify({ event, context, details })
+      }).catch(() => {});
+    } catch (_) {
+      // Anonymous measurement must never block contact links or checkout.
+    }
   }
 
   function commerceParams() {
@@ -587,17 +596,22 @@
     document.addEventListener('click', event => {
       const anchor = event.target.closest?.('a[href]');
       if (!anchor) return;
+      // Explicit per-link metadata ensures each channel and placement is
+      // counted once. Never send the target URL, email or phone number.
       const channel = anchor.dataset.contactChannel || '';
-      const isExistingContact = /^(mailto:|tel:|https:\/\/(?:wa\.me|(?:api\.)?whatsapp\.com)\/)/i
-        .test(anchor.getAttribute('href') || '');
-      if (channel || isExistingContact) {
-        trackFirstParty('contact_click', { channel: channel || 'other' });
-        window.MMCV2GTM?.track?.('contact_click', { contact_channel: channel || 'other' });
-        window.MMCMeta?.track?.('Contact', {
-          content_name: 'Customer contact',
-          contact_channel: channel || 'other'
-        });
-      }
+      const placement = anchor.dataset.contactPlacement || '';
+      if (!['whatsapp','messenger','instagram','email'].includes(channel) ||
+          !['contact_grid','contact_section','footer','floating'].includes(placement)) return;
+      trackFirstParty('contact_click', { source: channel, section: placement });
+      window.MMCV2GTM?.track?.('contact_click', {
+        contact_channel: channel,
+        contact_placement: placement
+      });
+      window.MMCMeta?.track?.('Contact', {
+        content_name: 'Customer contact',
+        contact_channel: channel,
+        contact_placement: placement
+      });
     });
   }
 
