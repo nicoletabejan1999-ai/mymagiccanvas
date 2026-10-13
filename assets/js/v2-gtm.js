@@ -1,36 +1,27 @@
-/* GTM-TF75WXX8 is present in V2 <head> for Tag Assistant discovery.
- * Normal visitors: GA4 ecommerce events require optional analytics consent.
- * Temporary QA sessions opened with ?analytics_test=1:
- *   GA4 and the V2 GTM event bridge work without accepting the consent banner.
- *   This diagnostic exception expires on 20 October 2026 at 23:59 Paris time.
- * Meta Pixel, Pinterest and ad_user_data remain consent-dependent.
+/* GTM-TF75WXX8 for MyMagiCanvas V2.
+ * TEMPORARY PRODUCTION QA MODE until 20 October 2026, 23:59 Paris:
+ * GA4 analytics_storage and V2 funnel events are available without optional
+ * advertising opt-in. Meta/Pinterest and ads consent remain independent.
+ * After expiry, analytics once again requires visitor opt-in automatically.
+ * Only this V2 script is changed; V1 is unaffected.
  */
 (function () {
   'use strict';
 
   const CONSENT_KEY = 'mmc-ads-consent-v2';
-  const TEST_KEY = 'mmc-v2-analytics-test-until';
   const TEST_UNTIL = Date.parse('2026-10-20T21:59:00Z');
-
-  function isTestSession() {
-    if (Date.now() >= TEST_UNTIL) return false;
-    try {
-      const query = new URLSearchParams(location.search);
-      if (query.get('analytics_test') === '1') {
-        sessionStorage.setItem(TEST_KEY, String(TEST_UNTIL));
-        return true;
-      }
-      return sessionStorage.getItem(TEST_KEY) === String(TEST_UNTIL);
-    } catch (_) { return false; }
-  }
 
   function hasAdsConsent() {
     try { return localStorage.getItem(CONSENT_KEY) === 'accepted'; }
     catch (_) { return false; }
   }
 
+  function isTemporaryBypassActive() {
+    return Date.now() < TEST_UNTIL;
+  }
+
   function analyticsAllowed() {
-    return hasAdsConsent() || isTestSession();
+    return isTemporaryBypassActive() || hasAdsConsent();
   }
 
   function applyAnalyticsConsent() {
@@ -41,8 +32,8 @@
     }
   }
 
-  // This script follows the existing default-denied Google Consent Mode
-  // initializer, and runs BEFORE the GTM container snippet.
+  // Google Ads' shared tag has already established denied defaults.
+  // GTM remains immediately discoverable, with Analytics enabled for QA only.
   applyAnalyticsConsent();
 
   function track(eventName, values) {
@@ -54,19 +45,10 @@
     window.dataLayer.push({
       event: 'mmc_v2_' + eventName,
       landing_version: 'v2',
-      analytics_test_mode: isTestSession(),
+      analytics_test_mode: isTemporaryBypassActive(),
       ecommerce: Object.assign({}, values || {})
     });
     return true;
-  }
-
-  function labelTestSession() {
-    if (!isTestSession()) return;
-    const copy = document.querySelector('.cookiebar__copy');
-    if (!copy) return;
-    const note = document.createElement('span');
-    note.textContent = ' Diagnostic session: GA4 analytics is active for testing without optional advertising consent. Meta and Pinterest still require your choice.';
-    copy.appendChild(note);
   }
 
   window.MMCV2GTM = Object.freeze({
@@ -74,11 +56,8 @@
     start: () => { applyAnalyticsConsent(); return true; },
     hasConsent: hasAdsConsent,
     analyticsAllowed,
-    isTestSession
+    isTemporaryBypassActive
   });
-  window.addEventListener('mmc:ads-consent', applyAnalyticsConsent);
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', labelTestSession);
-  } else labelTestSession();
+  window.addEventListener('mmc:ads-consent', applyAnalyticsConsent);
 })();
