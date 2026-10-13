@@ -37,6 +37,16 @@
   function ga4(name, params) {
     if (!allowed()) return;
     const event = { name, params: Object.assign({ landing_version: 'v2' }, params || {}) };
+    // With GTM installed, it is the only GA4 event transport. Do not also
+    // dispatch directly via gtag, which would duplicate Purchase and revenue.
+    if (window.MMCV2GTM && typeof window.MMCV2GTM.track === 'function') {
+      const accepted = window.MMCV2GTM.track(name, event.params);
+      if (accepted && name === 'purchase' && event.params.transaction_id) {
+        try { sessionStorage.setItem(sentKey(event.params.transaction_id), 'sent'); }
+        catch (_) {}
+      }
+      return;
+    }
     if (!configured) {
       if (queue.length < 35) queue.push(event);
       setup();
@@ -186,7 +196,7 @@
 
   function applyConsent(event) {
     if (event.detail === 'accepted') {
-      setup();
+      if (!window.MMCV2GTM) setup();
       pageViewAndProduct();
     } else {
       queue.length = 0;
