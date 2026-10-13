@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Order confirmation | MyMagiCanvas V2</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<script src="assets/js/google-ads-tag.js?v=2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/styles.css?v=26">
+</head>
+<body class="success-page">
+<header class="hdr success-hdr">
+  <div class="wrap hdr__in">
+    <a class="brand" href="/v2.html">
+      <svg class="brand__mark" viewBox="0 0 32 32" aria-hidden="true">
+        <path d="M16 29V15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        <path d="M16 18c-3.2-1.2-5.4-3-6.2-5.6M16 16.5c3-1.1 5.1-2.8 6-5.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+        <circle cx="10" cy="9" r="3.4" fill="#B3C99C"/>
+        <circle cx="21.6" cy="8" r="4.2" fill="#EDE8D0"/>
+        <circle cx="16" cy="5.6" r="3" fill="#B3C99C" opacity=".75"/>
+      </svg>
+      <span>MyMagi<em>Canvas</em></span>
+    </a>
+  </div>
+</header>
+<main class="success-main">
+  <section class="success-card" aria-labelledby="v2SuccessTitle" aria-live="polite">
+    <div class="success-check" id="v2SuccessCheck" aria-hidden="true" hidden>
+      <svg viewBox="0 0 48 48">
+        <circle cx="24" cy="24" r="22"></circle>
+        <path d="M14 24.5l6.3 6.2L34.5 17"></path>
+      </svg>
+    </div>
+    <p class="eyebrow success-eyebrow" id="v2SuccessEyebrow">Secure checkout</p>
+    <h1 id="v2SuccessTitle">Verifying your payment…</h1>
+    <p class="success-lede" id="v2SuccessText">
+      Please wait while we confirm your order with Stripe.
+    </p>
+    <div id="v2SuccessDetails" hidden>
+      <div class="success-email">
+        <strong>Check your inbox</strong>
+        <p>We will send your order confirmation to the email used at checkout.</p>
+      </div>
+      <div class="success-steps">
+        <div><span>1</span><p><strong>Order confirmed</strong><br>Your payment has been verified.</p></div>
+        <div><span>2</span><p><strong>We prepare your canvas</strong><br>Your personalised order enters production.</p></div>
+        <div><span>3</span><p><strong>We keep you updated</strong><br>Check your email for order details.</p></div>
+      </div>
+      <p class="success-note">If you do not receive an email, please check your spam folder or contact us.</p>
+    </div>
+    <a class="btn btn--dark btn--lg" href="/v2.html">Back to MyMagiCanvas</a>
+    <p class="success-note"><button type="button" class="ftr__cookie" id="cookieSettings">Cookie settings</button></p>
+  </section>
+</main>
+<div class="cookiebar" id="cookieBar" role="dialog" aria-label="Optional advertising choices" hidden>
+  <p class="cookiebar__copy"><strong>Optional advertising measurement.</strong>
+    Google Ads uses limited cookieless measurement before you choose.
+    Meta, Pinterest and GA4 analytics only activate after consent.
+    The order confirmation works without accepting.
+    <a href="legal/privacy.html">Privacy details</a>.
+  </p>
+  <div class="cookiebar__actions">
+    <button type="button" class="btn btn--ghost btn--sm" id="metaReject">Only necessary</button>
+    <button type="button" class="btn btn--dark btn--sm" id="metaAccept">Allow advertising &amp; analytics</button>
+  </div>
+</div>
+<script src="assets/js/config.js?v=27"></script>
+<script src="assets/js/meta-consent.js?v=30"></script>
+<script src="assets/js/v2-funnel.js?v=1"></script>
+<script src="assets/js/v2-success.js?v=1"></script>
+</body>
+</html>
