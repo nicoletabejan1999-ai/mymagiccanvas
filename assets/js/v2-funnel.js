@@ -12,6 +12,7 @@
   let metaViewSent = false;
   let product = null;
   let purchase = null;
+  let pendingPurchaseId = '';
   const queue = [];
 
   function allowed() {
@@ -146,23 +147,17 @@
       price: Number(p.value),
       quantity: 1
     };
-    try {
-      if (sessionStorage.getItem(sentKey(p.sessionId)) !== 'sent') {
-        ga4('purchase', {
-          transaction_id: p.sessionId,
-          currency: p.currency,
-          value: Number(p.value),
-          shipping: Number(p.shipping || 0),
-          coupon: p.coupon || undefined,
-          items: [purchaseItem]
-        });
-      }
-    } catch (_) {
+    let recordedGa4 = false;
+    try { recordedGa4 = sessionStorage.getItem(sentKey(p.sessionId)) === 'sent'; }
+    catch (_) {}
+    if (!recordedGa4 && pendingPurchaseId !== p.sessionId) {
+      pendingPurchaseId = p.sessionId;
       ga4('purchase', {
         transaction_id: p.sessionId,
         currency: p.currency,
         value: Number(p.value),
         shipping: Number(p.shipping || 0),
+        coupon: p.coupon || undefined,
         items: [purchaseItem]
       });
     }
@@ -195,6 +190,7 @@
       pageViewAndProduct();
     } else {
       queue.length = 0;
+      pendingPurchaseId = '';
       if (typeof window.gtag === 'function') {
         window.gtag('consent', 'update', { analytics_storage: 'denied' });
       }
