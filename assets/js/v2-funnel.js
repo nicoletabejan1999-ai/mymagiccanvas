@@ -91,13 +91,27 @@
     return setupPromise;
   }
 
+  // Preserve marketing attribution without forwarding arbitrary URL values
+  // (which could contain personal information) into Analytics.
+  function safePageLocation() {
+    const cleaned = new URLSearchParams();
+    const query = new URLSearchParams(location.search || '');
+    for (const key of ['utm_source','utm_medium','utm_campaign',
+                       'utm_content','utm_term','gclid','gbraid','wbraid']) {
+      const value = query.get(key);
+      if (value && value.length <= 240) cleaned.set(key, value);
+    }
+    const qs = cleaned.toString();
+    return location.origin + location.pathname + (qs ? '?' + qs : '');
+  }
+
   function pageViewAndProduct() {
     if (!allowed()) return;
     if (!pageSent) {
       pageSent = true;
       ga4('page_view', {
         page_title: document.title,
-        page_location: location.origin + location.pathname,
+        page_location: safePageLocation(),
         page_path: location.pathname
       });
     }
