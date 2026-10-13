@@ -15,6 +15,25 @@
   let purchase = null;
   let pendingPurchaseId = '';
   const queue = [];
+  // Coalesce duplicate interaction handlers/double taps inside a short window.
+  // Different products, contact channels and placements remain separate.
+  const lastAction = new Map();
+  function duplicateTap(name, params) {
+    if (!['select_item', 'contact_click', 'begin_checkout',
+           'select_delivery_country', 'checkout_validation_error',
+           'checkout_failed'].includes(name)) return false;
+    const p = params || {};
+    const sku = Array.isArray(p.items) && p.items[0] ? p.items[0].item_id : '';
+    const key = [
+      name, sku || '', p.contact_channel || '',
+      p.contact_placement || '', p.country_code || '',
+      p.failure_stage || '', p.error_category || ''
+    ].join('|');
+    const now = Date.now();
+    const previous = lastAction.get(key);
+    lastAction.set(key, now);
+    return previous != null && now - previous < 900;
+  }
 
   function allowed() {
     // V2 production QA temporarily allows Analytics before the banner choice.
@@ -38,10 +57,10 @@
   });
   const sentKey = id => 'mmc-v2-ga4-purchase:' + id;
 
-  // V2 GA4 is emitted through the existing Google tag (AW) after the real
-  // GA4 stream is configured. GTM receives a separate namespaced dataLayer
-  // event for Tag Assistant/debugging and future consent-checked use.
-  // Do NOT configure duplicate GA4 tags for mmc_v2_* inside the GTM container.
+  // Single transport: GA4 via gtag only. The GTM container remains installed
+  // and discoverable, but we do not also dispatch mmc_v2_* events into GTM.
+  // Previously both transports could fire GA4 tags for the same interaction.
+  // Keep GTM's GA4 event tags disabled for this stream to avoid double-counting.
   function emitGA4(event) {
     if (!configured || !allowed() || !measurementId) return false;
     try {
@@ -57,14 +76,14 @@
   }
 
   function ga4(name, params) {
-    if (!allowed()) return false;
+    if (!allowed() || duplicateTap(name, params)) return false;
     const event = { name, params: Object.assign({
       landing_version: 'v2',
       analytics_test_mode: Boolean(window.MMCV2GTM?.isTemporaryBypassActive?.()),
       debug_mode: Boolean(window.MMCV2GTM?.isTemporaryBypassActive?.())
     }, params || {}) };
-    // One GTM dataLayer event per action. Do not re-push on async GA4 flush.
-    window.MMCV2GTM?.track?.(name, event.params);
+    // Do not mirror this event as mmc_v2_* into the GTM container: GTM tags
+    // configured on those triggers could otherwise send a second GA4 hit.
     if (!configured) {
       if (queue.length < 35) queue.push(event);
       setup();
