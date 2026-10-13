@@ -16,6 +16,9 @@
   const queue = [];
 
   function allowed() {
+    // V2 production QA temporarily allows Analytics before the banner choice.
+    // Meta and Pinterest use their own independent advertising-consent checks.
+    if (window.MMCV2GTM?.analyticsAllowed?.()) return true;
     try { return localStorage.getItem(CONSENT_KEY) === 'accepted'; }
     catch (_) { return false; }
   }
@@ -54,7 +57,10 @@
 
   function ga4(name, params) {
     if (!allowed()) return false;
-    const event = { name, params: Object.assign({ landing_version: 'v2' }, params || {}) };
+    const event = { name, params: Object.assign({
+      landing_version: 'v2',
+      analytics_test_mode: Boolean(window.MMCV2GTM?.isTemporaryBypassActive?.())
+    }, params || {}) };
     // One GTM dataLayer event per action. Do not re-push on async GA4 flush.
     window.MMCV2GTM?.track?.(name, event.params);
     if (!configured) {
@@ -233,7 +239,9 @@
   }
 
   function applyConsent(event) {
-    if (event.detail === 'accepted') {
+    // Rejecting optional advertising consent must not switch off GA4 during
+    // the temporary V2 QA interval. The exception automatically expires.
+    if (allowed()) {
       setup();
       pageViewAndProduct();
     } else {
