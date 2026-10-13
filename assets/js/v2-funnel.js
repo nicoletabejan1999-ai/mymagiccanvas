@@ -34,36 +34,39 @@
   });
   const sentKey = id => 'mmc-v2-ga4-purchase:' + id;
 
-  function ga4(name, params) {
-    if (!allowed()) return;
-    const event = { name, params: Object.assign({ landing_version: 'v2' }, params || {}) };
-    // With GTM installed, it is the only GA4 event transport. Do not also
-    // dispatch directly via gtag, which would duplicate Purchase and revenue.
-    if (window.MMCV2GTM && typeof window.MMCV2GTM.track === 'function') {
-      const accepted = window.MMCV2GTM.track(name, event.params);
-      if (accepted && name === 'purchase' && event.params.transaction_id) {
+  // V2 GA4 is emitted through the existing Google tag (AW) after the real
+  // GA4 stream is configured. GTM receives a separate namespaced dataLayer
+  // event for Tag Assistant/debugging and future consent-checked use.
+  // Do NOT configure duplicate GA4 tags for mmc_v2_* inside the GTM container.
+  function emitGA4(event) {
+    if (!configured || !allowed() || !measurementId) return false;
+    try {
+      window.gtag('event', event.name, Object.assign(
+        { send_to: measurementId }, event.params
+      ));
+      if (event.name === 'purchase' && event.params.transaction_id) {
         try { sessionStorage.setItem(sentKey(event.params.transaction_id), 'sent'); }
         catch (_) {}
       }
-      return;
-    }
+      return true;
+    } catch (_) { return false; }
+  }
+
+  function ga4(name, params) {
+    if (!allowed()) return false;
+    const event = { name, params: Object.assign({ landing_version: 'v2' }, params || {}) };
+    // One GTM dataLayer event per action. Do not re-push on async GA4 flush.
+    window.MMCV2GTM?.track?.(name, event.params);
     if (!configured) {
       if (queue.length < 35) queue.push(event);
       setup();
-      return;
+      return true;
     }
-    try {
-      window.gtag('event', name, Object.assign({ send_to: measurementId }, event.params));
-      if (name === 'purchase' && event.params.transaction_id) {
-        try { sessionStorage.setItem(sentKey(event.params.transaction_id), 'sent'); }
-        catch (_) {}
-      }
-    } catch (_) {}
+    return emitGA4(event);
   }
 
   function flush() {
-    const events = queue.splice(0);
-    events.forEach(e => ga4(e.name, e.params));
+    queue.splice(0).forEach(emitGA4);
   }
 
   async function setup() {
@@ -140,6 +143,27 @@
     ga4('begin_checkout', commerce(product));
   }
 
+  function contactClick(channel, placement) {
+    const channels = ['whatsapp','messenger','instagram','email'];
+    const placements = ['contact_grid','contact_section','footer','floating'];
+    if (!channels.includes(channel) || !placements.includes(placement)) return false;
+    return ga4('contact_click', {
+      contact_channel: channel,
+      contact_placement: placement
+    });
+  }
+
+  const customSignals = new Set([
+    'select_delivery_country',
+    'checkout_validation_error',
+    'checkout_failed',
+    'checkout_cancelled'
+  ]);
+  function signal(name, values) {
+    if (!customSignals.has(name)) return false;
+    return ga4(name, values || {});
+  }
+
   function recordPurchase(order) {
     if (!order || !order.live || !/^cs_live_[A-Za-z0-9]+$/.test(order.sessionId) ||
         !/^(EUR|USD)$/.test(order.currency) || !(Number(order.value) > 0)) return;
@@ -196,7 +220,7 @@
 
   function applyConsent(event) {
     if (event.detail === 'accepted') {
-      if (!window.MMCV2GTM) setup();
+      setup();
       pageViewAndProduct();
     } else {
       queue.length = 0;
@@ -213,6 +237,6 @@
   else init();
 
   window.MMCV2Funnel = Object.freeze({
-    setProduct, selectItem, customise, beginCheckout, recordPurchase
+    setProduct, selectItem, customise, beginCheckout, contactClick, signal, recordPurchase
   });
 })();
