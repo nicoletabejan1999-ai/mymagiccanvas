@@ -36,6 +36,7 @@ module.exports = async function handler(req, res) {
       live: Boolean(session.livemode),
       currency,
       value: subtotal / 100,
+      amountTotal: Number(session.amount_total || subtotal) / 100,
       shipping: Number(session.total_details && session.total_details.amount_shipping || 0) / 100,
       itemId: String(session.metadata.variant || ''),
       itemName: 'Fingerprint Tree Guest Book Canvas',
