@@ -1,5 +1,15 @@
 /* Variant B — a calm product-detail layout inspired by familiar marketplace UX.
    Scope every rule to .v2-page: existing index.html and styles.css stay untouched. */
+/* The exact numbered lettering fonts, served only when V2 loads this sheet. */
+@font-face{font-family:"MMC Hubiland";src:url("../fonts/hubiland.otf") format("opentype");font-style:normal;font-weight:400;font-display:swap}
+@font-face{font-family:"MMC Millerstone Demo";src:url("../fonts/millerstone.ttf") format("truetype");font-style:normal;font-weight:400;font-display:swap}
+@font-face{font-family:"MMC Boheme Floral";src:url("../fonts/boheme-floral.ttf") format("truetype");font-style:normal;font-weight:400;font-display:swap}
+@font-face{font-family:"MMC Francisco";src:url("../fonts/francisco.ttf") format("truetype");font-style:normal;font-weight:400;font-display:swap}
+@font-face{font-family:"MMC Belista";src:url("../fonts/belista.ttf") format("truetype");font-style:normal;font-weight:400;font-display:swap}
+@font-face{font-family:"MMC Poppy Shower";src:url("../fonts/poppy-shower.ttf") format("truetype");font-style:normal;font-weight:400;font-display:swap}
+@font-face{font-family:"MMC Dancing Script";src:url("../fonts/dancing-script.ttf") format("truetype");font-style:normal;font-weight:400;font-display:swap}
+@font-face{font-family:"MMC Savoye LET";src:url("../fonts/savoye-let.ttf") format("truetype");font-style:normal;font-weight:400;font-display:swap}
+
 .v2-page .v2-listing{
   padding:clamp(30px,5vw,70px) 0 clamp(56px,7vw,92px);
   background:#faf9f6;
@@ -201,6 +211,39 @@
 .v2-page .v2-personalise[open]{border-color:var(--line)}
 .v2-page .v2-personalise__fields{display:block;padding:1px 16px 19px}
 .v2-page .v2-personalise__fields>input{margin:0 0 15px}
+/* Lettering font picker: each card previews its actual installed print font. */
+.v2-page .v2-font-label{font-size:.89rem;font-weight:700;line-height:1.45;margin:2px 0 9px}
+.v2-page .v2-font-label small{font-weight:400;color:var(--ink-3);font-size:.76rem}
+.v2-page .v2-font-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-bottom:9px}
+.v2-page .v2-font{
+  position:relative;min-width:0;min-height:105px;padding:12px 10px 10px;
+  display:flex;flex-direction:column;align-items:stretch;justify-content:space-between;gap:9px;
+  border:1.5px solid #deded6;border-radius:11px;background:#fff;cursor:pointer;
+  color:var(--ink);text-align:center;transition:border-color .15s,box-shadow .15s,background .15s;
+}
+.v2-page .v2-font:hover{border-color:var(--sage-deep)}
+.v2-page .v2-font:focus-visible{outline:2px solid var(--sage-deep);outline-offset:2px}
+.v2-page .v2-font[aria-pressed="true"]{
+  border-color:var(--sage-deep);background:#f0f5e9;
+  box-shadow:inset 0 0 0 1px var(--sage-deep)
+}
+.v2-page .v2-font[aria-pressed="true"]::after{
+  content:"✓";position:absolute;top:6px;right:8px;color:var(--sage-ink);
+  font:700 .79rem var(--f-body)
+}
+.v2-page .v2-font__sample{
+  min-width:0;min-height:45px;display:flex;align-items:center;justify-content:center;
+  line-height:1.22;overflow-wrap:anywhere;white-space:normal;
+  font-weight:400;text-transform:none;font-style:normal;
+}
+.v2-page .v2-font__meta{display:flex;align-items:baseline;justify-content:center;gap:5px;flex-wrap:wrap;line-height:1.3}
+.v2-page .v2-font__number{color:var(--sage-ink);font-size:.7rem;font-weight:800}
+.v2-page .v2-font__name{color:var(--ink-2);font-size:.7rem;font-weight:600;overflow-wrap:anywhere}
+.v2-page .v2-font-selected{font-size:.77rem;color:var(--sage-ink);font-weight:600;margin:0 0 17px}
+@media(max-width:360px){
+  .v2-page .v2-font-grid{gap:7px}
+  .v2-page .v2-font{padding:11px 7px 9px}
+}
 .v2-page .v2-palette-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0 0 12px}
 .v2-page .v2-palette{
  min-width:0;display:flex;align-items:center;gap:9px;padding:10px 9px;background:#fff;
