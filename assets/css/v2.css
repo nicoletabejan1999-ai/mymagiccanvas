@@ -232,7 +232,7 @@
   font:700 .79rem var(--f-body)
 }
 .v2-page .v2-font__sample{
-  min-width:0;min-height:45px;display:flex;align-items:center;justify-content:center;
+  min-width:0;min-height:45px;display:block;align-content:center;text-align:center;
   line-height:1.22;overflow-wrap:anywhere;white-space:normal;
   font-weight:400;text-transform:none;font-style:normal;
 }
