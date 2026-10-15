@@ -332,6 +332,73 @@
     return button;
   }
 
+  // The eight exact numbered print fonts in MMC.FONTS are selectable cards.
+  // The selected number is kept in X.state.font, which checkout already sends.
+  function renderFontSample(sample, font, value) {
+    sample.replaceChildren();
+    if (!font.ampStand || !value.includes('&')) {
+      sample.textContent = value;
+      return;
+    }
+    // Francisco uses the configured alternate face for the ampersand.
+    value.split(/(&)/).forEach(part => {
+      if (!part) return;
+      if (part !== '&') {
+        sample.appendChild(document.createTextNode(part));
+      } else {
+        const amp = element('span', 'v2-font__amp');
+        amp.style.fontFamily = font.ampStand;
+        amp.textContent = '&';
+        sample.appendChild(amp);
+      }
+    });
+  }
+
+  function refreshFontSamples() {
+    const text = $('#v2Names').value.trim() || 'Emma & Leo';
+    $('#v2Fonts .v2-font').forEach(button => {
+      const font = C.FONTS.find(f => f.n === Number(button.dataset.font));
+      if (font) renderFontSample(button.querySelector('.v2-font__sample'), font, text);
+    });
+  }
+
+  function refreshFontSelection() {
+    $('#v2Fonts .v2-font').forEach(button => {
+      button.setAttribute('aria-pressed', String(Number(button.dataset.font) === X.state.font));
+    });
+    const selected = C.FONTS.find(f => f.n === X.state.font);
+    const status = $('#v2FontSelected');
+    if (selected && status) status.textContent = 'Selected: ' + selected.n + ' · ' + selected.name;
+  }
+
+  function buildFonts() {
+    const grid = $('#v2Fonts');
+    if (!grid) return;
+    C.FONTS.forEach(font => {
+      const button = element('button', 'v2-font');
+      button.type = 'button';
+      button.dataset.font = String(font.n);
+      button.setAttribute('aria-label', 'Choose font ' + font.n + ': ' + font.name);
+      const sample = element('span', 'v2-font__sample');
+      sample.style.fontFamily = font.css;
+      sample.style.fontSize = (1.42 * font.scale).toFixed(2) + 'rem';
+      button.appendChild(sample);
+      const meta = element('span', 'v2-font__meta');
+      meta.appendChild(element('span', 'v2-font__number', String(font.n)));
+      meta.appendChild(element('span', 'v2-font__name', esc(font.name)));
+      button.appendChild(meta);
+      button.addEventListener('click', () => {
+        if (X.state.font === font.n) return;
+        X.set({ font: font.n });
+        refreshFontSelection();
+        trackCustomise();
+      });
+      grid.appendChild(button);
+    });
+    refreshFontSamples();
+    refreshFontSelection();
+  }
+
   function buildInks() {
     const palettes = $('#v2Palettes');
     C.PALETTES.forEach(p => {
@@ -591,7 +658,9 @@
   function syncInputs() {
     $('#v2Size').addEventListener('change', event => selectVariant(event.target.value));
     $('#v2Names').addEventListener('input', e => {
-      X.set({ names: e.target.value }); trackCustomise();
+      X.set({ names: e.target.value });
+      refreshFontSamples();
+      trackCustomise();
     });
     $('#v2Date').addEventListener('input', e => {
       X.set({ date: e.target.value }); trackCustomise();
@@ -766,6 +835,7 @@
     });
     buildOtherSections();
     gallery();
+    buildFonts();
     buildInks();
     buildCountries();
     syncInputs();
