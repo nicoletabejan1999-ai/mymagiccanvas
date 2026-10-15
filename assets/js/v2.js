@@ -114,6 +114,12 @@
     ['FRAMED-L-EASEL', 'FRAMED L + EASEL', 'both']
   ];
 
+  // Target the actual size-guide image by filename, not the carousel ordinal.
+  // Currently the guide is item 6 (item 2 is a video).
+  const SIZE_GUIDE_MEDIA_INDEX = C.GALLERY.findIndex(media =>
+    media.type === 'image' && String(media.src || '').endsWith('/06-size-guide')
+  );
+
   function refreshVariantOptions() {
     const select = $('#v2Size');
     variants.forEach(([sku, label, format], index) => {
@@ -136,8 +142,11 @@
     const flags = formats[format];
     const sizeData = C.SIZES.find(item => item.id === size);
     X.set({ size, framed: flags.framed, easel: flags.easel, guests: sizeData.capacity });
-    galleryShow(flags.media);
-    $('#v2GalleryCaption').textContent = flags.caption;
+    const showSizeGuide = fromCustomer && SIZE_GUIDE_MEDIA_INDEX >= 0;
+    galleryShow(showSizeGuide ? SIZE_GUIDE_MEDIA_INDEX : flags.media);
+    $('#v2GalleryCaption').textContent = showSizeGuide
+      ? 'Canvas sizes: S 30 × 40 cm · M 40 × 50 cm · L 50 × 60 cm.'
+      : flags.caption;
     updatePrices();
     if (fromCustomer) {
       trackFirstParty('variant_select', { selectedVariant: sku });
