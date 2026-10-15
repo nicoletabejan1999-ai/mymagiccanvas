@@ -356,14 +356,14 @@
 
   function refreshFontSamples() {
     const text = $('#v2Names').value.trim() || 'Emma & Leo';
-    $('#v2Fonts .v2-font').forEach(button => {
+    document.querySelectorAll('#v2Fonts .v2-font').forEach(button => {
       const font = C.FONTS.find(f => f.n === Number(button.dataset.font));
       if (font) renderFontSample(button.querySelector('.v2-font__sample'), font, text);
     });
   }
 
   function refreshFontSelection() {
-    $('#v2Fonts .v2-font').forEach(button => {
+    document.querySelectorAll('#v2Fonts .v2-font').forEach(button => {
       button.setAttribute('aria-pressed', String(Number(button.dataset.font) === X.state.font));
     });
     const selected = C.FONTS.find(f => f.n === X.state.font);
