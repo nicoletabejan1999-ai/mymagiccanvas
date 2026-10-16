@@ -1,7 +1,8 @@
 /* GTM-TF75WXX8 for MyMagiCanvas V2.
- * TEMPORARY PRODUCTION QA MODE until 20 October 2026, 23:59 Paris:
+ * TEMPORARY PRODUCTION QA MODE until 27 October 2026, 23:59 Paris:
  * GA4 analytics_storage and V2 funnel events are available without optional
- * advertising opt-in. Meta/Pinterest and ads consent remain independent.
+ * advertising opt-in. Meta Pixel has the same temporary V2 exception;
+ * Pinterest and advertising user-data consent remain independent.
  * After expiry, analytics once again requires visitor opt-in automatically.
  * Only this V2 script is changed; V1 is unaffected.
  */
@@ -9,7 +10,7 @@
   'use strict';
 
   const CONSENT_KEY = 'mmc-ads-consent-v2';
-  const TEST_UNTIL = Date.parse('2026-10-20T21:59:00Z');
+  const TEST_UNTIL = Date.parse('2026-10-27T22:59:00Z');
 
   function hasAdsConsent() {
     try { return localStorage.getItem(CONSENT_KEY) === 'accepted'; }
