@@ -1,4 +1,4 @@
-const { isEnabled, isAdmin, isValidToken } = require('../lib/lead-email-tracking');
+const { isAdmin, isValidToken } = require('../lib/lead-email-tracking');
 const crypto = require('node:crypto');
 
 function json(res,code,body){
@@ -18,7 +18,6 @@ function authStorage() {
 module.exports=async function handler(req,res){
   if(req.method!=='POST'){res.setHeader('Allow','POST');return json(res,405,{error:'Method not allowed'});}
   if(!isAdmin(req))return json(res,403,{error:'Forbidden'});
-  if(!isEnabled())return json(res,503,{error:'Tracking disabled'});
   let body=req.body;
   if(typeof body==='string'){try{body=JSON.parse(body)}catch(_){body=null}}
   const token=body && body.token;
@@ -33,16 +32,18 @@ module.exports=async function handler(req,res){
     // Deauthorize immediately, before deleting historical event blobs.
     await del(consentPath,auth);
     let cursor,deleted=0;
+    const allPaths=[];
     do {
       const page=await list({prefix,cursor,limit:1000,...auth});
       const paths=(page.blobs||[]).map(x=>x.pathname);
-      for(let i=0;i<paths.length;i+=100){
-        const batch=paths.slice(i,i+100);
-        await del(batch,auth);
-        deleted+=batch.length;
-      }
+      allPaths.push(...paths);
       cursor=page.hasMore?page.cursor:undefined;
     }while(cursor);
+    for(let i=0;i<allPaths.length;i+=100){
+      const batch=allPaths.slice(i,i+100);
+      await del(batch,auth);
+      deleted+=batch.length;
+    }
     return json(res,200,{ok:true,deletedEvents:deleted});
   }catch(e){
     console.error('Email tracking erasure incomplete');
