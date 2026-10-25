@@ -12,8 +12,11 @@ nothing is switched on by merging the code.
    accessible privacy information and proof of the exact text accepted.
    Neither Messenger updates nor a promise to send ink recommendations
    counts as consent for individual marketing open tracking.
-3. Establish a defined deletion/retention job for event and consent blobs.
-   **Do not enable the feature without retention/deletion safeguards.**
+3. Configure the daily retention job (`CRON_SECRET` with >=16 random characters)
+   and verify that its cleanup succeeds. The draft cron route targets 04:15 UTC
+   and deletes recorded email open/click events older than 90 days. Consent
+   records are kept while active; the explicit erasure endpoint removes
+   individual consent and event history upon withdrawal/request.
 4. Keep old imported leads OFF unless they later supply a suitable opt-in.
 5. Generate a cryptographically random 32-byte **hex** token for each
    consenting CRM lead. Store the token inside the private Google Sheet,
@@ -25,11 +28,16 @@ nothing is switched on by merging the code.
    `MMC_EMAIL_TRACKING_ENABLED`: `true` only when ready; unset means OFF.
    Use the already-connected **private Vercel Blob** storage. No new paid
    platform is necessary just to make these endpoint types available.
-8. Verify the Apps Script sync implementation and email footer separately.
-   Do not enable email sending, install triggers or bulk-mail customers
-   simply because tracking endpoints are present.
+8. Add `Tracking.gs` to the existing bound Google Apps Script separately
+   from Code.gs. Set the SAME admin secret in Google Apps Script project
+   properties, and do not include it in outbound emails or GitHub.
+9. Provide a genuine separate opt-in mechanism; manually document AC, AE,
+   AF and AG in Google Sheets only when the actual evidence exists.
+10. Verify the appropriate CAN-SPAM footer, sender identity, and
+    click/open consent process; do not enable email sending or install
+    triggers because tracking endpoints exist.
 
-## API contract (all initially inert)
+## API contract (all initially inert while collection flag is unset)
 
 `POST /api/email-track-consent`
 Authentication: `x-mmc-tracking-secret: <secret>` (server-to-server only).
@@ -62,6 +70,35 @@ Returns event counts and first/last timestamps under each opaque token,
 for polling by Apps Script and writing to CRM. **No IP, user agent, recipient
 email, or personal data is deliberately stored in event records.**
 
+Additional endpoints:
+
+- `POST /api/email-track-erase` with the same admin secret and
+  `{"token":"<64-char-hex>"}`: immediately removes the consent record
+  and historical event blobs. This erasure endpoint remains callable even
+  when event collection is OFF, so users can withdraw consent safely.
+- `GET /api/email-track-retention` is the daily Vercel Cron endpoint.
+  It requires `Authorization: Bearer <CRON_SECRET>`; it scans recorded
+  events and deletes those older than 90 days. It does not collect any
+  customer events and is inert while the collection flag is OFF.
+
+## Google Sheets connector
+
+Add the separate `MyMagicCanvas_Tracking.gs` file as `Tracking.gs` in
+Extensions > Apps Script. Do not overwrite the existing working Code.gs.
+The independent functions are:
+
+- `mmcTrackRegisterSelectedConsent`: select ONE CRM lead row with
+  genuinely documented tracking opt-in, then register consent.
+- `mmcTrackSyncSummary`: read only opt-in tokens, then update U:Z and
+  the sync status. Does NOT send any email.
+- `mmcTrackEraseSelectedLead`: withdraw tracking and delete the linked
+  stored events for the selected row. Does NOT send any email.
+
+Existing lead-form submissions must never be marked as separate tracking
+consent just because they supplied an email address. Existing UUID-shaped
+Tracking IDs will be replaced with a separate random 64-hex token only
+when a lead supplies a real tracking opt-in.
+
 ## Safety properties
 
 - Off-by-default feature flag and proof-gated consent registration.
@@ -73,9 +110,10 @@ email, or personal data is deliberately stored in event records.**
 - Never infer human reading or exact reading duration from pixel loads.
 - Does not modify landing page, Stripe checkout, existing aggregate analytics,
   current Apps Script, or previously prepared customer emails.
-- There is currently **no connector from these new API endpoints to the
-  Google Sheets CRM** until the separate Apps Script integration is completed.
-- No event retention job exists in this draft. This blocks live activation.
+- Apps Script connector source has been prepared, but the user must install
+  it into the bound project and test it before live use.
+- The 90-day retention cron is included in the PR but not activated on
+  production until merge and CRON_SECRET configuration.
 
 ## Test sequence once compliance + integration are ready
 
