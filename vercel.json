@@ -42,5 +42,11 @@
     "api/stripe-webhook.js": {
       "includeFiles": "assets/**"
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/email-track-retention",
+      "schedule": "15 4 * * *"
+    }
+  ]
 }
