@@ -40,6 +40,7 @@ module.exports=async function handler(req,res) {
   if(!auth)return done(res,503,{error:'Private storage not configured'});
   const cutoff=Date.now()-RETENTION_DAYS*86400000;
   let removed=0,scanned=0, cursor, pages=0;
+  const pathsToRemove=[];
   const { list, del } = await import('@vercel/blob');
   try {
     do {
@@ -51,14 +52,16 @@ module.exports=async function handler(req,res) {
         const match=/^(\d{13})-(open|click)-[a-f0-9-]+\.json$/.exec(file);
         if(match && Number(match[1])<cutoff) paths.push(blob.pathname);
       }
-      for(let i=0;i<paths.length;i+=100){
-        const batch=paths.slice(i,i+100);
-        await del(batch,auth);
-        removed+=batch.length;
-      }
+      pathsToRemove.push(...paths);
       cursor=page.hasMore?page.cursor:undefined;
       pages++;
     } while(cursor && pages<MAX_PAGES);
+    // Gather before deleting: mutating a paginated list mid-scan may skip blobs.
+    for(let i=0;i<pathsToRemove.length;i+=100){
+      const batch=pathsToRemove.slice(i,i+100);
+      await del(batch,auth);
+      removed+=batch.length;
+    }
     return done(res,200,{ok:true,retentionDays:RETENTION_DAYS,scanned,deleted:removed,complete:!cursor});
   } catch(e){
     console.error('Email tracking retention job failed');
