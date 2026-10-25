@@ -23,6 +23,102 @@ function storageAuth() {
   return null;
 }
 
+
+/*
+ * Run a sealed synthetic scenario in the diagnostics-only namespace.
+ * It deliberately DOES NOT call customer-facing pixel/click endpoints,
+ * touch actual tokens, or change the global collection switch.
+ */
+async function simulatePrivateEvents(auth) {
+  const root = 'email-tracking/v1/diagnostics/' + crypto.randomUUID() + '/';
+  const consentPath = root + 'consent.json';
+  const eventPrefix = root + 'events/';
+  const created = [];
+  const { put, get, del, list } = await import('@vercel/blob');
+
+  const write = async (pathname, body) => {
+    await put(pathname, JSON.stringify(body), {
+      access: 'private',
+      addRandomSuffix: false,
+      allowOverwrite: true,
+      contentType: 'application/json',
+      ...auth
+    });
+    if (!created.includes(pathname)) created.push(pathname);
+  };
+
+  const read = async (pathname) => {
+    const result = await get(pathname, { access: 'private', useCache: false, ...auth });
+    if (!result || result.statusCode !== 200 || !result.stream) return null;
+    return JSON.parse(await new Response(result.stream).text());
+  };
+
+  const recordSynthetic = async (type) => {
+    // Read the consent record from PRIVATE storage before every event.
+    const consent = await read(consentPath);
+    if (!consent || consent.synthetic !== true || consent.granted !== true) return false;
+    const time = Date.now();
+    await write(eventPrefix + time + '-' + type + '-' + crypto.randomUUID() + '.json', {
+      version: 1,
+      synthetic: true,
+      event: type,
+      occurredAt: new Date(time).toISOString()
+    });
+    return true;
+  };
+
+  let countBeforeWithdrawal = { openLoads: 0, clickEvents: 0 };
+  let countAfterWithdrawal = { openLoads: 0, clickEvents: 0 };
+  let suppressedAfterWithdrawal = false;
+  let deleted = false;
+  try {
+    await write(consentPath, { synthetic: true, granted: true });
+    if (!await recordSynthetic('open') || !await recordSynthetic('open') ||
+        !await recordSynthetic('click')) {
+      throw new Error('Synthetic event creation failed');
+    }
+    const before = await list({ prefix: eventPrefix, limit: 100, ...auth });
+    if (before.hasMore) throw new Error('Unexpected pagination of synthetic records');
+    for (const blob of before.blobs || []) {
+      if (/-open-[a-f0-9-]+\.json$/.test(blob.pathname)) countBeforeWithdrawal.openLoads++;
+      if (/-click-[a-f0-9-]+\.json$/.test(blob.pathname)) countBeforeWithdrawal.clickEvents++;
+    }
+
+    // Revoke in storage; a fourth event must be rejected without being stored.
+    await write(consentPath, { synthetic: true, granted: false });
+    suppressedAfterWithdrawal = !(await recordSynthetic('open'));
+    const after = await list({ prefix: eventPrefix, limit: 100, ...auth });
+    if (after.hasMore) throw new Error('Unexpected pagination after synthetic revocation');
+    for (const blob of after.blobs || []) {
+      if (/-open-[a-f0-9-]+\.json$/.test(blob.pathname)) countAfterWithdrawal.openLoads++;
+      if (/-click-[a-f0-9-]+\.json$/.test(blob.pathname)) countAfterWithdrawal.clickEvents++;
+    }
+    const good = countBeforeWithdrawal.openLoads === 2 &&
+      countBeforeWithdrawal.clickEvents === 1 &&
+      countAfterWithdrawal.openLoads === 2 &&
+      countAfterWithdrawal.clickEvents === 1 &&
+      suppressedAfterWithdrawal;
+    if (!good) throw new Error('Unexpected synthetic event counts');
+    return {
+      ok: true,
+      diagnostic: 'synthetic-email-open-click-consent-revocation',
+      syntheticOpenLoads: 2,
+      syntheticClickEvents: 1,
+      suppressedAfterWithdrawal: true,
+      syntheticRecordsRemoved: true,
+      trackingEnabled: false,
+      touchedCustomerRecords: false
+    };
+  } finally {
+    // Remove everything created for this self-test before acknowledging success.
+    if (created.length) {
+      await del(created, auth);
+      deleted = true;
+    }
+    if (!deleted) console.error('Synthetic email event test cleanup incomplete');
+  }
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
@@ -33,6 +129,22 @@ module.exports = async function handler(req, res) {
 
   const auth = storageAuth();
   if (!auth) return json(res, 503, { ok: false, error: 'Private storage unavailable' });
+
+  const body = typeof req.body === 'string'
+    ? (() => { try { return JSON.parse(req.body); } catch (_) { return null; } })()
+    : req.body;
+  if (body && body.scenario === 'events') {
+    try {
+      const result = await simulatePrivateEvents(auth);
+      return json(res, 200, result);
+    } catch (error) {
+      console.error('Synthetic email events diagnostic failed');
+      return json(res, 503, {
+        ok: false,
+        error: 'Synthetic event test failed; inspect private storage health'
+      });
+    }
+  }
 
   const id = crypto.randomUUID();
   const pathname = 'email-tracking/v1/diagnostics/' + id + '.json';
