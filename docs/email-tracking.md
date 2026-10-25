@@ -12,9 +12,11 @@ nothing is switched on by merging the code.
    accessible privacy information and proof of the exact text accepted.
    Neither Messenger updates nor a promise to send ink recommendations
    counts as consent for individual marketing open tracking.
-3. Configure the daily retention job (`CRON_SECRET` with >=16 random characters)
-   and verify that its cleanup succeeds. The draft cron route targets 04:15 UTC
-   and deletes recorded email open/click events older than 90 days. Consent
+3. Before enabling event collection, add a Vercel Cron schedule for
+   `/api/email-track-retention` and verify that its cleanup succeeds.
+   Requires `CRON_SECRET` of >=16 random characters. The route deletes
+   recorded email open/click events older than 90 days, but is NOT scheduled
+   in production as part of this disabled-endpoints release. Consent
    records are kept while active; the explicit erasure endpoint removes
    individual consent and event history upon withdrawal/request.
 4. Keep old imported leads OFF unless they later supply a suitable opt-in.
@@ -76,7 +78,7 @@ Additional endpoints:
   `{"token":"<64-char-hex>"}`: immediately removes the consent record
   and historical event blobs. This erasure endpoint remains callable even
   when event collection is OFF, so users can withdraw consent safely.
-- `GET /api/email-track-retention` is the daily Vercel Cron endpoint.
+- `GET /api/email-track-retention` is a prepared Vercel Cron endpoint (not scheduled).
   It requires `Authorization: Bearer <CRON_SECRET>`; it scans recorded
   events and deletes those older than 90 days. It does not collect any
   customer events and is inert while the collection flag is OFF.
@@ -112,8 +114,8 @@ when a lead supplies a real tracking opt-in.
   current Apps Script, or previously prepared customer emails.
 - Apps Script connector source has been prepared, but the user must install
   it into the bound project and test it before live use.
-- The 90-day retention cron is included in the PR but not activated on
-  production until merge and CRON_SECRET configuration.
+- The 90-day retention API is included in this PR, but a Vercel Cron
+  schedule must be configured separately before enabling collection.
 
 ## Test sequence once compliance + integration are ready
 
