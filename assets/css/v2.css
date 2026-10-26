@@ -146,6 +146,7 @@
 .v2-page .v2-designer-invite p:not(.eyebrow){font-size:.95rem;color:var(--ink-2);margin-top:9px}
 .v2-page .v2-designer-invite .btn{flex:none}
 .v2-page #configurator{scroll-margin-top:82px}
+.v2-page #v2Personalise{scroll-margin-top:96px}
 .v2-page #configurator[hidden]{display:none!important}
 .v2-page .v2-designer-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
 .v2-page .v2-designer-toolbar .eyebrow{margin:0}

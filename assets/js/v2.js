@@ -655,6 +655,18 @@
     selectVariant(key);
   }
 
+  // Email links open the existing personalisation form without changing its values.
+  function openPersonalisationFromLink() {
+    if (window.location.hash !== '#v2Personalise') return;
+    const panel = $('#v2Personalise');
+    if (!panel) return;
+    panel.open = true;
+    // Reposition after the expanded form has affected layout.
+    requestAnimationFrame(() => {
+      panel.scrollIntoView({ block: 'start', behavior: 'auto' });
+    });
+  }
+
   function syncInputs() {
     $('#v2Size').addEventListener('change', event => selectVariant(event.target.value));
     $('#v2Names').addEventListener('input', e => {
@@ -839,10 +851,12 @@
     buildInks();
     buildCountries();
     syncInputs();
+    window.addEventListener('hashchange', openPersonalisationFromLink);
     applyCurrency();
     detectMarket();
     mobileDock();
     startPromoTimer();
+    openPersonalisationFromLink();
     const whatsapp = $('#v2WhatsApp');
     const shopWhatsapp = $('#v2ContactWhatsApp');
     if (C.SHOP.whatsapp) {
